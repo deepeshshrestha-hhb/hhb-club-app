@@ -13,7 +13,7 @@ from services.league_service import list_league_years, get_league
 # Maps tournament first-name → Spond firstName (lowercase).
 # Only entries that differ from the Spond name are listed here.
 ALIASES = {
-    "nawaz": "allah",        # Allah Nawaz Khan plays as "Nawaz"
+    "nawaz": "allah nawaz",  # Allah Nawaz Khan plays as "Nawaz" (Spond firstName is "Allah Nawaz")
     "yogi": "yogeshwar",     # Yogeshwar Chandelia plays as "Yogi"
     "tousif": "mohammad",    # Mohammad Tousif plays as "Tousif"
     "alty": "altamash",      # Altamash Pervez sometimes listed as "Alty"
