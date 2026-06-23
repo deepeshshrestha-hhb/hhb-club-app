@@ -14,7 +14,13 @@
       "mcp__visualize__show_widget",
       "PowerShell(python -c \"from config import Config; print\\('SECRET_KEY set:', bool\\(Config.SECRET_KEY\\)\\); print\\('USERNAME:', Config.SPOND_USERNAME\\); print\\('GROUP_ID:', Config.SPOND_GROUP_ID\\); print\\('PASSWORD set:', bool\\(Config.SPOND_PASSWORD\\)\\)\")",
       "Bash(git init *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git config *)",
+      "Bash(echo \"user.name=$\\(git config user.name\\)\")",
+      "Bash(echo \"user.email=$\\(git config user.email\\)\")",
+      "Bash(git branch *)",
+      "Bash(git commit *)",
+      "Bash(git rm *)"
     ]
   }
 }
