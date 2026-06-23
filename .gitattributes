@@ -1,0 +1,9 @@
+# Normalize line endings: let Git decide text vs binary, store LF in the repo
+# and check out the platform-native ending. Silences CRLF warnings on Windows.
+* text=auto
+
+# Treat binary data files explicitly so Git never tries to normalize them.
+*.xlsx binary
+*.xlsm binary
+*.jpg  binary
+*.png  binary

@@ -103,7 +103,6 @@ tournaments/            # Per-year tournament scoresheets (.xlsm) — source of 
   must be extended manually as more years are confirmed to fit a parser.
 - `get_doubles_tournament` has a duplicated unreachable `return` block at the end
   (harmless dead code).
-- **Not a git repository yet** — see Next Steps.
 
 ---
 
@@ -111,6 +110,12 @@ tournaments/            # Per-year tournament scoresheets (.xlsm) — source of 
 
 - **2026-06-23** — Created this CLAUDE.md as the project memory file (initial
   pass documenting the codebase as found).
+- **2026-06-23** — Initialized git and made the first commit of the existing
+  codebase. Added `.gitattributes` (`* text=auto` + explicit binary types) to
+  normalize line endings and silence Windows CRLF warnings.
+- **2026-06-23** — Stopped versioning `data/hhb_members.csv` (gitignored + removed
+  from tracking). *Why:* it contains member PII (emails, DOBs) and is regenerated
+  from Spond on every app startup, so it's a cache, not source.
 - **Spond live-fetch over pre-sync** — Calendar and member data are pulled live
   rather than synced into a local store; the Admin "Sync Spond" button is kept
   only for backwards compatibility. *Why:* avoids stale data and a sync job;
@@ -133,8 +138,7 @@ tournaments/            # Per-year tournament scoresheets (.xlsm) — source of 
 
 ## Next Steps / TODO
 
-- [ ] **Initialize git** (`git init`) — repo is not yet version-controlled, so
-  there's no working history. Make a first commit of the current state.
+- [x] **Initialize git** — done 2026-06-23; first commit captures the current state.
 - [ ] Decide whether `/api/calendar` should switch to live Spond data
   (currently Excel-backed).
 - [ ] Replace or remove the placeholder `/admin/sync_spond` behavior.

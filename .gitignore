@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+# Member PII - regenerated from Spond on app startup, do not version
+data/hhb_members.csv
+
 # Python
 __pycache__/
 *.py[cod]
