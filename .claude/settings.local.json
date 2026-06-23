@@ -20,7 +20,8 @@
       "Bash(echo \"user.email=$\\(git config user.email\\)\")",
       "Bash(git branch *)",
       "Bash(git commit *)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "PowerShell(taskkill /F /IM python.exe 2>$null)"
     ]
   }
 }
