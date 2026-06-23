@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="page-title">Tournaments</h1>
+
+<div class="row">
+    <div class="col-md-5 mb-4">
+        <div class="card hhb-card">
+            <div class="card-body">
+                <h5 class="card-title">Create Tournament</h5>
+                <form method="post" action="{{ url_for('tournaments.create_tournament_route') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" name="date" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-hhb-primary w-100">Create Tournament</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7 mb-4">
+        <div class="card hhb-card">
+            <div class="card-body">
+                <h5 class="card-title">Existing Tournaments</h5>
+
+                {% if tournaments %}
+                <ul class="list-group list-group-flush">
+                    {% for t in tournaments %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="{{ url_for('tournaments.tournament_detail_page', tournament_id=t.id) }}">
+                                {{ t.name }}
+                            </a>
+                            <div class="text-muted small">{{ t.date }}</div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0">No tournaments yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

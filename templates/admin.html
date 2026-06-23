@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="page-title">Admin</h1>
+<p class="text-muted mb-4">Admin tools for syncing Spond, managing data, etc.</p>
+
+<div class="card hhb-card">
+    <div class="card-body">
+        <h5 class="card-title">Spond Sync</h5>
+        <p class="card-text">Sync players and sessions from Spond (placeholder for now).</p>
+
+        <form action="{{ url_for('admin.sync_spond_route') }}" method="get">
+            <button type="submit" class="btn btn-hhb-accent">
+                Sync Spond (placeholder)
+            </button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

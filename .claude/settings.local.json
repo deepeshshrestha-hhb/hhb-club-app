@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(pip install *)",
+      "Bash(C:/Users/deepe/venvs/hhb_laptop_venv/Scripts/python.exe -c ' *)",
+      "Bash(grep -v \"^$\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\deepe\\\\OneDrive\\\\badminton_club_app\" -Recurse -Force)",
+      "Bash(Select-Object -First 30)",
+      "Bash(Format-Table Name, FullName)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\deepe\\\\OneDrive\\\\badminton_club_app\" -Recurse | Select-Object -First 30 | Format-Table Name, @{Name='Path';Expression={$_.FullName.Replace\\('C:\\\\Users\\\\deepe\\\\OneDrive\\\\badminton_club_app\\\\',''\\)}})",
+      "Skill(run)",
+      "Skill(run:*)",
+      "mcp__visualize__show_widget",
+      "PowerShell(python -c \"from config import Config; print\\('SECRET_KEY set:', bool\\(Config.SECRET_KEY\\)\\); print\\('USERNAME:', Config.SPOND_USERNAME\\); print\\('GROUP_ID:', Config.SPOND_GROUP_ID\\); print\\('PASSWORD set:', bool\\(Config.SPOND_PASSWORD\\)\\)\")",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}

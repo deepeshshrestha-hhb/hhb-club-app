@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+
+        <!-- Page Header -->
+        <div class="text-center mb-5">
+            <h1 class="page-title mb-1">About Us</h1>
+            <h2 class="h4 text-muted fw-normal">Haggis and Haleem Badminton Club</h2>
+            <hr class="mt-3">
+        </div>
+
+        <!-- Club Photo -->
+        <div class="text-center mb-5">
+            <img
+                src="{{ url_for('static', filename='images/Annual Doubles Tournament 2026 - 20260607_090756.jpg') }}"
+                class="img-fluid rounded shadow"
+                alt="Haggis and Haleem Badminton Club"
+                style="max-height: 480px; width: 100%; object-fit: cover; border-radius: 0.5rem;"
+            >
+            <p class="text-muted small mt-2">HHB Annual Doubles Classic 2026 — Eastwood High School</p>
+        </div>
+
+        <!-- Who Are We -->
+        <div class="card hhb-card mb-4">
+            <div class="card-body p-4">
+                <h3 class="h5 fw-bold mb-3" style="color: var(--hhb-primary);">Who Are We?</h3>
+                <p>
+                    We are the <strong>Haggis and Haleem Badminton Club</strong> — a friendly, social badminton club
+                    based in <strong>Newton Mearns, Glasgow</strong>. Our name is a nod to the wonderful mix of
+                    cultures that make up our club: the Scottish haggis and the South Asian haleem, two hearty
+                    dishes that bring people together, much like we do on the badminton court.
+                </p>
+                <p>
+                    With <strong>40+ members</strong> drawn from India, Pakistan, Bangladesh, Nepal, Malaysia, and Scotland, our club
+                    is a vibrant, multicultural community united by a shared love of the game. Our members range
+                    in age from their early 40s to their 60s, and while the competitive spirit is always alive,
+                    the camaraderie off the court is just as important to us.
+                </p>
+            </div>
+        </div>
+
+        <!-- When & Where We Play -->
+        <div class="card hhb-card mb-4">
+            <div class="card-body p-4">
+                <h3 class="h5 fw-bold mb-3" style="color: var(--hhb-primary);">When &amp; Where We Play</h3>
+                <p>We run <strong>two weekly sessions</strong>, both focused on doubles badminton:</p>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0" style="background: #eaf4ff; border-radius: 0.5rem;">
+                            <div class="card-body">
+                                <h6 class="fw-bold mb-2">Sunday Sessions</h6>
+                                <ul class="mb-0 ps-3">
+                                    <li><strong>Time:</strong> 9:00 am – 11:00 am</li>
+                                    <li><strong>Venue:</strong> Eastwood High School</li>
+                                    <li><strong>Courts:</strong> 4 courts</li>
+                                    <li><strong>Capacity:</strong> 20 players max</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 border-0" style="background: #eafaf4; border-radius: 0.5rem;">
+                            <div class="card-body">
+                                <h6 class="fw-bold mb-2">Wednesday Sessions</h6>
+                                <ul class="mb-0 ps-3">
+                                    <li><strong>Time:</strong> 7:00 pm – 9:00 pm</li>
+                                    <li><strong>Venue:</strong> Parklands Country Club</li>
+                                    <li><strong>Courts:</strong> 2 courts</li>
+                                    <li><strong>Capacity:</strong> 10 players max</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="mt-3 mb-0 text-muted small">
+                    Sessions fill up quickly — sign-up is managed through the <strong>Spond app</strong>. Members will receive an invite via Spond for each session.
+                </p>
+            </div>
+        </div>
+
+        <!-- Our Community -->
+        <div class="card hhb-card mb-5">
+            <div class="card-body p-4">
+                <h3 class="h5 fw-bold mb-3" style="color: var(--hhb-primary);">Our Community</h3>
+                <p>
+                    We are proud of the diversity and warmth within our group. Whether you are a seasoned player
+                    or just looking to stay active and social, the spirit here is always welcoming. Banter,
+                    competitive doubles, post-game chai — it is all part of the HHB experience.
+                </p>
+                <p class="mb-0">
+                    We are more than just a badminton club — we are a community that has been playing, competing,
+                    and growing together for years, right here in the heart of Newton Mearns.
+                </p>
+            </div>
+        </div>
+
+        <!-- Why Badminton? -->
+        <div class="card hhb-card mb-5">
+            <div class="card-body p-4">
+                <h3 class="h5 fw-bold mb-3" style="color: var(--hhb-primary);">Why Badminton?</h3>
+                <p>
+                    Badminton is one of the most rewarding racket sports for overall health and wellbeing. Research has shown that
+                    regular badminton players benefit from improved hand-eye coordination, enhanced cognitive function, and better brain development.
+                    The dynamic nature of the sport — with its rapid directional changes, quick decision-making, and strategic thinking — keeps both
+                    body and mind sharp, contributing to increased longevity and a healthier lifestyle.
+                </p>
+                <p class="mb-0">
+                    But beyond the physical benefits, badminton is deeply rooted in social connection. The doubles format — which we
+                    emphasise at HHB — creates natural partnerships and teamwork, fostering meaningful friendships and a sense of belonging.
+                    Studies show that this social aspect of sport is equally vital to health and wellbeing, reducing stress, combating isolation,
+                    and improving mental health. At HHB, we believe that the combination of vigorous physical activity, mental engagement, and
+                    genuine community is what makes badminton such a transformative experience.
+                </p>
+            </div>
+        </div>
+
+        <!-- Back to Dashboard -->
+        <div class="text-center mb-4">
+            <a href="/" class="btn btn-hhb-primary text-white px-4">Back to Dashboard</a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

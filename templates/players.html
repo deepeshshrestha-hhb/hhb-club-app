@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
+    <div>
+        <h1 class="page-title mb-1">HHB Members</h1>
+        <p class="text-muted small mb-0">{{ players | length }} members · Ranked by HHB Score · Synced from Spond on startup</p>
+    </div>
+</div>
+
+<!-- HHB Score legend - Collapsible -->
+<div class="card hhb-card mb-4">
+    <div class="card-header p-0">
+        <button class="btn btn-link btn-block w-100 text-start p-3 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#hhbFormulaTable" aria-expanded="false" aria-controls="hhbFormulaTable">
+            <span class="fw-semibold">HHB Score Formula</span>
+            <i class="bi bi-chevron-down ms-2"></i>
+        </button>
+    </div>
+    <div class="collapse" id="hhbFormulaTable">
+        <div class="card-body p-0" style="max-width: 100%; overflow-x: auto;">
+            <div style="max-width: 700px; margin: 0 auto;">
+            <table class="table table-sm table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="fw-semibold">Tournament Type</th>
+                        <th class="fw-semibold">Performance Level</th>
+                        <th class="text-end fw-semibold">Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-active" style="border-top: 3px solid #333;">
+                        <td rowspan="6" class="fw-semibold align-middle" style="border-left: 3px solid #333;">Doubles Classic<br><span class="text-muted small">(per year)</span></td>
+                        <td>Group Stage</td>
+                        <td class="text-end">10</td>
+                    </tr>
+                    <tr>
+                        <td>Knockouts</td>
+                        <td class="text-end">20</td>
+                    </tr>
+                    <tr>
+                        <td>Semi-Final</td>
+                        <td class="text-end">35</td>
+                    </tr>
+                    <tr>
+                        <td>3rd Place</td>
+                        <td class="text-end">55</td>
+                    </tr>
+                    <tr>
+                        <td>Runner-up</td>
+                        <td class="text-end">75</td>
+                    </tr>
+                    <tr style="border-bottom: 3px solid #333;">
+                        <td>Winner</td>
+                        <td class="text-end fw-bold">100</td>
+                    </tr>
+                    <tr class="table-active" style="border-top: 3px solid #333;">
+                        <td rowspan="5" class="fw-semibold align-middle" style="border-left: 3px solid #333;">Championships<br><span class="text-muted small">(per pool)</span></td>
+                        <td>Group Stage</td>
+                        <td class="text-end">8</td>
+                    </tr>
+                    <tr>
+                        <td>Semi-Final</td>
+                        <td class="text-end">20</td>
+                    </tr>
+                    <tr>
+                        <td>3rd Place</td>
+                        <td class="text-end">40</td>
+                    </tr>
+                    <tr>
+                        <td>Runner-up</td>
+                        <td class="text-end">60</td>
+                    </tr>
+                    <tr style="border-bottom: 3px solid #333;">
+                        <td>Winner</td>
+                        <td class="text-end fw-bold">85</td>
+                    </tr>
+                    <tr class="table-active" style="border-top: 3px solid #333;">
+                        <td rowspan="6" class="fw-semibold align-middle" style="border-left: 3px solid #333;">Players League<br><span class="text-muted small">(per season)</span></td>
+                        <td>Participated</td>
+                        <td class="text-end">10</td>
+                    </tr>
+                    <tr>
+                        <td>Top 10</td>
+                        <td class="text-end">15</td>
+                    </tr>
+                    <tr>
+                        <td>Top 5</td>
+                        <td class="text-end">20</td>
+                    </tr>
+                    <tr>
+                        <td>3rd Place</td>
+                        <td class="text-end">30</td>
+                    </tr>
+                    <tr>
+                        <td>Runner-up</td>
+                        <td class="text-end">45</td>
+                    </tr>
+                    <tr style="border-bottom: 3px solid #333;">
+                        <td>Champion</td>
+                        <td class="text-end fw-bold">70</td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card hhb-card">
+    <div class="card-body p-0">
+        <div class="sticky-table-wrapper" style="max-height:75vh;">
+            <table class="table table-sm table-striped table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="position:sticky;left:0;z-index:3;background:#1a1a1a;">#</th>
+                        <th style="position:sticky;left:36px;z-index:3;background:#1a1a1a;">Name</th>
+                        <th>Age</th>
+                        <th title="Annual Doubles Classic seasons">DC</th>
+                        <th title="Annual Championships seasons">Champ</th>
+                        <th title="Annual Players League seasons">League</th>
+                        <th>🏆 Wins</th>
+                        <th>🥈 Runner-ups</th>
+                        <th>🥉 3rds</th>
+                        <th>HHB Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in players %}
+                    {% set row_bg = '#fff8dc' if p.rank == 1 else ('#f8f9fa' if p.rank <= 3 else '#ffffff') %}
+                    <tr class="{{ 'table-warning fw-bold' if p.rank == 1 else ('table-light' if p.rank <= 3) }}">
+                        <td style="position:sticky;left:0;z-index:1;background:{{ row_bg }};">
+                            {% if p.rank == 1 %}🏆
+                            {% elif p.rank == 2 %}🥈
+                            {% elif p.rank == 3 %}🥉
+                            {% else %}{{ p.rank }}{% endif %}
+                        </td>
+                        <td class="fw-semibold" style="position:sticky;left:36px;z-index:1;background:{{ row_bg }};">{{ p.full_name }}</td>
+                        <td class="text-muted small">{{ p.age or '—' }}</td>
+                        <td class="text-center">
+                            {% if p.dt_count %}<span class="badge bg-secondary">{{ p.dt_count }}</span>{% else %}<span class="text-muted">—</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if p.ch_count %}<span class="badge bg-secondary">{{ p.ch_count }}</span>{% else %}<span class="text-muted">—</span>{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if p.lg_count %}<span class="badge bg-secondary">{{ p.lg_count }}</span>{% else %}<span class="text-muted">—</span>{% endif %}
+                        </td>
+                        <td class="text-center fw-bold" style="color:var(--hhb-accent)">
+                            {% if p.total_wins %}{{ p.total_wins }}{% else %}—{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if p.total_runner_ups %}{{ p.total_runner_ups }}{% else %}—{% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if p.total_thirds %}{{ p.total_thirds }}{% else %}—{% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height:8px;min-width:60px">
+                                    {% set max_score = players[0].hhb_score if players else 1 %}
+                                    <div class="progress-bar" style="width:{{ ((p.hhb_score / max_score) * 100) | round }}%;background:var(--hhb-primary)"></div>
+                                </div>
+                                <span class="fw-bold small" style="min-width:30px">{{ p.hhb_score }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="12" class="text-muted text-center py-4">No players found. Check that Spond sync ran on startup.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<p class="text-muted small mt-2">
+    DT = Annual Doubles Tournament seasons &nbsp;|&nbsp; Champ = Annual Championships &nbsp;|&nbsp; League = Annual Doubles League seasons.
+    Tournament matching is by first name — players who used a different name in older scoresheets may show lower counts.
+</p>
+
+{% endblock %}

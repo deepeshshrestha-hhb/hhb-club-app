@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
+    <h1 class="page-title">{{ tournament.title or ('HHB Annual Doubles Classic ' ~ tournament.year) }}</h1>
+    <a href="{{ url_for('tournaments.doubles_index') }}" class="btn btn-sm btn-outline-secondary">&larr; All Years</a>
+</div>
+
+{% if tournament.important_dates %}
+<div class="d-flex flex-wrap gap-2 mb-4">
+    {% for d in tournament.important_dates %}
+    <span class="badge bg-secondary">{{ d.label }}: {{ d.date }}</span>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if tournament.knockouts and tournament.knockouts.winner %}
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="podium-card podium-gold">
+            <div class="small text-muted">WINNER</div>
+            <div class="h5 mb-0">🏆 {{ tournament.knockouts.winner }}</div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="podium-card podium-silver">
+            <div class="small text-muted">RUNNER-UP</div>
+            <div class="h5 mb-0">🥈 {{ tournament.knockouts.runner_up }}</div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="podium-card podium-bronze">
+            <div class="small text-muted">THIRD PLACE</div>
+            <div class="h5 mb-0">🥉 {{ tournament.knockouts.third or 'N/A' }}</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<ul class="nav nav-tabs mb-4" id="tournTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#groups-pane" type="button">Group Stage</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#knockouts-pane" type="button">Knockouts</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#rules-pane" type="button">Rules</button>
+    </li>
+</ul>
+
+<div class="tab-content">
+
+    <!-- Group Stage -->
+    <div class="tab-pane fade show active" id="groups-pane">
+        {% if tournament.groups %}
+        <div class="row">
+            {% for group in tournament.groups %}
+            <div class="col-lg-6 mb-4">
+                <div class="card hhb-card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ group.name }} - Standings</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped align-middle mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>#</th><th>Team</th><th>P</th><th>W</th><th>L</th>
+                                        <th>Pts</th><th>PF</th><th>PA</th><th>NSD</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for t in group.standings %}
+                                    <tr>
+                                        <td>{{ t.rank }}</td>
+                                        <td>{{ t.team }}</td>
+                                        <td>{{ t.played }}</td>
+                                        <td>{{ t.won }}</td>
+                                        <td>{{ t.lost }}</td>
+                                        <td><strong>{{ t.points }}</strong></td>
+                                        <td>{{ t.pf }}</td>
+                                        <td>{{ t.pa }}</td>
+                                        <td>{{ t.nsd }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card hhb-card">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ group.name }} - Matches</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-dark">
+                                    <tr><th>#</th><th>Date</th><th>Team 1</th><th></th><th>Team 2</th><th>Winner</th></tr>
+                                </thead>
+                                <tbody>
+                                    {% for m in group.matches %}
+                                    <tr>
+                                        <td>{{ m.no }}</td>
+                                        <td>{{ m.date }}</td>
+                                        <td class="{{ 'fw-bold' if m.winner == m.team1 }}">{{ m.team1 }} {{ m.score1 }}</td>
+                                        <td class="text-muted">v</td>
+                                        <td class="{{ 'fw-bold' if m.winner == m.team2 }}">{{ m.team2 }} {{ m.score2 }}</td>
+                                        <td><span class="text-muted small">{{ m.winner }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">Group stage data for this year hasn't been parsed yet - the original sheet uses a different layout. Let me know and this can be added.</p>
+        {% endif %}
+    </div>
+
+    <!-- Knockouts -->
+    <div class="tab-pane fade" id="knockouts-pane">
+        {% if tournament.knockouts %}
+        {% set k = tournament.knockouts %}
+
+        {% if not k.winner %}
+        <div class="alert alert-warning">
+            The original spreadsheet for this year doesn't have the Final result recorded
+            (scores were never entered) - showing what data is available below.
+        </div>
+        {% endif %}
+
+        <div class="card hhb-card">
+            <div class="card-body">
+                <div class="bracket">
+
+                    {% if k.quarterfinals %}
+                    <div class="bracket-round">
+                        <div class="bracket-round-title">{{ k['qf_label'] if 'qf_label' in k else 'Quarterfinals' }}</div>
+                        {% for m in k.quarterfinals %}
+                        <div class="bracket-match">
+                            <div class="bracket-team {{ 'winner' if m.winner == m.team1 }}">
+                                <span>{{ m.team1 }}</span>
+                                <span class="bracket-sets">{{ m.team1_sets|join('-') }}</span>
+                            </div>
+                            <div class="bracket-team {{ 'winner' if m.winner == m.team2 }}">
+                                <span>{{ m.team2 }}</span>
+                                <span class="bracket-sets">{{ m.team2_sets|join('-') }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <div class="bracket-round">
+                        <div class="bracket-round-title">Semifinals</div>
+                        {% for m in k.semifinals %}
+                        <div class="bracket-match">
+                            <div class="bracket-team {{ 'winner' if m.winner == m.team1 }}">
+                                <span>{{ m.team1 }}{% if m.note and m.winner == m.team2 %} <em class="small text-muted">(opponent {{ m.note|lower }})</em>{% endif %}</span>
+                                <span class="bracket-sets">{{ m.team1_sets|join('-') }}</span>
+                            </div>
+                            <div class="bracket-team {{ 'winner' if m.winner == m.team2 }}">
+                                <span>{{ m.team2 }}{% if m.note and m.winner == m.team1 %} <em class="small text-muted">(opponent {{ m.note|lower }})</em>{% endif %}</span>
+                                <span class="bracket-sets">{{ m.team2_sets|join('-') }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="bracket-round">
+                        <div class="bracket-round-title">Final</div>
+                        <div class="bracket-match">
+                            <div class="bracket-team {{ 'winner' if k.final.winner == k.final.team1 }}">
+                                <span>{{ k.final.team1 }}</span>
+                                <span class="bracket-sets">{{ k.final.team1_sets|join('-') }}</span>
+                            </div>
+                            <div class="bracket-team {{ 'winner' if k.final.winner == k.final.team2 }}">
+                                <span>{{ k.final.team2 }}</span>
+                                <span class="bracket-sets">{{ k.final.team2_sets|join('-') }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bracket-round">
+                        <div class="bracket-round-title">3rd Place</div>
+                        {% if k.third_place.team1 or k.third_place.team2 %}
+                        <div class="bracket-match">
+                            <div class="bracket-team {{ 'winner' if k.third_place.winner == k.third_place.team1 }}">
+                                <span>{{ k.third_place.team1 }}</span>
+                                <span class="bracket-sets">{{ k.third_place.team1_sets|join('-') }}</span>
+                            </div>
+                            <div class="bracket-team {{ 'winner' if k.third_place.winner == k.third_place.team2 }}">
+                                <span>{{ k.third_place.team2 }}</span>
+                                <span class="bracket-sets">{{ k.third_place.team2_sets|join('-') }}</span>
+                            </div>
+                        </div>
+                        {% if not k.third_place.winner %}
+                        <p class="text-muted small mt-1 mb-0">Match not played - N/A</p>
+                        {% endif %}
+                        {% else %}
+                        <div class="bracket-match">
+                            <div class="bracket-team"><span class="text-muted">N/A</span></div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <p class="text-muted">Knockout data for this year hasn't been parsed yet - the original sheet uses a different layout. Let me know and this can be added.</p>
+        {% endif %}
+    </div>
+
+    <!-- Rules -->
+    <div class="tab-pane fade" id="rules-pane">
+        <div class="card hhb-card">
+            <div class="card-body">
+                <ol class="mb-0">
+                    {% for rule in tournament.rules %}
+                    <li class="mb-2" style="white-space: pre-line;">{{ rule }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

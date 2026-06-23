@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card hhb-card">
+            <div class="card-body">
+                <h1 class="h4 mb-3 text-center">Login</h1>
+                <p class="text-muted text-center mb-4">Authentication can be added later.</p>
+
+                <form method="post">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" placeholder="Deepesh" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" placeholder="Not required yet" disabled>
+                    </div>
+                    <button class="btn btn-hhb-primary w-100" disabled>Login (coming soon)</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

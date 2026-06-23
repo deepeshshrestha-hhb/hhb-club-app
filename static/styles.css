@@ -1,0 +1,226 @@
+/* HHB Theme 1: Blue + Green */
+
+:root {
+    --hhb-primary: #0066cc;
+    --hhb-accent: #00b386;
+    --hhb-danger: #cc0033;
+    --hhb-dark: #1a1a1a;
+    --hhb-light: #f8f9fa;
+}
+
+/* Navbar */
+.hhb-navbar {
+    background: var(--hhb-dark);
+}
+
+/* Links */
+a {
+    color: var(--hhb-primary);
+}
+a:hover {
+    color: var(--hhb-accent);
+}
+
+/* Headings */
+h1, h2, h3 {
+    color: var(--hhb-dark);
+}
+
+/* Cards / panels */
+.hhb-card {
+    border-radius: 0.5rem;
+    border: 1px solid #e0e0e0;
+    background: #ffffff;
+}
+
+/* Buttons */
+.btn-hhb-primary {
+    background-color: var(--hhb-primary);
+    border-color: var(--hhb-primary);
+}
+.btn-hhb-primary:hover {
+    background-color: #0052a3;
+    border-color: #0052a3;
+}
+
+.btn-hhb-accent {
+    background-color: var(--hhb-accent);
+    border-color: var(--hhb-accent);
+}
+.btn-hhb-accent:hover {
+    background-color: #00946e;
+    border-color: #00946e;
+}
+
+/* Tables */
+.table thead.table-dark {
+    background-color: var(--hhb-dark);
+}
+
+/* Utility spacing tweaks */
+.page-title {
+    margin-bottom: 1.5rem;
+}
+
+/* --- Knockout bracket --- */
+.bracket {
+    display: flex;
+    align-items: stretch;
+    overflow-x: auto;
+    padding: 1rem 0;
+    gap: 0;
+}
+
+.bracket-round {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    min-width: 250px;
+    padding: 0 1.5rem;
+    position: relative;
+}
+
+.bracket-round-title {
+    text-align: center;
+    font-weight: 600;
+    color: var(--hhb-dark);
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.bracket-match {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.4rem;
+    margin: 0.6rem 0;
+    position: relative;
+    font-size: 0.85rem;
+}
+
+.bracket-match::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -1.5rem;
+    width: 1.5rem;
+    height: 1px;
+    background: #adb5bd;
+}
+
+.bracket-round:last-child .bracket-match::after {
+    display: none;
+}
+
+.bracket-team {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.35rem 0.6rem;
+    border-bottom: 1px solid #f1f1f1;
+}
+.bracket-team:last-child {
+    border-bottom: none;
+}
+
+.bracket-team span:first-child {
+    overflow-wrap: anywhere;
+    min-width: 0;
+}
+
+.bracket-team.winner {
+    font-weight: 700;
+    color: var(--hhb-accent);
+}
+
+.bracket-sets {
+    color: #6c757d;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+}
+
+.podium-card {
+    border-radius: 0.5rem;
+    border: none;
+    text-align: center;
+    padding: 1rem;
+}
+.podium-gold { background: linear-gradient(135deg, #fff7e0, #ffe9a8); }
+.podium-silver { background: linear-gradient(135deg, #f4f6f7, #e2e6e9); }
+.podium-bronze { background: linear-gradient(135deg, #fbe9dd, #f1c9a8); }
+
+/* Sticky table: frozen header row + frozen first two columns (Date, Day) */
+.sticky-table-wrapper {
+    max-height: 70vh;
+    overflow: auto;
+    position: relative;
+}
+
+.sticky-table-wrapper table {
+    margin-bottom: 0;
+}
+
+/* Frozen header row */
+.sticky-table-wrapper thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: var(--hhb-dark);
+    color: #fff;
+}
+
+/* Frozen first column (Date) */
+.sticky-table-wrapper th:nth-child(1),
+.sticky-table-wrapper td:nth-child(1) {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background-color: #ffffff;
+    min-width: 110px;
+}
+
+/* Frozen second column (Day) */
+.sticky-table-wrapper th:nth-child(2),
+.sticky-table-wrapper td:nth-child(2) {
+    position: sticky;
+    left: 110px;
+    z-index: 1;
+    background-color: #ffffff;
+    min-width: 100px;
+}
+
+/* Top-left frozen header cells need to sit above both header and column layers */
+.sticky-table-wrapper thead th:nth-child(1),
+.sticky-table-wrapper thead th:nth-child(2) {
+    z-index: 3;
+    background-color: var(--hhb-dark);
+}
+
+/* Keep frozen column readable on hover/striped rows */
+.sticky-table-wrapper tbody tr:nth-of-type(odd) td:nth-child(1),
+.sticky-table-wrapper tbody tr:nth-of-type(odd) td:nth-child(2) {
+    background-color: #f8f9fa;
+}
+.sticky-table-wrapper tbody tr:hover td:nth-child(1),
+.sticky-table-wrapper tbody tr:hover td:nth-child(2) {
+    background-color: #eaeaea;
+}
+
+/* Make tables use full available width on small/landscape screens */
+@media (max-width: 991px) {
+    .table-responsive {
+        width: 100%;
+    }
+    .table {
+        width: 100%;
+        font-size: 0.9rem;
+    }
+    .table th, .table td {
+        padding: 0.5rem 0.6rem;
+        white-space: nowrap;
+    }
+}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row">
+    <div class="col-12 mb-3">
+        <h1 class="page-title">Badminton Club Dashboard</h1>
+        <p class="text-muted">Welcome, Deepesh. Quick overview of sessions, tournaments, and players.</p>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card hhb-card">
+            <div class="card-body">
+                <h5 class="card-title">Upcoming Sessions</h5>
+                <p class="card-text">View the club calendar and upcoming play sessions.</p>
+                <a href="/calendar" class="btn btn-hhb-primary btn-sm">View Calendar</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card hhb-card">
+            <div class="card-body">
+                <h5 class="card-title">Annual Tournaments</h5>
+                <p class="card-text">Championships, Doubles Tournament, and Doubles League archives.</p>
+                <a href="/tournaments/annual" class="btn btn-hhb-primary btn-sm">View Annual Tournaments</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card hhb-card">
+            <div class="card-body">
+                <h5 class="card-title">Players</h5>
+                <p class="card-text">View and manage player list and ratings.</p>
+                <a href="/players" class="btn btn-hhb-primary btn-sm">View Players</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card hhb-card">
+            <div class="card-body">
+                <h5 class="card-title">About Us</h5>
+                <p class="card-text">Learn about the Haggis and Haleem Badminton Club — who we are and where we play.</p>
+                <a href="/about" class="btn btn-hhb-primary btn-sm">About the Club</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="page-title">{{ tournament.name }}</h1>
+
+<div class="card hhb-card mb-3">
+    <div class="card-body">
+        <p class="mb-1"><strong>Date:</strong> {{ tournament.date }}</p>
+        <p class="text-muted mb-0">
+            Here you can later add matches, scores, and standings.
+        </p>
+    </div>
+</div>
+
+{% endblock %}
