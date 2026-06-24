@@ -22,3 +22,6 @@ def save_excel(df, filename):
     ensure_data_dir()
     path = DATA_DIR / filename
     df.to_excel(path, index=False)
+    # Push the durable copy back to R2 (no-op when R2 isn't configured).
+    from services import r2_service
+    r2_service.upload_file(path)

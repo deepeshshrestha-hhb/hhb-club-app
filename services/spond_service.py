@@ -148,6 +148,9 @@ def fetch_members_to_csv():
             writer.writeheader()
             writer.writerows(members)
         print(f"Spond: {len(members)} HHB members written to {csv_path}")
+        # Persist the refreshed member list to R2 (no-op when R2 isn't configured).
+        from services import r2_service
+        r2_service.upload_file(csv_path)
     except Exception as exc:
         print(f"Spond member fetch skipped (using cached CSV): {exc}")
 

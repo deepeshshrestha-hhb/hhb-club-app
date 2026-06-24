@@ -22,3 +22,9 @@ class Config:
     # No fallback for the password on purpose - it must come from the environment.
     SPOND_PASSWORD = os.environ.get("SPOND_PASSWORD")
     SPOND_GROUP_ID = os.environ.get("SPOND_GROUP_ID")
+
+    # --- Admin login (single user) ---
+    # Both must be set (as Render secrets in prod / .env locally) for the Admin
+    # area to be reachable. If either is missing, admin login is disabled.
+    ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
+    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")

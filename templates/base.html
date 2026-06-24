@@ -35,6 +35,10 @@
                     <li class="nav-item"><a class="nav-link" href="/tournaments/annual">Annual Tournaments</a></li>
                     <li class="nav-item"><a class="nav-link" href="/players">Players</a></li>
                     <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
+                    {% if session.get('is_admin') %}
+                    <li class="nav-item"><a class="nav-link" href="/admin">Admin</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.logout') }}">Logout</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -42,6 +46,16 @@
 
     <!-- Main content area -->
     <div class="container-fluid mt-4 mb-5">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for m in messages %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {{ m }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
         {% block content %}{% endblock %}
     </div>
 

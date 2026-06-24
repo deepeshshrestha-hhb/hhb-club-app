@@ -2,18 +2,41 @@
 {% block content %}
 
 <h1 class="page-title">Admin</h1>
-<p class="text-muted mb-4">Admin tools for syncing Spond, managing data, etc.</p>
+<p class="text-muted mb-4">Refresh data from Spond and from R2 durable storage.</p>
 
-<div class="card hhb-card">
-    <div class="card-body">
-        <h5 class="card-title">Spond Sync</h5>
-        <p class="card-text">Sync players and sessions from Spond (placeholder for now).</p>
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <div class="card hhb-card h-100">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">Spond Refresh</h5>
+                <p class="card-text text-muted small">
+                    Re-fetch the member list from Spond, update the local CSV, and
+                    save it to R2. Use this when a player joins or leaves.
+                </p>
+                <form action="{{ url_for('admin.sync_spond_route') }}" method="post" class="mt-auto">
+                    <button type="submit" class="btn btn-hhb-accent">
+                        Refresh Members from Spond
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 
-        <form action="{{ url_for('admin.sync_spond_route') }}" method="get">
-            <button type="submit" class="btn btn-hhb-accent">
-                Sync Spond (placeholder)
-            </button>
-        </form>
+    <div class="col-md-6 mb-3">
+        <div class="card hhb-card h-100">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">Refresh Data from R2</h5>
+                <p class="card-text text-muted small">
+                    Re-download all data and tournament files from R2 into the app.
+                    Use this after uploading a new scoresheet directly to the bucket.
+                </p>
+                <form action="{{ url_for('admin.refresh_data_route') }}" method="post" class="mt-auto">
+                    <button type="submit" class="btn btn-hhb-primary text-white">
+                        Refresh Data from R2
+                    </button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 

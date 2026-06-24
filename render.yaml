@@ -1,0 +1,43 @@
+# Render deployment config for the HHB Club Flask app.
+# Free web service: single gunicorn worker (fits free-tier RAM and keeps the
+# in-process stats cache + on-demand /admin/refresh-data coherent).
+#
+# Secrets (sync: false) are intentionally NOT stored here - set their values in
+# the Render dashboard under Environment. Never commit real credentials.
+services:
+  - type: web
+    name: hhb-club
+    runtime: python
+    plan: free
+    region: frankfurt          # pick the region closest to you / your R2 bucket
+    # branch: omitted - Render deploys your repo's default branch (master).
+    # Add `branch: <name>` here if you want to pin a specific one.
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.10"
+      # --- App / Flask ---
+      - key: SECRET_KEY
+        sync: false
+      # --- Spond ---
+      - key: SPOND_USERNAME
+        sync: false
+      - key: SPOND_PASSWORD
+        sync: false
+      - key: SPOND_GROUP_ID
+        sync: false
+      # --- Cloudflare R2 durable storage ---
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_ENDPOINT_URL
+        sync: false
+      # --- Admin login (single user) ---
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false

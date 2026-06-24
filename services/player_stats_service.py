@@ -39,6 +39,13 @@ LG_PTS = {   # Annual Doubles League
 _cache = None
 
 
+def invalidate_cache():
+    """Drop the in-process HHB Score cache so the next request recomputes from
+    freshly downloaded files. Called by the admin refresh actions."""
+    global _cache
+    _cache = None
+
+
 def _n(name):
     return (name or "").strip().lower()
 

@@ -1,0 +1,189 @@
+"""
+Cloudflare R2 (S3-compatible) durable storage for the club's data files.
+
+Render's free filesystem is ephemeral, so on each boot we pull the canonical
+copies of every data file from R2 into the same local paths the services layer
+already reads (``data/`` and ``tournaments/``). Whenever the app writes a data
+file, we push that exact file back to R2 so the durable copy stays current.
+
+The bucket mirrors the local tree under two prefixes:
+
+    data/<filename>            e.g. data/Tournaments.xlsx
+    tournaments/<filename>     e.g. "tournaments/HHB Annual Doubles Classic - 2026.xlsm"
+
+Everything here is gated by the R2_* env vars: when they are absent (e.g. local
+development), the helpers become no-ops and the app just uses whatever is on
+local disk. So importing this module never changes local behavior unless R2 is
+actually configured.
+
+Previous-version safety is handled by enabling **object versioning on the R2
+bucket** (a Cloudflare-side setting), so overwrites retain prior versions
+automatically and the app does not need to manage backups itself.
+
+Required environment variables (set as Render secrets, never committed):
+    R2_ACCESS_KEY_ID       R2 API token access key id
+    R2_SECRET_ACCESS_KEY   R2 API token secret access key
+    R2_BUCKET              bucket name
+    R2_ENDPOINT_URL        https://<accountid>.r2.cloudflarestorage.com
+"""
+import os
+import time
+import logging
+import threading
+from pathlib import Path
+
+from config import Config
+
+logger = logging.getLogger("r2")
+
+# Local roots that mirror the bucket prefixes.
+BASE_DIR = Path(Config.BASE_DIR)
+SYNCED_DIRS = {
+    "data": BASE_DIR / "data",
+    "tournaments": BASE_DIR / "tournaments",
+}
+
+_REQUIRED_VARS = (
+    "R2_ACCESS_KEY_ID",
+    "R2_SECRET_ACCESS_KEY",
+    "R2_BUCKET",
+    "R2_ENDPOINT_URL",
+)
+
+_client = None
+_client_lock = threading.Lock()
+
+
+def _env(name):
+    val = os.environ.get(name)
+    return val.strip() if val and val.strip() else None
+
+
+def is_enabled():
+    """True only when every R2_* variable is present. Otherwise all helpers no-op."""
+    return all(_env(n) for n in _REQUIRED_VARS)
+
+
+def get_client():
+    """Lazily build (and cache) a boto3 S3 client pointed at R2."""
+    global _client
+    if _client is None:
+        with _client_lock:
+            if _client is None:
+                import boto3
+                from botocore.config import Config as BotoConfig
+
+                _client = boto3.client(
+                    "s3",
+                    endpoint_url=_env("R2_ENDPOINT_URL"),
+                    aws_access_key_id=_env("R2_ACCESS_KEY_ID"),
+                    aws_secret_access_key=_env("R2_SECRET_ACCESS_KEY"),
+                    region_name="auto",
+                    config=BotoConfig(
+                        retries={"max_attempts": 3, "mode": "standard"},
+                        s3={"addressing_style": "path"},
+                    ),
+                )
+    return _client
+
+
+def _key_to_local(key):
+    """Map an R2 object key ('tournaments/Foo.xlsm') to its local Path.
+    Returns None for keys outside the two mirrored prefixes."""
+    parts = key.split("/", 1)
+    if len(parts) != 2:
+        return None
+    prefix, rest = parts
+    root = SYNCED_DIRS.get(prefix)
+    if root is None or not rest:
+        return None
+    return root / rest
+
+
+def _local_to_key(local_path):
+    """Map a local Path back to its R2 key ('data/foo.xlsx').
+    Returns None if the path is not under a synced directory."""
+    local_path = Path(local_path).resolve()
+    for prefix, root in SYNCED_DIRS.items():
+        try:
+            rel = local_path.relative_to(root.resolve())
+        except ValueError:
+            continue
+        return f"{prefix}/{rel.as_posix()}"
+    return None
+
+
+def download_all():
+    """Pull every object under the mirrored prefixes from R2 onto local disk.
+
+    Safe to call on startup and on demand. Creates the local dirs even when a
+    prefix is empty in the bucket. No-op (returns skipped=True) when R2 is not
+    configured, so local dev is unaffected.
+    """
+    # Always make sure the local dirs exist, R2 or not.
+    for root in SYNCED_DIRS.values():
+        root.mkdir(parents=True, exist_ok=True)
+
+    if not is_enabled():
+        logger.info("R2 not configured; skipping download (using local files).")
+        return {"downloaded": 0, "skipped": True}
+
+    client = get_client()
+    bucket = _env("R2_BUCKET")
+    downloaded, names = 0, []
+    paginator = client.get_paginator("list_objects_v2")
+    for prefix in SYNCED_DIRS:
+        for page in paginator.paginate(Bucket=bucket, Prefix=f"{prefix}/"):
+            for obj in page.get("Contents", []):
+                key = obj["Key"]
+                if key.endswith("/"):
+                    continue  # skip "folder" placeholder keys
+                local = _key_to_local(key)
+                if local is None:
+                    continue
+                local.parent.mkdir(parents=True, exist_ok=True)
+                client.download_file(bucket, key, str(local))
+                downloaded += 1
+                names.append(key)
+    logger.info("R2 download complete: %d file(s) pulled (%s).", downloaded, ", ".join(names) or "none")
+    return {"downloaded": downloaded, "skipped": False, "files": names}
+
+
+def upload_file(local_path):
+    """Push one local file back to R2 under its mirrored key, with retries.
+
+    On persistent failure it logs an error and leaves the local file in place
+    (the update is not lost locally) rather than raising. Returns True on
+    success, False otherwise. No-op (returns False) when R2 is not configured.
+    """
+    if not is_enabled():
+        return False
+
+    local_path = Path(local_path)
+    key = _local_to_key(local_path)
+    if key is None:
+        logger.warning("R2 upload skipped: %s is not under a synced directory.", local_path)
+        return False
+    if not local_path.exists():
+        logger.warning("R2 upload skipped: %s does not exist.", local_path)
+        return False
+
+    client = get_client()
+    bucket = _env("R2_BUCKET")
+    last_exc = None
+    for attempt in range(1, 4):
+        try:
+            client.upload_file(str(local_path), bucket, key)
+            logger.info("R2 upload ok: %s -> %s (attempt %d).", local_path.name, key, attempt)
+            return True
+        except Exception as exc:  # noqa: BLE001 - we want to retry on anything
+            last_exc = exc
+            logger.warning("R2 upload failed for %s (attempt %d/3): %s", key, attempt, exc)
+            time.sleep(2 ** (attempt - 1))
+
+    logger.error(
+        "R2 upload FAILED after 3 attempts for %s: %s. Local file kept at %s; "
+        "durable copy is now STALE until the next successful upload.",
+        key, last_exc, local_path,
+    )
+    return False
