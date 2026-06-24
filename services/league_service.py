@@ -2,6 +2,7 @@ import openpyxl
 from collections import Counter, defaultdict
 from pathlib import Path
 from config import Config
+from services.excel_service import load_workbook_normalized
 from services.tournament_service import _clean, _fmt_date
 
 TOURNAMENTS_DIR = Path(Config.BASE_DIR) / "tournaments"
@@ -23,7 +24,7 @@ def get_league(year):
     if not path.exists():
         return None
 
-    wb = openpyxl.load_workbook(path, data_only=True)
+    wb = load_workbook_normalized(path, data_only=True)
 
     # Rules
     rules = []

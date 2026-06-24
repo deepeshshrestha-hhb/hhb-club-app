@@ -18,7 +18,7 @@ import openpyxl
 import pandas as pd
 from pathlib import Path
 from config import Config
-from services.excel_service import load_excel, save_excel
+from services.excel_service import load_excel, save_excel, load_workbook_normalized
 
 
 # --- Generic tournament CRUD (Tournaments.xlsx) ---
@@ -545,7 +545,7 @@ def get_doubles_tournament(year):
     if not path.exists():
         return None
 
-    wb = openpyxl.load_workbook(path, data_only=True)
+    wb = load_workbook_normalized(path, data_only=True)
 
     if year == 2018:
         return _parse_doubles_2018(wb)
