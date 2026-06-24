@@ -128,4 +128,18 @@ def debug_files():
             f"{p.name}\n  size={size} sha256={sha} zip={is_zip} "
             f"entries={entries} sharedStrings={has_ss}\n  {load}"
         )
+
+    # Full entry dump for the file that fails first, to expose any
+    # case/encoding difference in the zip member names on this server.
+    target = TOURNAMENTS_DIR / "HHB Annual Doubles Classic - 2026.xlsm"
+    lines.append("\n--- full namelist: Doubles 2026 ---")
+    if target.exists():
+        try:
+            for n in zipfile.ZipFile(target).namelist():
+                lines.append(f"  {n!r}")
+        except Exception as exc:  # noqa: BLE001
+            lines.append(f"  ziperr: {exc}")
+    else:
+        lines.append("  (file missing)")
+
     return Response("\n".join(lines), mimetype="text/plain")
