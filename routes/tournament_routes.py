@@ -42,7 +42,7 @@ def annual_tournaments_hub():
     return render_template("annual_tournaments.html")
 
 
-# --- HHB Annual Doubles Tournament archive ---
+# --- HHB Annual Doubles Classic archive ---
 
 @tournament_bp.route("/tournaments/doubles")
 def doubles_index():

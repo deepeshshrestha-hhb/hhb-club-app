@@ -23,7 +23,7 @@ ALIASES = {
 }
 
 # Points per best achievement in a season/year
-DT_PTS = {   # Annual Doubles Tournament
+DT_PTS = {   # Annual Doubles Classic
     "winner": 100, "runner_up": 75, "third": 55,
     "semi": 35, "knockout": 20, "group": 10,
 }
@@ -84,7 +84,7 @@ def get_all_player_stats():
         if fn not in raw:
             raw[fn] = {"dt": {}, "ch": {}, "lg": {}}
 
-    # ── Annual Doubles Tournament ─────────────────────────────────────────────
+    # ── Annual Doubles Classic ─────────────────────────────────────────────
     for year in list_doubles_tournament_years():
         t = get_doubles_tournament(year)
         if not t:

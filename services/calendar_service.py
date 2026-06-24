@@ -83,7 +83,7 @@ def get_annual_events():
         "Annual Championships",
         "Annual Club Holiday",
         "Annual Summer Picnic",
-        "Annual Doubles Tournament",
+        "Annual Doubles Classic",
     }
 
     events = []

@@ -4,7 +4,7 @@ Two things live in this file:
 1. The original generic tournament CRUD (backed by Tournaments.xlsx) used by
    the "Create Tournament" form on /tournaments.
 
-2. A read-only parser for the HHB Annual Doubles Tournament scoresheets
+2. A read-only parser for the HHB Annual Doubles Classic scoresheets
    (.xlsm files in the 'tournaments' folder), used by the /tournaments/doubles
    archive pages.
 
@@ -65,7 +65,7 @@ def create_tournament(name: str, date: str):
     save_excel(df, "Tournaments.xlsx")
 
 
-# --- HHB Annual Doubles Tournament archive (read-only Excel parser) ---
+# --- HHB Annual Doubles Classic archive (read-only Excel parser) ---
 
 TOURNAMENTS_DIR = Path(Config.BASE_DIR) / "tournaments"
 
