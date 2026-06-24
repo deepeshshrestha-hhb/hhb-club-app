@@ -88,3 +88,44 @@ def refresh_data_route():
     else:
         flash(f"Refreshed {result.get('downloaded', 0)} file(s) from R2.")
     return redirect(url_for("admin.admin_page"))
+
+
+@admin_bp.route("/admin/debug-files")
+@admin_required
+def debug_files():
+    """Temporary diagnostic: report, for each tournament file as it exists on
+    this server, its size/hash/zip-contents and openpyxl load result, plus the
+    interpreter + openpyxl versions. Lets us compare the deployed bytes/lib
+    against local. Remove once the deploy is verified healthy."""
+    import sys
+    import hashlib
+    import zipfile
+    import openpyxl
+    from flask import Response
+    from services.tournament_service import TOURNAMENTS_DIR
+
+    lines = [
+        f"python={sys.version.split()[0]}  openpyxl={openpyxl.__version__}",
+        f"tournaments_dir={TOURNAMENTS_DIR}",
+        "",
+    ]
+    for p in sorted(TOURNAMENTS_DIR.glob("*.xlsm")):
+        size = p.stat().st_size
+        sha = hashlib.sha256(p.read_bytes()).hexdigest()[:16]
+        try:
+            is_zip = zipfile.is_zipfile(p)
+            names = zipfile.ZipFile(p).namelist() if is_zip else []
+            has_ss = "xl/sharedStrings.xml" in names
+            entries = len(names)
+        except Exception as exc:  # noqa: BLE001
+            is_zip, has_ss, entries = False, "?", f"ziperr: {exc}"
+        try:
+            openpyxl.load_workbook(p, data_only=True)
+            load = "LOAD_OK"
+        except Exception as exc:  # noqa: BLE001
+            load = f"LOAD_FAIL {type(exc).__name__}: {exc}"
+        lines.append(
+            f"{p.name}\n  size={size} sha256={sha} zip={is_zip} "
+            f"entries={entries} sharedStrings={has_ss}\n  {load}"
+        )
+    return Response("\n".join(lines), mimetype="text/plain")
