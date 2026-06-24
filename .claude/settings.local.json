@@ -21,7 +21,8 @@
       "Bash(git branch *)",
       "Bash(git commit *)",
       "Bash(git rm *)",
-      "PowerShell(taskkill /F /IM python.exe 2>$null)"
+      "PowerShell(taskkill /F /IM python.exe 2>$null)",
+      "Bash(git mv *)"
     ]
   }
 }
