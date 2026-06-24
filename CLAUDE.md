@@ -75,7 +75,35 @@ tournaments/            # Per-year tournament scoresheets (.xlsm) — source of 
   leaderboard. Player name matching across tournaments uses lowercase first
   names + an `ALIASES` map for nicknames/spellings. Results are cached in-process.
 - Secrets live only in `.env` (gitignored). `.env.example` documents required
-  vars: `SECRET_KEY`, `SPOND_USERNAME`, `SPOND_PASSWORD`, `SPOND_GROUP_ID`.
+  vars: `SECRET_KEY`, `SPOND_USERNAME`, `SPOND_PASSWORD`, `SPOND_GROUP_ID`,
+  `R2_*` (durable storage), `ADMIN_USERNAME`/`ADMIN_PASSWORD` (admin login).
+
+---
+
+## Deployment (Render + Cloudflare R2)
+
+Live at **https://www.hhbclub.co.uk** (apex `hhbclub.co.uk` redirects to www),
+also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
+(`gunicorn app:app --workers 1`, see [render.yaml](render.yaml)). GitHub repo
+`deepeshshrestha-hhb/hhb-club-app` (private); Render auto-deploys on push to
+`master`.
+
+- **Durable storage:** Render's filesystem is ephemeral, so the canonical copies
+  of `data/*` and `tournaments/*` live in a **Cloudflare R2** bucket
+  (`hhb-club-data`). [r2_service.py](services/r2_service.py) downloads them on
+  startup into the same local paths the parsers already use, and re-uploads any
+  file the app writes (backing up the prior version under a `backups/` prefix
+  first). All R2 code is a no-op locally when the `R2_*` env vars are unset.
+- **Seeding / manual updates:** upload new `.xlsm` files to R2 under
+  `tournaments/<exact filename>`, then **Admin → Refresh Data from R2** (or a
+  redeploy) pulls them in. Use [scripts/seed_r2.py](scripts/seed_r2.py) to
+  (re)seed with round-trip verification.
+- **Admin:** single-user session login (`/admin/login`, `ADMIN_USERNAME` /
+  `ADMIN_PASSWORD`). Buttons: **Spond Refresh** (members → CSV → R2) and
+  **Refresh Data from R2**. Members are no longer fetched on every startup.
+- **Cloudflare** now only provides DNS for the domain (A `@`→`216.24.57.1`,
+  CNAME `www`→`hhb-club.onrender.com`, both DNS-only/grey-cloud). The old
+  `cloudflared` tunnel has been deleted.
 
 ---
 
@@ -90,8 +118,6 @@ tournaments/            # Per-year tournament scoresheets (.xlsm) — source of 
 - Championships and League parsers + HHB Score leaderboard.
 
 **In progress / partial:**
-- `/admin/sync_spond` is a **placeholder** (live-fetch mode means there's
-  nothing to pre-sync). Returns a placeholder string.
 - `/api/calendar` still serves `ClubCalendar.xlsx` data, not live Spond — noted
   inline as a possible future switch to `get_weekly_sessions()`.
 - `models/` classes are minimal and largely unused; logic lives in services.
@@ -103,6 +129,20 @@ tournaments/            # Per-year tournament scoresheets (.xlsm) — source of 
   must be extended manually as more years are confirmed to fit a parser.
 - `get_doubles_tournament` has a duplicated unreachable `return` block at the end
   (harmless dead code).
+- **Backslash-separator `.xlsm` files:** some scoresheets were saved with `\`
+  ZIP path separators (e.g. `xl\sharedStrings.xml`). Windows' `zipfile` hides
+  this (maps `\`→`/`) so they load fine locally, but on **Linux/Render** openpyxl
+  raises `KeyError: 'xl/sharedStrings.xml'`. Handled by
+  `load_workbook_normalized()` in [excel_service.py](services/excel_service.py),
+  which rebuilds the package with forward slashes on failure. New scoresheets
+  with this quirk are auto-handled — no manual fix needed.
+- **R2 seeding & OneDrive:** the repo lives under OneDrive. Uploading files while
+  they are un-hydrated "Files On-Demand" placeholders produced size-correct but
+  byte-corrupt R2 objects. [scripts/seed_r2.py](scripts/seed_r2.py) reads each
+  file (forcing hydration) and verifies the round trip; always seed via it.
+- **Free-tier cold start:** the Render free instance spins down after ~15 min
+  idle; the next request takes ~50s to wake (re-runs the R2 pull + first HHB
+  Score computation, then caches). Expected, not a bug.
 
 ---
 
@@ -133,19 +173,34 @@ tournaments/            # Per-year tournament scoresheets (.xlsm) — source of 
   source data; documented nicknames are the only edge cases.
 - **Secrets in `.env`, never committed** — `.gitignore` excludes `.env*`
   (except `.env.example`).
+- **2026-06-24/25 — Deployed to Render free tier with Cloudflare R2 durable
+  storage.** *Why:* stop depending on a local PC + `cloudflared` tunnel. Added
+  R2 download-on-startup / upload-on-write, a single-user admin login, gunicorn,
+  `render.yaml`, and production-safe app entry (`app = create_app()`, no
+  `debug`). Members fetched on demand (Admin → Spond Refresh) instead of every
+  startup. See the Deployment section.
+- **2026-06-25 — App-side backups instead of R2 bucket versioning.** *Why:* R2
+  exposes no S3-style versioning toggle, so `upload_file` copies the prior object
+  to `backups/<key>.<timestamp>` before overwriting.
+- **2026-06-25 — Tolerant workbook loader for backslash-`.xlsm` files.** *Why:*
+  the Linux-only `sharedStrings` `KeyError`; see Known issues / gotchas.
 
 ---
 
 ## Next Steps / TODO
 
 - [x] **Initialize git** — done 2026-06-23; first commit captures the current state.
+- [x] **Replace the placeholder `/admin/sync_spond`** — now a real Spond Refresh
+  (fetch members → CSV → R2), behind admin login. Done 2026-06-25.
+- [x] **Deploy off the local PC** — live on Render + R2; tunnel removed. Done 2026-06-25.
 - [ ] Decide whether `/api/calendar` should switch to live Spond data
   (currently Excel-backed).
-- [ ] Replace or remove the placeholder `/admin/sync_spond` behavior.
 - [ ] Remove the duplicated dead `return` block at the end of
   `get_doubles_tournament` in [tournament_service.py](services/tournament_service.py).
 - [ ] Confirm/extend `SUPPORTED_DOUBLES_YEARS` as remaining years are validated.
 - [ ] Keep `COMPLETED_2026_EVENTS` current as the season progresses.
+- [ ] Optional: re-enable Cloudflare proxy (orange cloud) with SSL/TLS mode
+  **Full (strict)** if you want CDN/WAF in front of Render.
 
 ---
 
