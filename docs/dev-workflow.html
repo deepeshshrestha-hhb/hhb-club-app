@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: 1080px 1640px; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #ffffff; }
+  svg { display: block; }
+</style>
+</head>
+<body>
+<svg width="1080" height="1640" viewBox="0 0 1080 1640" xmlns="http://www.w3.org/2000/svg"
+     font-family="'Segoe UI', system-ui, sans-serif">
+  <defs>
+    <linearGradient id="hdr" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b3d2e"/>
+      <stop offset="1" stop-color="#15654a"/>
+    </linearGradient>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0b3d2e" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+  <rect width="1080" height="1640" fill="#f3f7f5"/>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="1080" height="150" fill="url(#hdr)"/>
+  <text x="50" y="62" font-size="34">🏸</text>
+  <text x="98" y="66" font-size="33" font-weight="700" fill="#ffffff">HHB Club App — Dev Workflow</text>
+  <text x="98" y="104" font-size="17" fill="#cfe9df">Make a change → validate locally → ship to Render</text>
+  <text x="50" y="135" font-size="14" fill="#9fd9c3" font-family="Consolas, monospace">live: www.hhbclub.co.uk   ·   auto-deploys on merge to master</text>
+
+  <!-- ===== Step pipeline ===== -->
+  <text x="50" y="196" font-size="15" font-weight="700" fill="#64748b" letter-spacing="2">STEP BY STEP</text>
+  <!-- vertical timeline -->
+  <line x1="78" y1="220" x2="78" y2="760" stroke="#cbd5e1" stroke-width="3"/>
+
+  <!-- step template: circle + card -->
+  <!-- 1 -->
+  <circle cx="78" cy="244" r="20" fill="#15803d"/><text x="78" y="251" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">1</text>
+  <g filter="url(#sh)"><rect x="116" y="216" width="924" height="78" rx="12" fill="#ffffff" stroke="#e2e8f0"/></g>
+  <text x="140" y="248" font-size="19" font-weight="700" fill="#1f2a37">Branch from master</text>
+  <text x="140" y="276" font-size="15" fill="#475569" font-family="Consolas, monospace">git checkout master &amp;&amp; git pull   ·   git checkout -b my-change</text>
+
+  <!-- 2 -->
+  <circle cx="78" cy="338" r="20" fill="#15803d"/><text x="78" y="345" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">2</text>
+  <g filter="url(#sh)"><rect x="116" y="310" width="924" height="78" rx="12" fill="#ffffff" stroke="#e2e8f0"/></g>
+  <text x="140" y="342" font-size="19" font-weight="700" fill="#1f2a37">Run locally &amp; validate</text>
+  <text x="140" y="370" font-size="15" fill="#475569" font-family="Consolas, monospace">python app.py  →  http://localhost:5000   (R2 off → uses local files)</text>
+
+  <!-- 3 -->
+  <circle cx="78" cy="432" r="20" fill="#15803d"/><text x="78" y="439" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">3</text>
+  <g filter="url(#sh)"><rect x="116" y="404" width="924" height="78" rx="12" fill="#ffffff" stroke="#e2e8f0"/></g>
+  <text x="140" y="436" font-size="19" font-weight="700" fill="#1f2a37">Commit on the branch</text>
+  <text x="140" y="464" font-size="15" fill="#475569" font-family="Consolas, monospace">git add -p   ·   git commit -m "Short, imperative summary"</text>
+
+  <!-- 4 -->
+  <circle cx="78" cy="526" r="20" fill="#15803d"/><text x="78" y="533" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">4</text>
+  <g filter="url(#sh)"><rect x="116" y="498" width="924" height="78" rx="12" fill="#ffffff" stroke="#e2e8f0"/></g>
+  <text x="140" y="530" font-size="19" font-weight="700" fill="#1f2a37">Push &amp; open a PR</text>
+  <text x="140" y="558" font-size="15" fill="#475569" font-family="Consolas, monospace">git push -u origin my-change   ·   open PR on GitHub</text>
+
+  <!-- 5 -->
+  <circle cx="78" cy="620" r="20" fill="#d97706"/><text x="78" y="627" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">5</text>
+  <g filter="url(#sh)"><rect x="116" y="592" width="924" height="78" rx="12" fill="#fffaf0" stroke="#f3e2c2"/></g>
+  <text x="140" y="624" font-size="19" font-weight="700" fill="#1f2a37">Merge to master  ⚡  Render auto-deploys</text>
+  <text x="140" y="652" font-size="15" fill="#9a3412">Deploy fires on the merge — not on the branch push.</text>
+
+  <!-- 6 -->
+  <circle cx="78" cy="714" r="20" fill="#2563eb"/><text x="78" y="721" text-anchor="middle" font-size="18" font-weight="700" fill="#fff">6</text>
+  <g filter="url(#sh)"><rect x="116" y="686" width="924" height="78" rx="12" fill="#eff6ff" stroke="#cfe0fb"/></g>
+  <text x="140" y="718" font-size="19" font-weight="700" fill="#1f2a37">Verify on Render</text>
+  <text x="140" y="746" font-size="15" fill="#1d4ed8">Logs show “R2 download complete: N files”.  First hit ≈ 50s (cold start).</text>
+
+  <!-- ===== Code vs Data ===== -->
+  <text x="50" y="824" font-size="15" font-weight="700" fill="#64748b" letter-spacing="2">CODE vs DATA — TWO PATHS</text>
+
+  <g filter="url(#sh)"><rect x="50" y="844" width="490" height="232" rx="14" fill="#ffffff" stroke="#cde6d8"/></g>
+  <rect x="50" y="844" width="490" height="8" rx="4" fill="#15803d"/>
+  <text x="76" y="892" font-size="20" font-weight="700" fill="#166534">💻  Code → deploy</text>
+  <text x="76" y="928" font-size="15.5" fill="#334155">.py · .html · CSS changes</text>
+  <text x="76" y="958" font-size="15.5" fill="#334155">→ git → PR → merge to master</text>
+  <text x="76" y="988" font-size="15.5" fill="#334155">→ Render builds &amp; redeploys</text>
+  <rect x="76" y="1010" width="438" height="44" rx="8" fill="#f0fbf4"/>
+  <text x="96" y="1038" font-size="14.5" fill="#15803d">New Doubles year? also add to SUPPORTED_DOUBLES_YEARS</text>
+
+  <g filter="url(#sh)"><rect x="560" y="844" width="470" height="232" rx="14" fill="#ffffff" stroke="#f0dcb8"/></g>
+  <rect x="560" y="844" width="470" height="8" rx="4" fill="#d97706"/>
+  <text x="586" y="892" font-size="20" font-weight="700" fill="#b45309">🗄️  Data → no deploy</text>
+  <text x="586" y="928" font-size="15.5" fill="#334155">New / updated .xlsm:</text>
+  <text x="586" y="958" font-size="15.5" fill="#334155">→ upload to R2 tournaments/</text>
+  <text x="586" y="988" font-size="15.5" fill="#334155">→ Admin ▸ Refresh Data from R2</text>
+  <rect x="586" y="1010" width="420" height="44" rx="8" fill="#fffaf0"/>
+  <text x="606" y="1038" font-size="14.5" fill="#9a3412">Members → Admin ▸ Spond Refresh   ·   bulk: seed_r2.py</text>
+
+  <!-- ===== Remember ===== -->
+  <rect x="50" y="1104" width="980" height="460" rx="16" fill="#0b3d2e"/>
+  <text x="78" y="1148" font-size="16" font-weight="700" fill="#bff0db" letter-spacing="2">REMEMBER</text>
+
+  <rect x="78" y="1170" width="924" height="86" rx="10" fill="#0f4a38"/>
+  <text x="100" y="1212" font-size="26">🧪</text>
+  <text x="146" y="1206" font-size="18" font-weight="700" fill="#ffffff">Local (Windows) ≠ Linux for some .xlsm quirks</text>
+  <text x="146" y="1234" font-size="14.5" fill="#cfe9df">The loader auto-fixes them, but confirm data changes by loading the page on Render.</text>
+
+  <rect x="78" y="1268" width="924" height="86" rx="10" fill="#0f4a38"/>
+  <text x="100" y="1310" font-size="26">↩️</text>
+  <text x="146" y="1304" font-size="18" font-weight="700" fill="#ffffff">Rollback is instant</text>
+  <text x="146" y="1332" font-size="14.5" fill="#cfe9df">Render ▸ Manual Deploy ▸ Roll back to a previous deploy   ·   or git revert &lt;sha&gt; + push.</text>
+
+  <rect x="78" y="1366" width="924" height="86" rx="10" fill="#0f4a38"/>
+  <text x="100" y="1408" font-size="26">🔑</text>
+  <text x="146" y="1402" font-size="18" font-weight="700" fill="#ffffff">Secrets stay out of git</text>
+  <text x="146" y="1430" font-size="14.5" fill="#cfe9df">Production secrets live in Render ▸ Environment.  Local ones in .env (gitignored).</text>
+
+  <rect x="78" y="1464" width="924" height="86" rx="10" fill="#0f4a38"/>
+  <text x="100" y="1506" font-size="26">❄️</text>
+  <text x="146" y="1500" font-size="18" font-weight="700" fill="#ffffff">Free-tier cold start</text>
+  <text x="146" y="1528" font-size="14.5" fill="#cfe9df">Sleeps after ~15 min idle; first request ~50s, then fast. Not a bug.</text>
+
+  <text x="1030" y="1604" text-anchor="end" font-size="11" fill="#94a3b8" font-family="Consolas, monospace">hhb-club-app · docs/DEVELOPMENT.md · 2026-06-25</text>
+</svg>
+</body>
+</html>

@@ -104,6 +104,9 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
 - **Cloudflare** now only provides DNS for the domain (A `@`→`216.24.57.1`,
   CNAME `www`→`hhb-club.onrender.com`, both DNS-only/grey-cloud). The old
   `cloudflared` tunnel has been deleted.
+- **Day-to-day change → deploy workflow:** see
+  [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (and the phone cheat-sheet
+  `docs/dev-workflow.png`). System diagram: `docs/architecture.png`.
 
 ---
 
