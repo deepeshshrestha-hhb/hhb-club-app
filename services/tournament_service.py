@@ -14,7 +14,6 @@ Quarters -> Semis -> Final/3rd place). Older formats (e.g. 2018/2019 single
 round-robin league, or 2022's 3-group "Super 6/Super 3" stage) use a different
 layout and are not yet supported - they'll need their own handling later.
 """
-import openpyxl
 import pandas as pd
 from pathlib import Path
 from config import Config

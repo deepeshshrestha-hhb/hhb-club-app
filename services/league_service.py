@@ -1,4 +1,3 @@
-import openpyxl
 from collections import Counter, defaultdict
 from pathlib import Path
 from config import Config

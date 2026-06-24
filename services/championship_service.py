@@ -1,4 +1,3 @@
-import openpyxl
 from pathlib import Path
 from config import Config
 from services.excel_service import load_workbook_normalized
