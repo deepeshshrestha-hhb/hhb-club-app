@@ -16,9 +16,12 @@ development), the helpers become no-ops and the app just uses whatever is on
 local disk. So importing this module never changes local behavior unless R2 is
 actually configured.
 
-Previous-version safety is handled by enabling **object versioning on the R2
-bucket** (a Cloudflare-side setting), so overwrites retain prior versions
-automatically and the app does not need to manage backups itself.
+Previous-version safety: R2 does not expose S3-style bucket versioning, so
+before overwriting an object the app server-side-copies the current version to
+a timestamped ``backups/<key>.<UTC timestamp>`` key. Those backup objects live
+outside the mirrored prefixes, so they are never pulled back to local disk. Add
+an R2 Object Lifecycle Rule on the ``backups/`` prefix if you want them expired
+automatically.
 
 Required environment variables (set as Render secrets, never committed):
     R2_ACCESS_KEY_ID       R2 API token access key id
@@ -30,6 +33,7 @@ import os
 import time
 import logging
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 
 from config import Config
@@ -149,12 +153,35 @@ def download_all():
     return {"downloaded": downloaded, "skipped": False, "files": names}
 
 
+def _backup_existing(client, bucket, key):
+    """Server-side copy the current object (if any) to a timestamped backups/
+    key, so the prior version is recoverable before we overwrite it. Best-effort:
+    a backup failure is logged but does not block the upload."""
+    try:
+        client.head_object(Bucket=bucket, Key=key)
+    except Exception:
+        return  # nothing there yet (first upload) - nothing to back up
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    backup_key = f"backups/{key}.{ts}"
+    try:
+        client.copy_object(
+            Bucket=bucket,
+            Key=backup_key,
+            CopySource={"Bucket": bucket, "Key": key},
+        )
+        logger.info("R2 backup: %s -> %s", key, backup_key)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("R2 backup of %s failed (continuing with upload): %s", key, exc)
+
+
 def upload_file(local_path):
     """Push one local file back to R2 under its mirrored key, with retries.
 
-    On persistent failure it logs an error and leaves the local file in place
-    (the update is not lost locally) rather than raising. Returns True on
-    success, False otherwise. No-op (returns False) when R2 is not configured.
+    Before overwriting, the current object is backed up to a timestamped
+    backups/ key. On persistent upload failure it logs an error and leaves the
+    local file in place (the update is not lost locally) rather than raising.
+    Returns True on success, False otherwise. No-op (returns False) when R2 is
+    not configured.
     """
     if not is_enabled():
         return False
@@ -170,6 +197,7 @@ def upload_file(local_path):
 
     client = get_client()
     bucket = _env("R2_BUCKET")
+    _backup_existing(client, bucket, key)
     last_exc = None
     for attempt in range(1, 4):
         try:
