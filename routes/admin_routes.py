@@ -129,17 +129,31 @@ def debug_files():
             f"entries={entries} sharedStrings={has_ss}\n  {load}"
         )
 
-    # Full entry dump for the file that fails first, to expose any
-    # case/encoding difference in the zip member names on this server.
+    # Deep probe of the file that fails first, to expose any case/encoding
+    # difference in the zip member names or a central-directory parsing issue.
     target = TOURNAMENTS_DIR / "HHB Annual Doubles Classic - 2026.xlsm"
-    lines.append("\n--- full namelist: Doubles 2026 ---")
-    if target.exists():
-        try:
-            for n in zipfile.ZipFile(target).namelist():
-                lines.append(f"  {n!r}")
-        except Exception as exc:  # noqa: BLE001
-            lines.append(f"  ziperr: {exc}")
-    else:
+    lines.append("\n--- deep probe: Doubles 2026 ---")
+    if not target.exists():
         lines.append("  (file missing)")
+        return Response("\n".join(lines), mimetype="text/plain")
+    try:
+        raw = target.read_bytes()
+        lines.append(f"  full_sha256={hashlib.sha256(raw).hexdigest()}")
+        lines.append(f"  len={len(raw)}  head={raw[:4]!r}  tail4={raw[-4:]!r}")
+        # The member name is stored in raw bytes (local header + central dir),
+        # so it should appear ~2x even if zipfile can't resolve it.
+        lines.append(f"  raw count b'sharedStrings.xml' = {raw.count(b'sharedStrings.xml')}")
+        lines.append(f"  raw count b'SharedStrings.xml' = {raw.count(b'SharedStrings.xml')}")
+        zf = zipfile.ZipFile(target)
+        lines.append("  namelist:")
+        for n in zf.namelist():
+            lines.append(f"    {n!r}")
+        try:
+            zf.getinfo("xl/sharedStrings.xml")
+            lines.append("  getinfo('xl/sharedStrings.xml') -> OK")
+        except KeyError as exc:
+            lines.append(f"  getinfo('xl/sharedStrings.xml') -> KeyError {exc}")
+    except Exception as exc:  # noqa: BLE001
+        lines.append(f"  probe error: {type(exc).__name__}: {exc}")
 
     return Response("\n".join(lines), mimetype="text/plain")
