@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: 1123px 794px; margin: 0; }
+  html, body { margin: 0; padding: 0; background: #ffffff; }
+  svg { display: block; }
+  .t  { font-family: 'Segoe UI', system-ui, sans-serif; }
+  .mono { font-family: 'Consolas', 'Courier New', monospace; }
+</style>
+</head>
+<body>
+<svg width="1123" height="794" viewBox="0 0 1123 794" xmlns="http://www.w3.org/2000/svg" class="t">
+  <defs>
+    <linearGradient id="hdr" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0b3d2e"/>
+      <stop offset="1" stop-color="#15654a"/>
+    </linearGradient>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f3f7f5"/>
+    </linearGradient>
+    <marker id="arr" markerWidth="11" markerHeight="11" refX="8" refY="3.2" orient="auto">
+      <path d="M0,0 L9,3.2 L0,6.4 Z" fill="#475569"/>
+    </marker>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0b3d2e" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <rect width="1123" height="794" fill="url(#bg)"/>
+
+  <!-- ===== Header ===== -->
+  <rect x="0" y="0" width="1123" height="86" fill="url(#hdr)"/>
+  <circle cx="44" cy="43" r="20" fill="#ffffff" opacity="0.12"/>
+  <text x="44" y="51" text-anchor="middle" font-size="22">🏸</text>
+  <text x="78" y="38" font-size="25" font-weight="700" fill="#ffffff">HHB Club App — Production Architecture</text>
+  <text x="78" y="63" font-size="13.5" fill="#cfe9df">Flask web app · deployed on Render free tier · durable data in Cloudflare R2</text>
+  <text x="1099" y="33" text-anchor="end" font-size="13.5" fill="#ffffff" font-weight="600">LIVE</text>
+  <text x="1099" y="55" text-anchor="end" font-size="14" fill="#bff0db" class="mono">https://www.hhbclub.co.uk</text>
+  <text x="1099" y="73" text-anchor="end" font-size="10.5" fill="#9fd9c3" class="mono">apex hhbclub.co.uk → redirects to www</text>
+
+  <!-- ===== Column labels ===== -->
+  <text x="168" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#64748b" letter-spacing="1.5">CLIENT &amp; DNS</text>
+  <text x="528" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#64748b" letter-spacing="1.5">HOSTING (RENDER)</text>
+  <text x="921" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#64748b" letter-spacing="1.5">DATA &amp; INTEGRATIONS</text>
+
+  <!-- ===== Browser card ===== -->
+  <g filter="url(#sh)">
+    <rect x="36" y="124" width="264" height="104" rx="12" fill="#ffffff" stroke="#dbe3ee"/>
+  </g>
+  <rect x="36" y="124" width="264" height="6" rx="3" fill="#2563eb"/>
+  <text x="56" y="158" font-size="24">🌐</text>
+  <text x="90" y="153" font-size="16" font-weight="700" fill="#1f2a37">Club members</text>
+  <text x="90" y="172" font-size="12" fill="#5b6675">Any browser / phone</text>
+  <rect x="56" y="186" width="224" height="28" rx="6" fill="#eef4ff"/>
+  <text x="68" y="204" font-size="12.5" class="mono" fill="#1d4ed8">www.hhbclub.co.uk</text>
+
+  <!-- ===== Cloudflare DNS card ===== -->
+  <g filter="url(#sh)">
+    <rect x="36" y="360" width="264" height="158" rx="12" fill="#ffffff" stroke="#dbe3ee"/>
+  </g>
+  <rect x="36" y="360" width="264" height="6" rx="3" fill="#f6821f"/>
+  <text x="56" y="396" font-size="22">☁️</text>
+  <text x="88" y="390" font-size="16" font-weight="700" fill="#1f2a37">Cloudflare</text>
+  <text x="88" y="408" font-size="12" fill="#5b6675">DNS only (grey-cloud)</text>
+  <rect x="56" y="420" width="224" height="34" rx="6" fill="#fff5ea"/>
+  <text x="68" y="441" font-size="11.5" class="mono" fill="#9a3412">A  @  → 216.24.57.1</text>
+  <rect x="56" y="460" width="224" height="46" rx="6" fill="#fff5ea"/>
+  <text x="68" y="478" font-size="11.5" class="mono" fill="#9a3412">CNAME www →</text>
+  <text x="68" y="494" font-size="11.5" class="mono" fill="#9a3412">hhb-club.onrender.com</text>
+
+  <!-- ===== Render big card ===== -->
+  <g filter="url(#sh)">
+    <rect x="350" y="124" width="356" height="468" rx="14" fill="#ffffff" stroke="#cde6d8"/>
+  </g>
+  <rect x="350" y="124" width="356" height="46" rx="14" fill="#15803d"/>
+  <rect x="350" y="150" width="356" height="20" fill="#15803d"/>
+  <text x="372" y="146" font-size="17" font-weight="700" fill="#ffffff">⚙️  Render — free web service</text>
+  <text x="372" y="164" font-size="11.5" class="mono" fill="#d7f3e1">gunicorn app:app --workers 1  ·  Python 3.12</text>
+
+  <!-- Flask app inner -->
+  <rect x="370" y="186" width="316" height="104" rx="10" fill="#f0fbf4" stroke="#bfe6cd"/>
+  <text x="386" y="208" font-size="13.5" font-weight="700" fill="#166534">Flask app  ·  app.py → create_app()</text>
+  <text x="386" y="228" font-size="11" fill="#3f6b50">Blueprints (routes):</text>
+  <rect x="386" y="234" width="62" height="22" rx="5" fill="#dcfce7"/><text x="417" y="249" text-anchor="middle" font-size="10.5" fill="#15803d">Calendar</text>
+  <rect x="454" y="234" width="84" height="22" rx="5" fill="#dcfce7"/><text x="496" y="249" text-anchor="middle" font-size="10.5" fill="#15803d">Tournaments</text>
+  <rect x="544" y="234" width="56" height="22" rx="5" fill="#dcfce7"/><text x="572" y="249" text-anchor="middle" font-size="10.5" fill="#15803d">Players</text>
+  <rect x="606" y="234" width="56" height="22" rx="5" fill="#dcfce7"/><text x="634" y="249" text-anchor="middle" font-size="10.5" fill="#15803d">Admin</text>
+  <text x="386" y="276" font-size="11" fill="#3f6b50">Services: r2_service · spond_service · parsers · player_stats (cache)</text>
+
+  <!-- Local disk -->
+  <rect x="370" y="300" width="316" height="58" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="386" y="322" font-size="13" font-weight="700" fill="#334155">💽  Local disk — rebuildable cache</text>
+  <text x="386" y="343" font-size="11" class="mono" fill="#64748b">/data (*.xlsx, members.csv)   /tournaments (*.xlsm)</text>
+  <text x="676" y="343" text-anchor="end" font-size="9.5" fill="#94a3b8">ephemeral</text>
+
+  <!-- Startup -->
+  <rect x="370" y="368" width="316" height="46" rx="10" fill="#eff6ff" stroke="#cfe0fb"/>
+  <text x="386" y="389" font-size="12.5" font-weight="700" fill="#1d4ed8">① On boot</text>
+  <text x="386" y="406" font-size="11" class="mono" fill="#2563eb">r2_service.download_all() — pull canonical files</text>
+
+  <!-- Admin -->
+  <rect x="370" y="424" width="316" height="68" rx="10" fill="#fef6ff" stroke="#f0d6f5"/>
+  <text x="386" y="445" font-size="12.5" font-weight="700" fill="#9333ea">🔐  Admin  ·  /admin/login (session)</text>
+  <text x="386" y="464" font-size="11" fill="#7e22ce">Spond Refresh → members CSV → R2</text>
+  <text x="386" y="481" font-size="11" fill="#7e22ce">Refresh Data from R2 → re-pull on demand</text>
+
+  <!-- Deploy note -->
+  <rect x="370" y="502" width="316" height="74" rx="10" fill="#f1f5f9" stroke="#e2e8f0"/>
+  <text x="386" y="524" font-size="12.5" font-weight="700" fill="#334155">🐙  GitHub → auto-deploy</text>
+  <text x="386" y="543" font-size="11" class="mono" fill="#475569">deepeshshrestha-hhb / hhb-club-app</text>
+  <text x="386" y="562" font-size="11" fill="#475569">git push master  →  Render builds &amp; redeploys</text>
+
+  <!-- ===== R2 card ===== -->
+  <g filter="url(#sh)">
+    <rect x="756" y="124" width="330" height="214" rx="12" fill="#ffffff" stroke="#f0dcb8"/>
+  </g>
+  <rect x="756" y="124" width="330" height="6" rx="3" fill="#d97706"/>
+  <text x="776" y="160" font-size="22">🗄️</text>
+  <text x="808" y="153" font-size="16" font-weight="700" fill="#1f2a37">Cloudflare R2</text>
+  <text x="808" y="171" font-size="11.5" fill="#5b6675">S3-compatible object storage</text>
+  <rect x="936" y="138" width="134" height="24" rx="12" fill="#fef3c7"/>
+  <text x="1003" y="154" text-anchor="middle" font-size="10.5" font-weight="700" fill="#b45309">SOURCE OF TRUTH</text>
+  <text x="776" y="196" font-size="11.5" class="mono" fill="#92400e">bucket: hhb-club-data</text>
+  <rect x="776" y="206" width="294" height="34" rx="7" fill="#fffaf0" stroke="#f3e2c2"/>
+  <text x="790" y="227" font-size="11.5" class="mono" fill="#9a3412">data/         *.xlsx · members.csv</text>
+  <rect x="776" y="246" width="294" height="34" rx="7" fill="#fffaf0" stroke="#f3e2c2"/>
+  <text x="790" y="267" font-size="11.5" class="mono" fill="#9a3412">tournaments/  *.xlsm scoresheets</text>
+  <rect x="776" y="286" width="294" height="34" rx="7" fill="#fffaf0" stroke="#f3e2c2"/>
+  <text x="790" y="307" font-size="11.5" class="mono" fill="#9a3412">backups/      prior versions (on write)</text>
+
+  <!-- ===== Spond card ===== -->
+  <g filter="url(#sh)">
+    <rect x="756" y="368" width="330" height="120" rx="12" fill="#ffffff" stroke="#ded6f5"/>
+  </g>
+  <rect x="756" y="368" width="330" height="6" rx="3" fill="#7c3aed"/>
+  <text x="776" y="406" font-size="22">📅</text>
+  <text x="808" y="399" font-size="16" font-weight="700" fill="#1f2a37">Spond API</text>
+  <text x="808" y="417" font-size="11.5" fill="#5b6675">club's live group data</text>
+  <rect x="776" y="430" width="294" height="44" rx="7" fill="#f6f2ff"/>
+  <text x="790" y="449" font-size="11.5" fill="#6d28d9">Members (Admin refresh) + weekly</text>
+  <text x="790" y="466" font-size="11.5" fill="#6d28d9">sessions (live per calendar load)</text>
+
+  <!-- ===== Flow arrows ===== -->
+  <!-- Browser -> DNS -->
+  <line x1="168" y1="228" x2="168" y2="356" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <rect x="118" y="278" width="100" height="20" rx="10" fill="#eef2f7"/>
+  <text x="168" y="292" text-anchor="middle" font-size="10" fill="#475569">① resolve domain</text>
+
+  <!-- DNS -> Render -->
+  <path d="M300,420 C330,420 330,330 346,318" fill="none" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <rect x="262" y="350" width="92" height="20" rx="10" fill="#eef2f7"/>
+  <text x="308" y="364" text-anchor="middle" font-size="10" fill="#475569">② HTTPS request</text>
+
+  <!-- Render <-> R2 : download (R2 -> Render) -->
+  <line x1="754" y1="206" x2="710" y2="206" stroke="#2563eb" stroke-width="1.8" marker-end="url(#arr)"/>
+  <rect x="712" y="184" width="160" height="18" rx="9" fill="#eaf1ff"/>
+  <text x="792" y="197" text-anchor="middle" font-size="10" fill="#1d4ed8">download_all() on boot</text>
+
+  <!-- Render -> R2 : upload -->
+  <line x1="710" y1="246" x2="754" y2="246" stroke="#d97706" stroke-width="1.8" marker-end="url(#arr)"/>
+  <rect x="712" y="252" width="168" height="18" rx="9" fill="#fdf0db"/>
+  <text x="796" y="265" text-anchor="middle" font-size="10" fill="#b45309">upload_file() on write (+backup)</text>
+
+  <!-- Render <-> Spond -->
+  <line x1="710" y1="428" x2="754" y2="428" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#arr)"/>
+  <line x1="754" y1="452" x2="710" y2="452" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+  <rect x="600" y="410" width="150" height="18" rx="9" fill="#f3eeff"/>
+  <text x="675" y="423" text-anchor="middle" font-size="10" fill="#6d28d9">live fetch (on demand)</text>
+
+  <!-- GitHub -> Render (deploy comes from repo; arrow into render card top-right) -->
+  <text x="528" y="582" text-anchor="middle" font-size="9.5" fill="#94a3b8">CI/CD: GitHub push triggers a new Render deploy (build → startup R2 pull → live)</text>
+
+  <!-- ===== Footer key facts ===== -->
+  <rect x="36" y="612" width="1050" height="150" rx="12" fill="#0b3d2e"/>
+  <text x="56" y="640" font-size="13" font-weight="700" fill="#bff0db" letter-spacing="1">OPERATING NOTES</text>
+
+  <g class="t">
+    <rect x="56" y="654" width="248" height="92" rx="9" fill="#0f4a38"/>
+    <text x="72" y="680" font-size="14">❄️</text>
+    <text x="96" y="678" font-size="12.5" font-weight="700" fill="#ffffff">Cold start</text>
+    <text x="72" y="702" font-size="10.8" fill="#cfe9df">Free instance sleeps after ~15 min</text>
+    <text x="72" y="718" font-size="10.8" fill="#cfe9df">idle; first hit ~50s, then cached.</text>
+
+    <rect x="316" y="654" width="248" height="92" rx="9" fill="#0f4a38"/>
+    <text x="332" y="680" font-size="14">💾</text>
+    <text x="356" y="678" font-size="12.5" font-weight="700" fill="#ffffff">Durability</text>
+    <text x="332" y="702" font-size="10.8" fill="#cfe9df">R2 is the source of truth; local</text>
+    <text x="332" y="718" font-size="10.8" fill="#cfe9df">disk is a rebuildable cache.</text>
+
+    <rect x="576" y="654" width="248" height="92" rx="9" fill="#0f4a38"/>
+    <text x="592" y="680" font-size="14">🌱</text>
+    <text x="616" y="678" font-size="12.5" font-weight="700" fill="#ffffff">Seeding</text>
+    <text x="592" y="702" font-size="10.8" fill="#cfe9df">Always use scripts/seed_r2.py</text>
+    <text x="592" y="718" font-size="10.8" fill="#cfe9df">(round-trip verified; OneDrive-safe).</text>
+
+    <rect x="836" y="654" width="250" height="92" rx="9" fill="#0f4a38"/>
+    <text x="852" y="680" font-size="14">🧩</text>
+    <text x="876" y="678" font-size="12.5" font-weight="700" fill="#ffffff">.xlsm quirk</text>
+    <text x="852" y="702" font-size="10.8" fill="#cfe9df">Backslash-zip sheets auto-normalized</text>
+    <text x="852" y="718" font-size="10.8" fill="#cfe9df">on read (Linux/openpyxl fix).</text>
+  </g>
+
+  <text x="1086" y="784" text-anchor="end" font-size="9" fill="#94a3b8" class="mono">generated 2026-06-25 · hhb-club-app</text>
+</svg>
+</body>
+</html>
