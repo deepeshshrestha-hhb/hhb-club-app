@@ -129,28 +129,49 @@ def download_all():
         root.mkdir(parents=True, exist_ok=True)
 
     if not is_enabled():
-        logger.info("R2 not configured; skipping download (using local files).")
+        present = [n for n in _REQUIRED_VARS if _env(n)]
+        logger.warning(
+            "R2 not configured; skipping download (using local files). "
+            "R2 vars present: %s of %s.", present, list(_REQUIRED_VARS),
+        )
         return {"downloaded": 0, "skipped": True}
 
     client = get_client()
     bucket = _env("R2_BUCKET")
-    downloaded, names = 0, []
+    logger.info("R2 download starting from bucket %r ...", bucket)
+    downloaded, failed, names = 0, 0, []
     paginator = client.get_paginator("list_objects_v2")
     for prefix in SYNCED_DIRS:
         for page in paginator.paginate(Bucket=bucket, Prefix=f"{prefix}/"):
             for obj in page.get("Contents", []):
-                key = obj["Key"]
+                key, size = obj["Key"], obj["Size"]
                 if key.endswith("/"):
                     continue  # skip "folder" placeholder keys
                 local = _key_to_local(key)
                 if local is None:
                     continue
                 local.parent.mkdir(parents=True, exist_ok=True)
-                client.download_file(bucket, key, str(local))
-                downloaded += 1
-                names.append(key)
-    logger.info("R2 download complete: %d file(s) pulled (%s).", downloaded, ", ".join(names) or "none")
-    return {"downloaded": downloaded, "skipped": False, "files": names}
+                try:
+                    client.download_file(bucket, key, str(local))
+                    got = local.stat().st_size
+                    if got != size:
+                        failed += 1
+                        logger.error(
+                            "R2 download SIZE MISMATCH for %s: expected %d, got %d bytes "
+                            "(file may be corrupt).", key, size, got,
+                        )
+                    else:
+                        downloaded += 1
+                        names.append(key)
+                        logger.info("R2 downloaded %s (%d bytes).", key, got)
+                except Exception as exc:  # noqa: BLE001 - log and keep going
+                    failed += 1
+                    logger.error("R2 download FAILED for %s: %s", key, exc)
+    logger.info(
+        "R2 download complete: %d ok, %d failed. Files: %s",
+        downloaded, failed, ", ".join(names) or "none",
+    )
+    return {"downloaded": downloaded, "failed": failed, "skipped": False, "files": names}
 
 
 def _backup_existing(client, bucket, key):

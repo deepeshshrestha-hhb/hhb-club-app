@@ -1,3 +1,4 @@
+import sys
 import logging
 
 from flask import Flask, render_template
@@ -9,9 +10,13 @@ from routes.player_routes import player_bp
 from services import r2_service
 
 # Log to stdout so messages (incl. R2 sync) surface in the Render logs.
+# force=True is required because under gunicorn the root logger already has
+# handlers, which would otherwise make a plain basicConfig() a silent no-op.
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    stream=sys.stdout,
+    force=True,
 )
 
 
