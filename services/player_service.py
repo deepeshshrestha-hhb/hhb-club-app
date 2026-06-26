@@ -42,6 +42,7 @@ def get_all_players():
         "dt_count": 0, "ch_count": 0, "lg_count": 0,
         "total_wins": 0, "total_runner_ups": 0, "total_thirds": 0,
         "hhb_score_cumulative": 0, "hhb_score_current": 0,
+        "breakdown": {"doubles": [], "champ_a": [], "champ_b": [], "league": []},
     }
 
     players = []
