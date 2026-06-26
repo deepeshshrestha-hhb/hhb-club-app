@@ -122,9 +122,10 @@ def _parse_important_dates(ws):
     row = 4
     while True:
         label = ws[f"B{row}"].value
-        date_val = ws[f"E{row}"].value
         if label is None:
             break
+        # Modern sheets have the date in col E; older layouts (e.g. 2022) use col D.
+        date_val = ws[f"E{row}"].value or ws[f"D{row}"].value
         dates.append({"label": _clean(label), "date": _fmt_date(date_val)})
         row += 1
     return dates

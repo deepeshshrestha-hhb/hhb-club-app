@@ -26,28 +26,6 @@
 </div>
 {% endif %}
 
-{% if tournament.knockouts and tournament.knockouts.winner %}
-<div class="row mb-4">
-    <div class="col-md-4 mb-3">
-        <div class="podium-card podium-gold">
-            <div class="small text-muted">WINNER</div>
-            <div class="h5 mb-0">🏆 {{ tournament.knockouts.winner }}</div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-3">
-        <div class="podium-card podium-silver">
-            <div class="small text-muted">RUNNER-UP</div>
-            <div class="h5 mb-0">🥈 {{ tournament.knockouts.runner_up }}</div>
-        </div>
-    </div>
-    <div class="col-md-4 mb-3">
-        <div class="podium-card podium-bronze">
-            <div class="small text-muted">THIRD PLACE</div>
-            <div class="h5 mb-0">🥉 {{ tournament.knockouts.third or 'N/A' }}</div>
-        </div>
-    </div>
-</div>
-{% endif %}
 
 <ul class="nav nav-tabs mb-4" id="tournTabs" role="tablist">
     <li class="nav-item" role="presentation">
