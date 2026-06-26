@@ -207,6 +207,26 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
 
 ---
 
+## Git Workflow
+
+**Always use feature branches — never commit directly to `master`.**
+
+The full flow for every change:
+
+```
+git checkout -b feature/<short-description>   # 1. branch from master
+# ... make changes, commit ...
+git push -u origin feature/<short-description> # 2. push branch
+gh pr create ...                               # 3. open PR (PowerShell, full gh path)
+# merge on GitHub                              # 4. user merges via GitHub UI
+git checkout master && git pull                # 5. sync local master
+```
+
+A `PreToolUse` hook in `.claude/settings.local.json` will fire a ⚠ warning
+if a `git commit` or `git push` is attempted directly on `master` as a reminder.
+
+---
+
 ## Local Tooling Notes
 
 - **gh CLI** is installed at `C:\Program Files\GitHub CLI\gh.exe` but that
