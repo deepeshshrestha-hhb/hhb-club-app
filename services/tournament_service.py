@@ -559,7 +559,19 @@ def get_doubles_tournament(year):
     title = f"HHB Annual Doubles Classic {year}"
 
     rules = _parse_rules(dates_ws)
-    important_dates = _parse_important_dates(dates_ws)
+
+    if year == 2019:
+        # 2019 layout: labels in col E, dates in col F, starting at row 3.
+        import datetime as _dt
+        important_dates = []
+        for row in range(3, 20):
+            label = dates_ws.cell(row, 5).value
+            date_val = dates_ws.cell(row, 6).value
+            if label is None or not isinstance(date_val, _dt.datetime):
+                break
+            important_dates.append({"label": _clean(label), "date": _fmt_date(date_val)})
+    else:
+        important_dates = _parse_important_dates(dates_ws)
 
     group_sheet_names = [
         s for s in wb.sheetnames
