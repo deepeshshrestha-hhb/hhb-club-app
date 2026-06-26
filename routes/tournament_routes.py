@@ -68,7 +68,12 @@ def doubles_detail(year):
     tournament = get_doubles_tournament(year)
     if not tournament:
         return "Tournament not found", 404
-    return render_template("tournament_doubles_detail.html", tournament=tournament)
+    years = sorted(list_doubles_tournament_years())
+    idx = years.index(year) if year in years else -1
+    prev_year = years[idx - 1] if idx > 0 else None
+    next_year = years[idx + 1] if idx >= 0 and idx < len(years) - 1 else None
+    return render_template("tournament_doubles_detail.html", tournament=tournament,
+                           prev_year=prev_year, next_year=next_year)
 
 
 # --- HHB Annual Championships ---
@@ -94,7 +99,12 @@ def championships_detail(year):
     championship = get_championship(year)
     if not championship:
         return "Championship not found", 404
-    return render_template("championships_detail.html", championship=championship)
+    years = sorted(list_championship_years())
+    idx = years.index(year) if year in years else -1
+    prev_year = years[idx - 1] if idx > 0 else None
+    next_year = years[idx + 1] if idx >= 0 and idx < len(years) - 1 else None
+    return render_template("championships_detail.html", championship=championship,
+                           prev_year=prev_year, next_year=next_year)
 
 
 # --- HHB Annual Doubles League ---
@@ -120,4 +130,9 @@ def league_detail(year):
     league = get_league(year)
     if not league:
         return "League not found", 404
-    return render_template("league_detail.html", league=league)
+    years = sorted(list_league_years())
+    idx = years.index(year) if year in years else -1
+    prev_year = years[idx - 1] if idx > 0 else None
+    next_year = years[idx + 1] if idx >= 0 and idx < len(years) - 1 else None
+    return render_template("league_detail.html", league=league,
+                           prev_year=prev_year, next_year=next_year)

@@ -86,7 +86,14 @@
       "Bash(gh pr create --title 'Update HHB Score criteria and add Current vs Cumulative ranking' --body ' *)",
       "PowerShell(\\(Get-Command gh -ErrorAction SilentlyContinue\\).Source; where.exe gh 2>$null)",
       "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -ErrorAction SilentlyContinue; Get-ChildItem \"$env:LOCALAPPDATA\\\\Programs\\\\gh\\\\bin\\\\gh.exe\" -ErrorAction SilentlyContinue; Get-ChildItem \"C:\\\\Users\\\\deepe\\\\scoop\\\\shims\\\\gh.exe\" -ErrorAction SilentlyContinue)",
-      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" pr merge 1 --merge --delete-branch)"
+      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" pr merge 1 --merge --delete-branch)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force }; Write-Host \"killed\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:5000/tournaments/doubles/2025)",
+      "Bash(curl -s http://127.0.0.1:5000/tournaments/doubles/2018)",
+      "Bash(python -c \"import sys,re; html=sys.stdin.read\\(\\); m=re.search\\(r'<h1[^>]*>\\([^<]+\\)</h1>', html\\); print\\(m.group\\(1\\).strip\\(\\) if m else 'not found'\\)\")",
+      "Bash(curl -s http://127.0.0.1:5000/tournaments/doubles/2019)",
+      "Bash(curl -s http://127.0.0.1:5000/tournaments/doubles/2022)",
+      "Bash(curl -s http://127.0.0.1:5000/tournaments/doubles/2025)"
     ]
   }
 }
