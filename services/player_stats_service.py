@@ -44,7 +44,7 @@ CH_B_PTS = {   # Championships Pool B — Bronze tier (developing players)
 }
 LG_PTS = {   # Annual Players League — Gold-aligned (season-long consistent match-winning)
     "champion": 200, "runner_up": 150, "third": 105,
-    "top5": 65, "top10": 35, "participated": 15,
+    "top5": 65, "top10": 35, "top15": 15,
 }
 
 _cache = None
@@ -157,6 +157,7 @@ def get_all_player_stats():
             elif rank == 3:     level = "third"
             elif rank <= 5:     level = "top5"
             elif rank <= 10:    level = "top10"
+            elif rank <= 15:    level = "top15"
             else:               level = "participated"
             raw[fn]["lg"][year] = {"level": level, "rank": rank}
 
@@ -216,6 +217,40 @@ def get_all_player_stats():
             for yr, v in lg_ach.items() if yr in CURRENT_YEARS
         )
 
+        _labels = {
+            "winner": "Winner", "runner_up": "Runner-up", "third": "3rd Place",
+            "semi": "Semi-Final", "knockout": "Knockouts", "group": "Group Stage",
+            "champion": "Champion", "top5": "Top 5", "top10": "Top 10",
+            "top15": "Top 15", "participated": "Participated",
+        }
+
+        breakdown = {
+            "doubles": sorted(
+                [{"year": yr, "label": _labels.get(lv, lv),
+                  "pts": DT_PTS.get(lv, 0), "current": yr in CURRENT_YEARS}
+                 for yr, lv in dt_ach.items()],
+                key=lambda r: -r["year"]
+            ),
+            "champ_a": sorted(
+                [{"year": yr, "label": _labels.get(e["level"], e["level"]),
+                  "pts": CH_A_PTS.get(e["level"], 0), "current": yr in CURRENT_YEARS}
+                 for yr, entries in ch_ach.items() for e in entries if e["pool"] == "A"],
+                key=lambda r: -r["year"]
+            ),
+            "champ_b": sorted(
+                [{"year": yr, "label": _labels.get(e["level"], e["level"]),
+                  "pts": CH_B_PTS.get(e["level"], 0), "current": yr in CURRENT_YEARS}
+                 for yr, entries in ch_ach.items() for e in entries if e["pool"] == "B"],
+                key=lambda r: -r["year"]
+            ),
+            "league": sorted(
+                [{"year": yr, "label": _labels.get(v["level"], v["level"]),
+                  "pts": LG_PTS.get(v["level"], 0), "current": yr in CURRENT_YEARS}
+                 for yr, v in lg_ach.items()],
+                key=lambda r: -r["year"]
+            ),
+        }
+
         result[fn] = {
             "dt_count": len(dt_ach),
             "ch_count": len(ch_ach),
@@ -225,6 +260,7 @@ def get_all_player_stats():
             "total_thirds": dt_3rd + ch_3rd + lg_3rd,
             "hhb_score_cumulative": dt_pts + ch_pts + lg_pts,
             "hhb_score_current": dt_pts_cur + ch_pts_cur + lg_pts_cur,
+            "breakdown": breakdown,
         }
 
     _cache = result

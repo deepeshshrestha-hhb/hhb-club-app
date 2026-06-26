@@ -38,8 +38,10 @@
                         HHB Rank #{{ player.rank }}
                     </span>
                     {% endif %}
-                    <span class="badge bg-secondary" style="font-size:.85rem">
-                        {{ player.hhb_score_current }} pts (current)
+                    <span class="badge bg-secondary" style="font-size:.85rem;cursor:pointer"
+                          data-bs-toggle="modal" data-bs-target="#scoreModal"
+                          title="Click to see score breakdown">
+                        {{ player.hhb_score_current }} pts (current) <i class="bi bi-info-circle ms-1"></i>
                     </span>
                     {% if profile.year_joined %}
                     <span class="text-muted small">Playing with HHB since {{ profile.year_joined }}</span>
@@ -151,6 +153,99 @@
         <a href="/players" class="btn btn-outline-secondary ms-2">← All Players</a>
     </div>
 </div>
+{% endif %}
+
+<!-- ── HHB Score Breakdown Modal ── -->
+{% set bd = player.breakdown %}
+{% if bd %}
+{% set has_any = bd.doubles or bd.champ_a or bd.champ_b or bd.league %}
+{% if has_any %}
+<div class="modal fade" id="scoreModal" tabindex="-1" aria-label="HHB Score breakdown" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background:var(--hhb-primary);color:#fff;">
+                <h5 class="modal-title fw-bold">
+                    HHB Score Breakdown — {{ player.full_name.split()[0] }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+
+                <!-- Score summary bar -->
+                <div class="d-flex gap-4 justify-content-center py-3 px-4 border-bottom flex-wrap" style="background:#f8f9fa;">
+                    <div class="text-center">
+                        <div class="fw-bold fs-4" style="color:var(--hhb-primary)">{{ player.hhb_score_current }}</div>
+                        <div class="text-muted small">Current Score<br><span style="font-size:.75rem">(2024–2026)</span></div>
+                    </div>
+                    <div class="vr d-none d-sm-block"></div>
+                    <div class="text-center">
+                        <div class="fw-bold fs-4" style="color:#555">{{ player.hhb_score_cumulative }}</div>
+                        <div class="text-muted small">Cumulative Score<br><span style="font-size:.75rem">(all-time)</span></div>
+                    </div>
+                    {% if player.rank %}
+                    <div class="vr d-none d-sm-block"></div>
+                    <div class="text-center">
+                        <div class="fw-bold fs-4" style="color:var(--hhb-accent)">#{{ player.rank }}</div>
+                        <div class="text-muted small">Club Rank<br><span style="font-size:.75rem">(by current)</span></div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="px-3 pt-1 pb-2" style="overflow-x:auto;">
+                    <p class="text-muted small mt-2 mb-2 px-1">
+                        Rows highlighted in <span class="badge" style="background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;">green</span>
+                        count towards the <strong>Current Score</strong> (2024–2026).
+                        Unhighlighted rows are all-time only.
+                    </p>
+
+                    {% macro section(title, tier_label, tier_color, rows, col_label) %}
+                    {% if rows %}
+                    <table class="table table-sm mb-3" style="min-width:320px;">
+                        <thead>
+                            <tr style="background:#f0f0f0;">
+                                <th colspan="3" class="py-2">
+                                    {{ title }}
+                                    <span class="badge ms-1" style="background:{{ tier_color }};color:{{ '#333' if tier_color == '#f9a825' else '#fff' }};font-size:.7rem;">{{ tier_label }}</span>
+                                </th>
+                            </tr>
+                            <tr class="table-light">
+                                <th class="text-muted fw-normal small">Year</th>
+                                <th class="text-muted fw-normal small">{{ col_label }}</th>
+                                <th class="text-end text-muted fw-normal small">Points</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in rows %}
+                            <tr {% if row.current %}style="background:#e8f5e9;"{% endif %}>
+                                <td class="small">{{ row.year }}{% if row.current %} <span class="text-success" style="font-size:.7rem">●</span>{% endif %}</td>
+                                <td class="small">{{ row.label }}</td>
+                                <td class="text-end fw-semibold small">{{ row.pts }}</td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="table-light fw-semibold">
+                                <td colspan="2" class="small">Total</td>
+                                <td class="text-end small">{{ rows | sum(attribute='pts') }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    {% endif %}
+                    {% endmacro %}
+
+                    {{ section("Championships — Pool A", "Gold", "#f9a825", bd.champ_a, "Result") }}
+                    {{ section("Doubles Classic", "Silver", "#9e9e9e", bd.doubles, "Result") }}
+                    {{ section("Championships — Pool B", "Bronze", "#bf360c", bd.champ_b, "Result") }}
+                    {{ section("Players League", "Seasonal", "#333", bd.league, "Finish") }}
+
+                </div>
+            </div>
+            <div class="modal-footer border-top py-2">
+                <span class="text-muted small me-auto">Points are based on the <a href="/players#hhbFormulaTable" target="_blank">HHB Score formula</a></span>
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endif %}
 
 {% if profile and profile.photo_filename %}
