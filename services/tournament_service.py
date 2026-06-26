@@ -551,7 +551,7 @@ def get_doubles_tournament(year):
 
     dates_ws = wb["Dates"]
 
-    title = _clean(dates_ws["A1"].value).strip()
+    title = f"HHB Annual Doubles Classic {year}"
 
     rules = _parse_rules(dates_ws)
     important_dates = _parse_important_dates(dates_ws)
