@@ -1,9 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
-    <h1 class="page-title">{{ championship.title }}</h1>
-    <a href="{{ url_for('tournaments.championships_index') }}" class="btn btn-sm btn-outline-secondary">&larr; All Years</a>
+<div class="d-flex align-items-center justify-content-between flex-wrap mb-3 gap-2">
+    {% if prev_year %}
+    <a href="{{ url_for('tournaments.championships_detail', year=prev_year) }}" class="btn btn-sm btn-outline-secondary">&larr; {{ prev_year }}</a>
+    {% else %}
+    <span class="btn btn-sm btn-outline-secondary disabled">&larr; Prev</span>
+    {% endif %}
+    <div class="text-center">
+        <h1 class="page-title mb-0">{{ championship.title }}</h1>
+        <a href="{{ url_for('tournaments.championships_index') }}" class="text-muted small">All Years</a>
+    </div>
+    {% if next_year %}
+    <a href="{{ url_for('tournaments.championships_detail', year=next_year) }}" class="btn btn-sm btn-outline-secondary">{{ next_year }} &rarr;</a>
+    {% else %}
+    <span class="btn btn-sm btn-outline-secondary disabled">Next &rarr;</span>
+    {% endif %}
 </div>
 
 {% if championship.important_dates %}
