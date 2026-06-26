@@ -4,17 +4,28 @@
 <div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
     <div>
         <h1 class="page-title mb-1">HHB Members</h1>
-        <p class="text-muted small mb-0">{{ players | length }} members · Ranked by HHB Score · Synced from Spond on startup</p>
+        <p class="text-muted small mb-0">{{ players | length }} members (Synced from Spond on startup) · Ranked by HHB Score (Current)</p>
+    </div>
+    <div class="d-flex align-items-center gap-2 mt-2 mt-sm-0">
+        <span class="text-muted small">Rank by:</span>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Ranking mode">
+            <button type="button" class="btn btn-primary active" id="btn-current" onclick="setRankMode('current')">Current</button>
+            <button type="button" class="btn btn-outline-secondary" id="btn-cumulative" onclick="setRankMode('cumulative')">Cumulative</button>
+        </div>
     </div>
 </div>
 
 <!-- HHB Score legend - Collapsible -->
 <div class="card hhb-card mb-4">
-    <div class="card-header p-0">
-        <button class="btn btn-link btn-block w-100 text-start p-3 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#hhbFormulaTable" aria-expanded="false" aria-controls="hhbFormulaTable">
+    <div class="card-header d-flex align-items-start justify-content-between gap-3 flex-wrap p-0">
+        <button class="btn btn-link btn-block text-start p-3 text-decoration-none flex-shrink-0" type="button" data-bs-toggle="collapse" data-bs-target="#hhbFormulaTable" aria-expanded="false" aria-controls="hhbFormulaTable">
             <span class="fw-semibold">HHB Score Formula</span>
             <i class="bi bi-chevron-down ms-2"></i>
         </button>
+        <div class="px-3 py-2 text-muted small" style="max-width:520px">
+            <strong class="text-body">Current</strong> counts points from the last 3 years (2024–2026) only — the default ranking, rewarding recent form.
+            <strong class="text-body">Cumulative</strong> totals points from every tournament in club history.
+        </div>
     </div>
     <div class="collapse" id="hhbFormulaTable">
         <div class="card-body p-0" style="max-width: 100%; overflow-x: auto;">
@@ -121,20 +132,17 @@
                         <th>🏆 Wins</th>
                         <th>🥈 Runner-ups</th>
                         <th>🥉 3rds</th>
-                        <th>HHB Score</th>
+                        <th id="th-current" title="Points from 2024–2026 tournaments only">HHB Score (Current)</th>
+                        <th id="th-cumulative" title="Points from all-time tournaments" style="display:none">HHB Score (Cumulative)</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for p in players %}
-                    {% set row_bg = '#fff8dc' if p.rank == 1 else ('#f8f9fa' if p.rank <= 3 else '#ffffff') %}
-                    <tr class="{{ 'table-warning fw-bold' if p.rank == 1 else ('table-light' if p.rank <= 3) }}">
-                        <td style="position:sticky;left:0;z-index:1;background:{{ row_bg }};">
-                            {% if p.rank == 1 %}🏆
-                            {% elif p.rank == 2 %}🥈
-                            {% elif p.rank == 3 %}🥉
-                            {% else %}{{ p.rank }}{% endif %}
-                        </td>
-                        <td class="fw-semibold" style="position:sticky;left:36px;z-index:1;background:{{ row_bg }};">{{ p.full_name }}</td>
+                <tbody id="players-tbody">
+                    {% set max_current = (players | map(attribute='hhb_score_current') | max) if players else 1 %}
+                    {% set max_cumulative = (players | map(attribute='hhb_score_cumulative') | max) if players else 1 %}
+                    {% for p in players -%}
+                    <tr data-current="{{ p.hhb_score_current }}" data-cumulative="{{ p.hhb_score_cumulative }}" data-name="{{ p.full_name }}">
+                        <td class="rank-cell" style="position:sticky;left:0;z-index:1;"></td>
+                        <td class="fw-semibold" style="position:sticky;left:36px;z-index:1;">{{ p.full_name }}</td>
                         <td class="text-muted small">{{ p.age or '—' }}</td>
                         <td class="text-center">
                             {% if p.dt_count %}<span class="badge bg-secondary">{{ p.dt_count }}</span>{% else %}<span class="text-muted">—</span>{% endif %}
@@ -154,13 +162,22 @@
                         <td class="text-center">
                             {% if p.total_thirds %}{{ p.total_thirds }}{% else %}—{% endif %}
                         </td>
-                        <td>
+                        <!-- Current score cell -->
+                        <td class="score-cell-current">
                             <div class="d-flex align-items-center gap-2">
                                 <div class="progress flex-grow-1" style="height:8px;min-width:60px">
-                                    {% set max_score = players[0].hhb_score if players else 1 %}
-                                    <div class="progress-bar" style="width:{{ ((p.hhb_score / max_score) * 100) | round }}%;background:var(--hhb-primary)"></div>
+                                    <div class="progress-bar" style="width:{{ ((p.hhb_score_current / (max_current or 1)) * 100) | round }}%;background:var(--hhb-primary)"></div>
                                 </div>
-                                <span class="fw-bold small" style="min-width:30px">{{ p.hhb_score }}</span>
+                                <span class="fw-bold small" style="min-width:30px">{{ p.hhb_score_current }}</span>
+                            </div>
+                        </td>
+                        <!-- Cumulative score cell -->
+                        <td class="score-cell-cumulative" style="display:none">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height:8px;min-width:60px">
+                                    <div class="progress-bar" style="width:{{ ((p.hhb_score_cumulative / (max_cumulative or 1)) * 100) | round }}%;background:var(--hhb-primary)"></div>
+                                </div>
+                                <span class="fw-bold small" style="min-width:30px">{{ p.hhb_score_cumulative }}</span>
                             </div>
                         </td>
                     </tr>
@@ -177,5 +194,50 @@
     DC = Annual Doubles Classic seasons &nbsp;|&nbsp; Champ = Annual Championships &nbsp;|&nbsp; League = Annual Players League seasons.
     Tournament matching is by first name — players who used a different name in older scoresheets may show lower counts.
 </p>
+
+<script>
+function setRankMode(mode) {
+    const tbody = document.querySelector('#players-tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr[data-current]'));
+
+    // Sort rows by selected score descending
+    rows.sort((a, b) => +b.dataset[mode] - +a.dataset[mode]);
+    rows.forEach(r => tbody.appendChild(r));
+
+    // Update rank cells
+    const medals = ['🏆','🥈','🥉'];
+    rows.forEach((r, i) => {
+        const rankCell = r.querySelector('.rank-cell');
+        rankCell.textContent = i < 3 ? medals[i] : String(i + 1);
+        // Row highlight
+        r.className = i === 0 ? 'table-warning fw-bold' : (i < 3 ? 'table-light' : '');
+        // Sticky cell backgrounds
+        const rank1bg = '#fff8dc', rank3bg = '#f8f9fa', normalbg = '#ffffff';
+        const bg = i === 0 ? rank1bg : (i < 3 ? rank3bg : normalbg);
+        r.querySelector('.rank-cell').style.background = bg;
+        r.querySelectorAll('td[style*="left:36px"]').forEach(td => td.style.background = bg);
+    });
+
+    // Show/hide score columns
+    document.getElementById('th-current').style.display     = mode === 'current'    ? '' : 'none';
+    document.getElementById('th-cumulative').style.display  = mode === 'cumulative' ? '' : 'none';
+    document.querySelectorAll('.score-cell-current').forEach(el    => el.style.display = mode === 'current'    ? '' : 'none');
+    document.querySelectorAll('.score-cell-cumulative').forEach(el => el.style.display = mode === 'cumulative' ? '' : 'none');
+
+    // Toggle button states
+    document.getElementById('btn-current').className    = 'btn btn-' + (mode === 'current'    ? 'primary active' : 'outline-secondary');
+    document.getElementById('btn-cumulative').className = 'btn btn-' + (mode === 'cumulative' ? 'primary active' : 'outline-secondary');
+
+    // Update subtitle
+    const subtitle = document.querySelector('.page-title + p');
+    if (subtitle) {
+        subtitle.textContent = subtitle.textContent.replace(/Ranked by HHB Score \(.*?\)/,
+            'Ranked by HHB Score (' + (mode === 'current' ? 'Current' : 'Cumulative') + ')');
+    }
+}
+
+// Apply correct row backgrounds and ranks on page load (server already sorted by current)
+document.addEventListener('DOMContentLoaded', () => setRankMode('current'));
+</script>
 
 {% endblock %}

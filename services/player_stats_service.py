@@ -146,6 +146,8 @@ def get_all_player_stats():
             else:               level = "participated"
             raw[fn]["lg"][year] = {"level": level, "rank": rank}
 
+    CURRENT_YEARS = {2024, 2025, 2026}
+
     # ── Summarise ─────────────────────────────────────────────────────────────
     result = {}
     for fn, d in raw.items():
@@ -179,10 +181,22 @@ def get_all_player_stats():
         lg_ru   = _count(lg_ach, "runner_up")
         lg_3rd  = _count(lg_ach, "third")
 
-        # HHB Score
+        # HHB Score (Cumulative) — all years
         dt_pts = sum(DT_PTS.get(v, 0) for v in dt_ach.values())
         ch_pts = sum(CH_PTS.get(lv, 0) for vlist in ch_ach.values() for lv in vlist)
         lg_pts = sum(LG_PTS.get(v.get("level", "participated"), 0) for v in lg_ach.values())
+
+        # HHB Score (Current) — last 3 calendar years only
+        dt_pts_cur = sum(DT_PTS.get(v, 0) for yr, v in dt_ach.items() if yr in CURRENT_YEARS)
+        ch_pts_cur = sum(
+            CH_PTS.get(lv, 0)
+            for yr, vlist in ch_ach.items() if yr in CURRENT_YEARS
+            for lv in vlist
+        )
+        lg_pts_cur = sum(
+            LG_PTS.get(v.get("level", "participated"), 0)
+            for yr, v in lg_ach.items() if yr in CURRENT_YEARS
+        )
 
         result[fn] = {
             "dt_count": len(dt_ach),
@@ -191,7 +205,8 @@ def get_all_player_stats():
             "total_wins": dt_wins + ch_wins + lg_wins,
             "total_runner_ups": dt_ru + ch_ru + lg_ru,
             "total_thirds": dt_3rd + ch_3rd + lg_3rd,
-            "hhb_score": dt_pts + ch_pts + lg_pts,
+            "hhb_score_cumulative": dt_pts + ch_pts + lg_pts,
+            "hhb_score_current": dt_pts_cur + ch_pts_cur + lg_pts_cur,
         }
 
     _cache = result
