@@ -24,16 +24,16 @@ ALIASES = {
 
 # Points per best achievement in a season/year
 DT_PTS = {   # Annual Doubles Classic
-    "winner": 100, "runner_up": 75, "third": 55,
-    "semi": 35, "knockout": 20, "group": 10,
+    "winner": 100, "runner_up": 75, "third": 56,
+    "semi": 36, "knockout": 20, "group": 10,
 }
 CH_PTS = {   # Annual Championships (per pool appearance)
-    "winner": 85, "runner_up": 60, "third": 40,
+    "winner": 85, "runner_up": 64, "third": 38,
     "semi": 20, "group": 8,
 }
-LG_PTS = {   # Annual Doubles League
-    "champion": 70, "runner_up": 45, "third": 30,
-    "top5": 20, "top10": 15, "participated": 10,
+LG_PTS = {   # Annual Players League
+    "champion": 70, "runner_up": 56, "third": 42,
+    "top5": 28, "top10": 18, "participated": 10,
 }
 
 _cache = None
