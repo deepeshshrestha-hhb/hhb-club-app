@@ -1,7 +1,7 @@
 import sys
 import logging
 
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 from config import Config
 from routes.calendar_routes import calendar_bp
 from routes.tournament_routes import tournament_bp
@@ -44,6 +44,10 @@ def create_app():
     @app.route("/about")
     def about():
         return render_template("about.html")
+
+    @app.route("/health")
+    def health():
+        return jsonify({"status": "ok"})
 
     return app
 
