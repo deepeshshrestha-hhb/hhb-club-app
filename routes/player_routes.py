@@ -1,5 +1,5 @@
 import datetime
-from flask import Blueprint, render_template, request, redirect, url_for, abort, send_file, flash
+from flask import Blueprint, render_template, request, redirect, url_for, abort, send_file, flash, session
 from services.player_service import get_all_players
 from services.profile_service import (
     get_profile, save_profile, name_to_slug, get_photo_path, get_all_profile_slugs
@@ -40,27 +40,38 @@ def player_photo(filename):
 def add_profile():
     players = get_all_players()
 
+    is_admin = session.get("is_admin", False)
+
     if request.method == "POST":
         full_name = request.form.get("full_name", "").strip()
         if not full_name:
             flash("Please select a player.", "danger")
             return render_template("player_add_profile.html", players=players,
-                                   join_years=JOIN_YEARS, form=request.form)
+                                   join_years=JOIN_YEARS, form=request.form, is_admin=is_admin)
 
         # Validate player exists
         if not any(p["full_name"] == full_name for p in players):
             flash("Unknown player selected.", "danger")
             return render_template("player_add_profile.html", players=players,
-                                   join_years=JOIN_YEARS, form=request.form)
+                                   join_years=JOIN_YEARS, form=request.form, is_admin=is_admin)
+
+        slug = name_to_slug(full_name)
+        profile_exists = get_profile(slug) is not None
+
+        # Non-admins must explicitly confirm before overwriting an existing profile
+        if profile_exists and not is_admin:
+            if request.form.get("confirm_overwrite") != "yes":
+                return render_template("player_add_profile.html", players=players,
+                                       join_years=JOIN_YEARS, form=request.form,
+                                       is_admin=is_admin, overwrite_warning=full_name)
 
         photo_file = request.files.get("photo")
         ok, err = save_profile(full_name, request.form, photo_file)
         if not ok:
             flash(err, "danger")
             return render_template("player_add_profile.html", players=players,
-                                   join_years=JOIN_YEARS, form=request.form)
+                                   join_years=JOIN_YEARS, form=request.form, is_admin=is_admin)
 
-        slug = name_to_slug(full_name)
         flash(f"Profile saved for {full_name}.", "success")
         return redirect(url_for("players.player_profile", slug=slug))
 
@@ -73,4 +84,4 @@ def add_profile():
 
     return render_template("player_add_profile.html", players=players,
                            join_years=JOIN_YEARS, form=existing_profile or {},
-                           preselect=preselect)
+                           preselect=preselect, is_admin=is_admin)

@@ -116,8 +116,10 @@
 
         <hr class="mt-4 mb-3">
         <div class="d-flex gap-2 flex-wrap">
+            {% if session.get('is_admin') %}
             <a href="{{ url_for('players.add_profile') }}?player={{ player.full_name | urlencode }}"
                class="btn btn-sm btn-outline-secondary">Edit Profile</a>
+            {% endif %}
             <a href="/players" class="btn btn-sm btn-outline-secondary">← All Players</a>
         </div>
     </div>

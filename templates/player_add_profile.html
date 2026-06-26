@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block head_extra %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+{% endblock %}
 {% block content %}
 
 <nav aria-label="breadcrumb" class="mb-3">
@@ -15,14 +18,28 @@
         </h1>
         <p class="text-muted small mb-4">Fill in the details below. Saving will create or overwrite the existing profile.</p>
 
+        {% if overwrite_warning %}
+        <div class="alert alert-warning d-flex align-items-start gap-3 mb-4" role="alert">
+            <span style="font-size:1.4rem">⚠️</span>
+            <div>
+                <strong>A profile already exists for {{ overwrite_warning }}.</strong>
+                Review your changes below and click <strong>Save Profile</strong> again to overwrite it,
+                or <a href="{{ url_for('players.add_profile') }}">cancel</a>.
+            </div>
+        </div>
+        {% endif %}
+
         <form method="POST" enctype="multipart/form-data" novalidate>
+        {% if overwrite_warning %}
+        <input type="hidden" name="confirm_overwrite" value="yes">
+        {% endif %}
 
             <!-- Player selector -->
             <div class="mb-4">
                 <label for="full_name" class="form-label fw-semibold">Player <span class="text-danger">*</span></label>
-                <select class="form-select" id="full_name" name="full_name" required>
-                    <option value="">— select a player —</option>
-                    {% for p in players %}
+                <select class="form-select ts-player" id="full_name" name="full_name" required>
+                    <option value="">— type or select a player —</option>
+                    {% for p in players | sort(attribute='full_name') %}
                     <option value="{{ p.full_name }}"
                         {% if p.full_name == (form.get('full_name') or preselect) %}selected{% endif %}>
                         {{ p.full_name }}
@@ -38,9 +55,15 @@
                 <label for="fav_opponent" class="form-label">
                     🏸 Favourite player to play <strong>against</strong>?
                 </label>
-                <input type="text" class="form-control" id="fav_opponent" name="fav_opponent"
-                       placeholder="e.g. John" maxlength="100"
-                       value="{{ form.get('fav_opponent', '') }}">
+                <select class="form-select ts-player" id="fav_opponent" name="fav_opponent">
+                    <option value="">— type or select a player —</option>
+                    {% for p in players | sort(attribute='full_name') %}
+                    <option value="{{ p.full_name }}"
+                        {% if p.full_name == form.get('fav_opponent', '') %}selected{% endif %}>
+                        {{ p.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
             </div>
 
             <!-- Q2 -->
@@ -48,9 +71,15 @@
                 <label for="fav_partner" class="form-label">
                     🤝 Favourite player to have as a <strong>doubles partner</strong>?
                 </label>
-                <input type="text" class="form-control" id="fav_partner" name="fav_partner"
-                       placeholder="e.g. Priya" maxlength="100"
-                       value="{{ form.get('fav_partner', '') }}">
+                <select class="form-select ts-player" id="fav_partner" name="fav_partner">
+                    <option value="">— type or select a player —</option>
+                    {% for p in players | sort(attribute='full_name') %}
+                    <option value="{{ p.full_name }}"
+                        {% if p.full_name == form.get('fav_partner', '') %}selected{% endif %}>
+                        {{ p.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
             </div>
 
             <!-- Q3 -->
@@ -58,9 +87,24 @@
                 <label for="fav_shot" class="form-label">
                     ⚡ Favourite badminton shot?
                 </label>
-                <input type="text" class="form-control" id="fav_shot" name="fav_shot"
-                       placeholder="e.g. Drop shot, Smash, Net kill…" maxlength="100"
-                       value="{{ form.get('fav_shot', '') }}">
+                <select class="form-select ts-player" id="fav_shot" name="fav_shot">
+                    <option value="">— select a shot —</option>
+                    {% set shots = [
+                        'Smash', 'Jump Smash', 'Drop Shot', 'Slice Drop Shot',
+                        'Net Kill', 'Net Lift', 'Net Spin / Tumble',
+                        'Clear (Overhead)', 'Defensive Clear', 'Drive',
+                        'Cross-Court Shot', 'Push Shot', 'Flick Serve',
+                        'Low Serve', 'High Serve', 'Backhand Smash',
+                        'Backhand Drop', 'Backhand Clear', 'Around-the-Head Shot',
+                        'Deceptive / Fake Shot'
+                    ] %}
+                    {% for shot in shots %}
+                    <option value="{{ shot }}"
+                        {% if shot == form.get('fav_shot', '') %}selected{% endif %}>
+                        {{ shot }}
+                    </option>
+                    {% endfor %}
+                </select>
             </div>
 
             <!-- Q4 -->
@@ -114,4 +158,14 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script>
+document.querySelectorAll('.ts-player').forEach(el => {
+    new TomSelect(el, {
+        placeholder: '— type or select a player —',
+        allowEmptyOption: true,
+        maxOptions: null,
+    });
+});
+</script>
 {% endblock %}

@@ -132,7 +132,7 @@ def get_all_player_stats():
     # ── Annual Doubles League ────────────────────────────────────────────────
     for year in list_league_years():
         l = get_league(year)
-        if not l:
+        if not l or not l.get("is_complete"):
             continue
         for s in (l.get("standings") or []):
             fn = _canon(s["player"])
