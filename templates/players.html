@@ -19,7 +19,7 @@
 <div class="card hhb-card mb-4">
     <div class="card-header d-flex align-items-start justify-content-between gap-3 flex-wrap p-0">
         <button class="btn btn-link btn-block text-start p-3 text-decoration-none flex-shrink-0" type="button" data-bs-toggle="collapse" data-bs-target="#hhbFormulaTable" aria-expanded="false" aria-controls="hhbFormulaTable">
-            <span class="fw-semibold">HHB Score Formula</span>
+            <span class="fw-semibold">HHB Score — How It Works</span>
             <i class="bi bi-chevron-down ms-2"></i>
         </button>
         <div class="px-3 py-2 text-muted small" style="max-width:520px">
@@ -28,25 +28,98 @@
         </div>
     </div>
     <div class="collapse" id="hhbFormulaTable">
-        <div class="card-body p-0" style="max-width: 100%; overflow-x: auto;">
+        <div class="card-body px-4 pt-3 pb-0">
+
+            <p class="mb-2">
+                Your HHB Score is the sum of points earned across all three of our annual club tournaments.
+                Each tournament carries a different <strong>tier weight</strong> — just like the Gold, Silver, and Bronze
+                grading system used by <a href="https://badmintonscotland.org.uk/wp-content/uploads/2025/12/Gradings-and-Values-SCOTLAND-2026.pdf" target="_blank" rel="noopener">Badminton Scotland and the BWF</a>
+                to rank tournaments by strength.
+            </p>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <div class="p-3 rounded h-100" style="background:#fff8e1;border:2px solid #f9a825;">
+                        <div class="fw-bold mb-1" style="color:#f57f17;">🥇 Gold — Championships Pool A</div>
+                        <p class="small mb-0">
+                            Features the club's strongest players. Winning or placing here is the hardest competitive achievement
+                            at HHB, so it earns the most points.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 rounded h-100" style="background:#f3f3f3;border:2px solid #9e9e9e;">
+                        <div class="fw-bold mb-1" style="color:#424242;">🥈 Silver — Doubles Classic</div>
+                        <p class="small mb-0">
+                            Our flagship annual event and the established scoring baseline. Open to all ability levels
+                            in a group-stage plus knockout format.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 rounded h-100" style="background:#fbe9e7;border:2px solid #bf360c;">
+                        <div class="fw-bold mb-1" style="color:#bf360c;">🥉 Bronze — Championships Pool B</div>
+                        <p class="small mb-0">
+                            The entry-level and developing-players pool. Results here count towards your HHB Score
+                            but are weighted lower, so strong performances against tougher competition are always
+                            rewarded more.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <p class="small text-muted mb-3">
+                The exact ratio between tiers is taken directly from the
+                <a href="https://badmintonscotland.org.uk/wp-content/uploads/2025/12/Gradings-and-Values-SCOTLAND-2026.pdf" target="_blank" rel="noopener">Badminton Scotland / BWF Gradings and Values 2026</a>
+                document: Gold : Silver : Bronze = <strong>30 : 14 : 7</strong>
+                (Gold is ×2.14 Silver; Silver is ×2 Bronze). The HHB points table below was derived from
+                those same ratios, rounded to the nearest 5, so the weighting isn't arbitrary — it mirrors
+                how the sport's own governing bodies value tournaments of different strength.
+                The Players League uses a separate, flat scale as a seasonal consistency award and sits outside the tier system.
+            </p>
+
+        </div>
+        <div class="card-body p-0 pb-1" style="max-width: 100%; overflow-x: auto;">
             <div style="max-width: 700px; margin: 0 auto;">
             <table class="table table-sm table-striped mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="fw-semibold">Tournament Type</th>
+                        <th class="fw-semibold">Tournament</th>
+                        <th class="fw-semibold">Tier</th>
                         <th class="fw-semibold">Performance Level</th>
                         <th class="text-end fw-semibold">Points</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="table-active" style="border-top: 3px solid #333;">
-                        <td rowspan="6" class="fw-semibold align-middle" style="border-left: 3px solid #333;">Doubles Classic<br><span class="text-muted small">(per year)</span></td>
+                    <!-- Championships Pool A — Gold -->
+                    <tr style="border-top: 3px solid #f9a825; background:#fff8e1;">
+                        <td rowspan="5" class="fw-semibold align-middle" style="border-left: 3px solid #f9a825;">Championships<br><span class="text-muted small fw-normal">(Pool A)</span></td>
+                        <td rowspan="5" class="align-middle text-center"><span class="badge" style="background:#f9a825;color:#333;">Gold</span></td>
+                        <td>Group Stage</td>
+                        <td class="text-end">20</td>
+                    </tr>
+                    <tr style="background:#fff8e1;">
+                        <td>Semi-Final</td>
+                        <td class="text-end">75</td>
+                    </tr>
+                    <tr style="background:#fff8e1;">
+                        <td>3rd Place</td>
+                        <td class="text-end">120</td>
+                    </tr>
+                    <tr style="background:#fff8e1;">
+                        <td>Runner-up</td>
+                        <td class="text-end">160</td>
+                    </tr>
+                    <tr style="border-bottom: 3px solid #f9a825; background:#fff8e1;">
+                        <td>Winner</td>
+                        <td class="text-end fw-bold">215</td>
+                    </tr>
+                    <!-- Doubles Classic — Silver -->
+                    <tr style="border-top: 3px solid #9e9e9e;">
+                        <td rowspan="5" class="fw-semibold align-middle" style="border-left: 3px solid #9e9e9e;">Doubles Classic<br><span class="text-muted small fw-normal">(per year)</span></td>
+                        <td rowspan="5" class="align-middle text-center"><span class="badge bg-secondary">Silver</span></td>
                         <td>Group Stage</td>
                         <td class="text-end">10</td>
-                    </tr>
-                    <tr>
-                        <td>Knockouts</td>
-                        <td class="text-end">20</td>
                     </tr>
                     <tr>
                         <td>Semi-Final</td>
@@ -60,55 +133,59 @@
                         <td>Runner-up</td>
                         <td class="text-end">75</td>
                     </tr>
-                    <tr style="border-bottom: 3px solid #333;">
+                    <tr style="border-bottom: 3px solid #9e9e9e;">
                         <td>Winner</td>
                         <td class="text-end fw-bold">100</td>
                     </tr>
-                    <tr class="table-active" style="border-top: 3px solid #333;">
-                        <td rowspan="5" class="fw-semibold align-middle" style="border-left: 3px solid #333;">Championships<br><span class="text-muted small">(per pool)</span></td>
+                    <!-- Championships Pool B — Bronze -->
+                    <tr style="border-top: 3px solid #bf360c; background:#fbe9e7;">
+                        <td rowspan="5" class="fw-semibold align-middle" style="border-left: 3px solid #bf360c;">Championships<br><span class="text-muted small fw-normal">(Pool B)</span></td>
+                        <td rowspan="5" class="align-middle text-center"><span class="badge" style="background:#bf360c;">Bronze</span></td>
                         <td>Group Stage</td>
-                        <td class="text-end">8</td>
+                        <td class="text-end">5</td>
                     </tr>
-                    <tr>
+                    <tr style="background:#fbe9e7;">
                         <td>Semi-Final</td>
                         <td class="text-end">20</td>
                     </tr>
-                    <tr>
+                    <tr style="background:#fbe9e7;">
                         <td>3rd Place</td>
-                        <td class="text-end">38</td>
+                        <td class="text-end">30</td>
                     </tr>
-                    <tr>
+                    <tr style="background:#fbe9e7;">
                         <td>Runner-up</td>
-                        <td class="text-end">64</td>
+                        <td class="text-end">40</td>
                     </tr>
-                    <tr style="border-bottom: 3px solid #333;">
+                    <tr style="border-bottom: 3px solid #bf360c; background:#fbe9e7;">
                         <td>Winner</td>
-                        <td class="text-end fw-bold">85</td>
+                        <td class="text-end fw-bold">50</td>
                     </tr>
+                    <!-- Players League — Gold-aligned seasonal -->
                     <tr class="table-active" style="border-top: 3px solid #333;">
-                        <td rowspan="6" class="fw-semibold align-middle" style="border-left: 3px solid #333;">Players League<br><span class="text-muted small">(per season)</span></td>
+                        <td rowspan="6" class="fw-semibold align-middle" style="border-left: 3px solid #333;">Players League<br><span class="text-muted small fw-normal">(per season)</span></td>
+                        <td rowspan="6" class="align-middle text-center"><span class="badge bg-dark">Seasonal</span></td>
                         <td>Participated</td>
-                        <td class="text-end">10</td>
+                        <td class="text-end">15</td>
                     </tr>
-                    <tr>
+                    <tr class="table-active">
                         <td>Top 10</td>
-                        <td class="text-end">18</td>
+                        <td class="text-end">35</td>
                     </tr>
-                    <tr>
+                    <tr class="table-active">
                         <td>Top 5</td>
-                        <td class="text-end">28</td>
+                        <td class="text-end">65</td>
                     </tr>
-                    <tr>
+                    <tr class="table-active">
                         <td>3rd Place</td>
-                        <td class="text-end">42</td>
+                        <td class="text-end">105</td>
                     </tr>
-                    <tr>
+                    <tr class="table-active">
                         <td>Runner-up</td>
-                        <td class="text-end">56</td>
+                        <td class="text-end">150</td>
                     </tr>
-                    <tr style="border-bottom: 3px solid #333;">
+                    <tr class="table-active" style="border-bottom: 3px solid #333;">
                         <td>Champion</td>
-                        <td class="text-end fw-bold">70</td>
+                        <td class="text-end fw-bold">200</td>
                     </tr>
                 </tbody>
             </table>

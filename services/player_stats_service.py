@@ -22,18 +22,29 @@ ALIASES = {
     "usman": "usman",        # Usman – ex-member, won't match Spond but kept for completeness
 }
 
-# Points per best achievement in a season/year
-DT_PTS = {   # Annual Doubles Classic
+# Points per best achievement in a season/year.
+#
+# Tiers mirror the Badminton Scotland / BWF Gold:Silver:Bronze ratio of 30:14:7
+# (Gold:Silver = 15/7 ≈ 2.143; Silver:Bronze = 2.0 exactly).
+# Source: https://badmintonscotland.org.uk/wp-content/uploads/2025/12/Gradings-and-Values-SCOTLAND-2026.pdf
+#
+# Doubles Classic is the Silver baseline.  Championships Pool A = Gold (×15/7,
+# rounded to nearest 5).  Championships Pool B = Bronze (×0.5, nearest 5).
+DT_PTS = {   # Annual Doubles Classic — Silver tier (5 levels; knockout mapped to group)
     "winner": 100, "runner_up": 75, "third": 56,
-    "semi": 36, "knockout": 20, "group": 10,
+    "semi": 36, "knockout": 10, "group": 10,
 }
-CH_PTS = {   # Annual Championships (per pool appearance)
-    "winner": 85, "runner_up": 64, "third": 38,
-    "semi": 20, "group": 8,
+CH_A_PTS = {   # Championships Pool A — Gold tier (strongest players)
+    "winner": 215, "runner_up": 160, "third": 120,
+    "semi": 75, "group": 20,
 }
-LG_PTS = {   # Annual Players League
-    "champion": 70, "runner_up": 56, "third": 42,
-    "top5": 28, "top10": 18, "participated": 10,
+CH_B_PTS = {   # Championships Pool B — Bronze tier (developing players)
+    "winner": 50, "runner_up": 40, "third": 30,
+    "semi": 20, "group": 5,
+}
+LG_PTS = {   # Annual Players League — Gold-aligned (season-long consistent match-winning)
+    "champion": 200, "runner_up": 150, "third": 105,
+    "top5": 65, "top10": 35, "participated": 15,
 }
 
 _cache = None
@@ -127,7 +138,10 @@ def get_all_player_stats():
             for fn in participants:
                 if year not in raw[fn]["ch"]:
                     raw[fn]["ch"][year] = []
-                raw[fn]["ch"][year].append(_best_knockout_level(fn, k))
+                raw[fn]["ch"][year].append({
+                    "pool": pool_label,
+                    "level": _best_knockout_level(fn, k),
+                })
 
     # ── Annual Doubles League ────────────────────────────────────────────────
     for year in list_league_years():
@@ -152,7 +166,7 @@ def get_all_player_stats():
     result = {}
     for fn, d in raw.items():
         dt_ach = d["dt"]   # {year: level}
-        ch_ach = d["ch"]   # {year: [level_poolA, level_poolB]}
+        ch_ach = d["ch"]   # {year: [{"pool": "A"|"B", "level": str}, ...]}
         lg_ach = d["lg"]   # {year: {level, rank}}
 
         # Wins / runner-ups / thirds
@@ -174,24 +188,28 @@ def get_all_player_stats():
         dt_wins = _count(dt_ach, "winner")
         dt_ru   = _count(dt_ach, "runner_up")
         dt_3rd  = _count(dt_ach, "third")
-        ch_wins = sum(v.count("winner") for v in ch_ach.values())
-        ch_ru   = sum(v.count("runner_up") for v in ch_ach.values())
-        ch_3rd  = sum(v.count("third") for v in ch_ach.values())
+        ch_wins = sum(1 for vlist in ch_ach.values() for e in vlist if e["level"] == "winner")
+        ch_ru   = sum(1 for vlist in ch_ach.values() for e in vlist if e["level"] == "runner_up")
+        ch_3rd  = sum(1 for vlist in ch_ach.values() for e in vlist if e["level"] == "third")
         lg_wins = _count(lg_ach, "champion")
         lg_ru   = _count(lg_ach, "runner_up")
         lg_3rd  = _count(lg_ach, "third")
 
+        def _ch_pts_for(entry):
+            pts_map = CH_A_PTS if entry["pool"] == "A" else CH_B_PTS
+            return pts_map.get(entry["level"], 0)
+
         # HHB Score (Cumulative) — all years
         dt_pts = sum(DT_PTS.get(v, 0) for v in dt_ach.values())
-        ch_pts = sum(CH_PTS.get(lv, 0) for vlist in ch_ach.values() for lv in vlist)
+        ch_pts = sum(_ch_pts_for(e) for vlist in ch_ach.values() for e in vlist)
         lg_pts = sum(LG_PTS.get(v.get("level", "participated"), 0) for v in lg_ach.values())
 
         # HHB Score (Current) — last 3 calendar years only
         dt_pts_cur = sum(DT_PTS.get(v, 0) for yr, v in dt_ach.items() if yr in CURRENT_YEARS)
         ch_pts_cur = sum(
-            CH_PTS.get(lv, 0)
+            _ch_pts_for(e)
             for yr, vlist in ch_ach.items() if yr in CURRENT_YEARS
-            for lv in vlist
+            for e in vlist
         )
         lg_pts_cur = sum(
             LG_PTS.get(v.get("level", "participated"), 0)
