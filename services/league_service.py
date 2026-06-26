@@ -1,4 +1,5 @@
 from collections import Counter, defaultdict
+from datetime import date
 from pathlib import Path
 from config import Config
 from services.excel_service import load_workbook_normalized
@@ -33,6 +34,22 @@ def get_league(year):
             rules.append(_clean(text))
 
     match_ws = wb[str(year)]
+
+    # Scheduled start/end from header row (R1C3, R1C7)
+    scheduled_start_raw = match_ws.cell(1, 3).value
+    scheduled_end_raw = match_ws.cell(1, 7).value
+
+    # OFF dates from row 2: R2C1='OFF', dates at C2, C4, C6, ...
+    off_dates = []
+    if _clean(match_ws.cell(2, 1).value) == "OFF":
+        col = 2
+        while True:
+            v = match_ws.cell(2, col).value
+            if v is None:
+                break
+            if hasattr(v, "year"):
+                off_dates.append(_fmt_date(v))
+            col += 2
 
     # --- Matches ---
     matches = []
@@ -109,6 +126,27 @@ def get_league(year):
     avg_diff = round(sum(diffs) / len(diffs), 1) if diffs else 0
     biggest = max(matches, key=lambda m: m["diff"]) if matches else None
     squeaky = [m for m in matches if m["diff"] == 1]
+
+    # --- Status ---
+    today = date.today()
+    if not matches:
+        status = "not_started"
+    elif scheduled_end_raw and hasattr(scheduled_end_raw, "date") and scheduled_end_raw.date() > today:
+        status = "in_progress"
+    elif max_date and max_date.date() > today:
+        status = "in_progress"
+    else:
+        status = "complete"
+
+    is_complete = status == "complete"
+
+    # Resolve season dates: use actual match dates for complete, scheduled header for others
+    if min_date and max_date:
+        season_start_disp = _fmt_date(min_date)
+        season_end_disp = _fmt_date(max_date)
+    else:
+        season_start_disp = _fmt_date(scheduled_start_raw) if scheduled_start_raw else "TBC"
+        season_end_disp = _fmt_date(scheduled_end_raw) if scheduled_end_raw else "TBC"
 
     # Score frequency
     score_counter = Counter()
@@ -195,12 +233,15 @@ def get_league(year):
     return {
         "year": year,
         "title": f"HHB Annual Players League {year}",
-        "season_start": _fmt_date(min_date),
-        "season_end": _fmt_date(max_date),
+        "season_start": season_start_disp,
+        "season_end": season_end_disp,
+        "status": status,
+        "is_complete": is_complete,
+        "off_dates": off_dates,
         "standings": standings,
-        "winner": standings[0]["player"] if standings else "",
-        "runner_up": standings[1]["player"] if len(standings) > 1 else "",
-        "third": standings[2]["player"] if len(standings) > 2 else "",
+        "winner": standings[0]["player"] if standings and is_complete else "",
+        "runner_up": standings[1]["player"] if len(standings) > 1 and is_complete else "",
+        "third": standings[2]["player"] if len(standings) > 2 and is_complete else "",
         "matches": matches,
         "all_players": all_players,
         "analytics": analytics,
