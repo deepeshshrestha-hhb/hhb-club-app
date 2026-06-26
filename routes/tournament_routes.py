@@ -122,6 +122,7 @@ def league_index():
             "season_start": data["season_start"] if data else "",
             "season_end": data["season_end"] if data else "",
             "status": data["status"] if data else "complete",
+            "off_dates": data["off_dates"] if data else [],
         })
     return render_template("league_index.html", leagues=leagues)
 

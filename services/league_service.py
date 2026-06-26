@@ -39,6 +39,18 @@ def get_league(year):
     scheduled_start_raw = match_ws.cell(1, 3).value
     scheduled_end_raw = match_ws.cell(1, 7).value
 
+    # OFF dates from row 2: R2C1='OFF', dates at C2, C4, C6, ...
+    off_dates = []
+    if _clean(match_ws.cell(2, 1).value) == "OFF":
+        col = 2
+        while True:
+            v = match_ws.cell(2, col).value
+            if v is None:
+                break
+            if hasattr(v, "year"):
+                off_dates.append(_fmt_date(v))
+            col += 2
+
     # --- Matches ---
     matches = []
     min_date = None
@@ -225,6 +237,7 @@ def get_league(year):
         "season_end": season_end_disp,
         "status": status,
         "is_complete": is_complete,
+        "off_dates": off_dates,
         "standings": standings,
         "winner": standings[0]["player"] if standings and is_complete else "",
         "runner_up": standings[1]["player"] if len(standings) > 1 and is_complete else "",

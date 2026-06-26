@@ -25,6 +25,11 @@
                     <span class="badge bg-success">Complete</span>
                     {% endif %}
                 </p>
+                {% if l.off_dates %}
+                <p class="text-muted small mb-3">
+                    <span class="fw-semibold">Off dates:</span> {{ l.off_dates | join(', ') }}
+                </p>
+                {% endif %}
                 {% if l.winner %}
                 <div class="mb-2">
                     <div class="small text-muted">CHAMPION</div>
@@ -38,7 +43,7 @@
                 </div>
                 {% endif %}
                 {% if l.status == 'not_started' %}
-                <button class="btn btn-hhb-primary btn-sm mt-auto text-white disabled" disabled>View League</button>
+                <button class="btn btn-secondary btn-sm mt-auto" disabled>View League</button>
                 {% else %}
                 <a href="{{ url_for('tournaments.league_detail', year=l.year) }}" class="btn btn-hhb-primary btn-sm mt-auto text-white">
                     View League
