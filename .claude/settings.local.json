@@ -66,7 +66,27 @@
       "Bash(git checkout main)",
       "Bash(git log *)",
       "Bash(git diff *)",
-      "Bash(git status)"
+      "Bash(git status)",
+      "Bash(python app.py)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:5000/)",
+      "mcp__Claude_in_Chrome__navigate",
+      "PowerShell(Start-Process \"http://127.0.0.1:5000/players\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:5000/players)",
+      "Bash(curl -s http://127.0.0.1:5000/players)",
+      "Bash(python -c \"import sys; html=sys.stdin.read\\(\\); markers=['th-current','th-cumulative','players-tbody','btn-current','btn-cumulative','score-cell-current','score-cell-cumulative','HHB Score \\(Current\\)','HHB Score \\(Cumulative\\)']; [print\\(m, '✓' if m in html else '✗'\\) for m in markers]\")",
+      "Bash(python -c \"import sys; html=sys.stdin.read\\(\\); markers=['th-current','th-cumulative','players-tbody','btn-current','btn-cumulative','score-cell-current','score-cell-cumulative','HHB Score \\(Current\\)','HHB Score \\(Cumulative\\)']; [print\\(m, 'OK' if m in html else 'MISSING'\\) for m in markers]\")",
+      "PowerShell(Get-Process python)",
+      "PowerShell(netstat -ano)",
+      "PowerShell(Stop-Process -Id 6796 -Force)",
+      "PowerShell(Stop-Process -Id 21032 -Force)",
+      "Bash(python -c \"import sys; html=sys.stdin.read\\(\\); markers=['th-current','players-tbody','btn-current','score-cell-current','HHB Score \\(Current\\)','HHB Score \\(Cumulative\\)']; [print\\(m, 'OK' if m in html else 'MISSING'\\) for m in markers]\")",
+      "Bash(python -c \"import sys; html=sys.stdin.read\\(\\); print\\('card-header OK' if 'Recent form' in html or 'rewarding recent form' in html else 'card-header MISSING'\\); print\\('footnote still there' if 'rewarding recent activity' in html else 'footnote removed OK'\\)\")",
+      "PowerShell(Get-NetTCPConnection -LocalPort 5000 -State Listen | Select-Object -ExpandProperty OwningProcess | ForEach-Object { Stop-Process -Id $_ -Force }; Write-Host \"killed\")",
+      "Bash(python -c \"import sys; html=sys.stdin.read\\(\\); print\\('card-header OK' if 'rewarding recent form' in html else 'card-header MISSING'\\); print\\('footnote removed OK' if 'rewarding recent activity' not in html else 'footnote still there'\\)\")",
+      "Bash(gh pr create --title 'Update HHB Score criteria and add Current vs Cumulative ranking' --body ' *)",
+      "PowerShell(\\(Get-Command gh -ErrorAction SilentlyContinue\\).Source; where.exe gh 2>$null)",
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" -ErrorAction SilentlyContinue; Get-ChildItem \"$env:LOCALAPPDATA\\\\Programs\\\\gh\\\\bin\\\\gh.exe\" -ErrorAction SilentlyContinue; Get-ChildItem \"C:\\\\Users\\\\deepe\\\\scoop\\\\shims\\\\gh.exe\" -ErrorAction SilentlyContinue)",
+      "PowerShell(& \"C:\\\\Program Files\\\\GitHub CLI\\\\gh.exe\" pr merge 1 --merge --delete-branch)"
     ]
   }
 }
