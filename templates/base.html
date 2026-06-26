@@ -16,6 +16,7 @@
 
     <!-- HHB custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    {% block head_extra %}{% endblock %}
 </head>
 
 <body class="bg-light">
@@ -46,10 +47,10 @@
 
     <!-- Main content area -->
     <div class="container-fluid mt-4 mb-5">
-        {% with messages = get_flashed_messages() %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
-            {% for m in messages %}
-            <div class="alert alert-info alert-dismissible fade show" role="alert">
+            {% for cat, m in messages %}
+            <div class="alert alert-{{ cat if cat in ['success','danger','warning','info'] else 'info' }} alert-dismissible fade show" role="alert">
                 {{ m }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>

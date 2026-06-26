@@ -6,6 +6,10 @@
 # Member PII - regenerated from Spond on app startup, do not version
 data/hhb_members.csv
 
+# Player profile runtime data - stored in R2, not source-controlled
+data/player_profiles.json
+data/profile_photos/
+
 # Python
 __pycache__/
 *.py[cod]

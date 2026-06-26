@@ -142,7 +142,17 @@
                     {% for p in players -%}
                     <tr data-current="{{ p.hhb_score_current }}" data-cumulative="{{ p.hhb_score_cumulative }}" data-name="{{ p.full_name }}">
                         <td class="rank-cell" style="position:sticky;left:0;z-index:1;"></td>
-                        <td class="fw-semibold" style="position:sticky;left:36px;z-index:1;">{{ p.full_name }}</td>
+                        <td class="fw-semibold" style="position:sticky;left:36px;z-index:1;">
+                            {% set slug = p.full_name | slugify %}
+                            <a href="{{ url_for('players.player_profile', slug=slug) }}"
+                               class="text-decoration-none"
+                               style="color:{% if slug in profile_slugs %}var(--hhb-primary){% else %}inherit{% endif %}">
+                                {{ p.full_name }}
+                            </a>
+                            {% if slug in profile_slugs %}
+                            <span class="ms-1" title="Has a profile" style="font-size:.7rem;color:var(--hhb-accent)">●</span>
+                            {% endif %}
+                        </td>
                         <td class="text-muted small">{{ p.age or '—' }}</td>
                         <td class="text-center">
                             {% if p.dt_count %}<span class="badge bg-secondary">{{ p.dt_count }}</span>{% else %}<span class="text-muted">—</span>{% endif %}

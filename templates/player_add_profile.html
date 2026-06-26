@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block head_extra %}
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/players">Players</a></li>
+        <li class="breadcrumb-item active">{{ 'Edit' if form.get('full_name') else 'Add' }} Player Profile</li>
+    </ol>
+</nav>
+
+<div class="card hhb-card mx-auto" style="max-width:600px">
+    <div class="card-body p-4">
+        <h1 class="page-title mb-1" style="font-size:1.5rem">
+            {{ 'Edit' if form.get('full_name') or preselect else 'Add' }} Player Profile
+        </h1>
+        <p class="text-muted small mb-4">Fill in the details below. Saving will create or overwrite the existing profile.</p>
+
+        {% if overwrite_warning %}
+        <div class="alert alert-warning d-flex align-items-start gap-3 mb-4" role="alert">
+            <span style="font-size:1.4rem">⚠️</span>
+            <div>
+                <strong>A profile already exists for {{ overwrite_warning }}.</strong>
+                Review your changes below and click <strong>Save Profile</strong> again to overwrite it,
+                or <a href="{{ url_for('players.add_profile') }}">cancel</a>.
+            </div>
+        </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" novalidate>
+        {% if overwrite_warning %}
+        <input type="hidden" name="confirm_overwrite" value="yes">
+        {% endif %}
+
+            <!-- Player selector -->
+            <div class="mb-4">
+                <label for="full_name" class="form-label fw-semibold">Player <span class="text-danger">*</span></label>
+                <select class="form-select ts-player" id="full_name" name="full_name" required>
+                    <option value="">— type or select a player —</option>
+                    {% for p in players | sort(attribute='full_name') %}
+                    <option value="{{ p.full_name }}"
+                        {% if p.full_name == (form.get('full_name') or preselect) %}selected{% endif %}>
+                        {{ p.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <hr class="mb-4">
+
+            <!-- Q1 -->
+            <div class="mb-3">
+                <label for="fav_opponent" class="form-label">
+                    🏸 Favourite player to play <strong>against</strong>?
+                </label>
+                <select class="form-select ts-player" id="fav_opponent" name="fav_opponent">
+                    <option value="">— type or select a player —</option>
+                    {% for p in players | sort(attribute='full_name') %}
+                    <option value="{{ p.full_name }}"
+                        {% if p.full_name == form.get('fav_opponent', '') %}selected{% endif %}>
+                        {{ p.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Q2 -->
+            <div class="mb-3">
+                <label for="fav_partner" class="form-label">
+                    🤝 Favourite player to have as a <strong>doubles partner</strong>?
+                </label>
+                <select class="form-select ts-player" id="fav_partner" name="fav_partner">
+                    <option value="">— type or select a player —</option>
+                    {% for p in players | sort(attribute='full_name') %}
+                    <option value="{{ p.full_name }}"
+                        {% if p.full_name == form.get('fav_partner', '') %}selected{% endif %}>
+                        {{ p.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Q3 -->
+            <div class="mb-3">
+                <label for="fav_shot" class="form-label">
+                    ⚡ Favourite badminton shot?
+                </label>
+                <select class="form-select ts-player" id="fav_shot" name="fav_shot">
+                    <option value="">— select a shot —</option>
+                    {% set shots = [
+                        'Smash', 'Jump Smash', 'Drop Shot', 'Slice Drop Shot',
+                        'Net Kill', 'Net Lift', 'Net Spin / Tumble',
+                        'Clear (Overhead)', 'Defensive Clear', 'Drive',
+                        'Cross-Court Shot', 'Push Shot', 'Flick Serve',
+                        'Low Serve', 'High Serve', 'Backhand Smash',
+                        'Backhand Drop', 'Backhand Clear', 'Around-the-Head Shot',
+                        'Deceptive / Fake Shot'
+                    ] %}
+                    {% for shot in shots %}
+                    <option value="{{ shot }}"
+                        {% if shot == form.get('fav_shot', '') %}selected{% endif %}>
+                        {{ shot }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Q4 -->
+            <div class="mb-3">
+                <label for="day_job" class="form-label">
+                    💼 Day job?
+                </label>
+                <input type="text" class="form-control" id="day_job" name="day_job"
+                       placeholder="e.g. Software Engineer" maxlength="120"
+                       value="{{ form.get('day_job', '') }}">
+            </div>
+
+            <!-- Q5 -->
+            <div class="mb-4">
+                <label for="year_joined" class="form-label">
+                    📅 Playing with HHB Club since…
+                </label>
+                <select class="form-select" id="year_joined" name="year_joined">
+                    <option value="">— select year —</option>
+                    {% for y in join_years %}
+                    <option value="{{ y }}"
+                        {% if form.get('year_joined') | string == y | string %}selected{% endif %}>
+                        {{ y }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Photo upload -->
+            <div class="mb-4">
+                <label for="photo" class="form-label">📷 Profile photo <span class="text-muted small">(optional)</span></label>
+                {% if form.get('photo_filename') %}
+                <div class="mb-2">
+                    <img src="{{ url_for('players.player_photo', filename=form.get('photo_filename')) }}"
+                         alt="Current photo" class="rounded-circle border"
+                         style="width:70px;height:70px;object-fit:cover;border-color:var(--hhb-primary)!important;border-width:2px!important;">
+                    <span class="text-muted small ms-2">Current photo — upload a new one to replace it</span>
+                </div>
+                {% endif %}
+                <input class="form-control" type="file" id="photo" name="photo"
+                       accept=".jpg,.jpeg,.png,.gif,.webp">
+                <div class="form-text">jpg, jpeg, png, gif or webp · max 10 MB</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-hhb-primary text-white px-4">Save Profile</button>
+                <a href="/players" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script>
+document.querySelectorAll('.ts-player').forEach(el => {
+    new TomSelect(el, {
+        placeholder: '— type or select a player —',
+        allowEmptyOption: true,
+        maxOptions: null,
+    });
+});
+</script>
+{% endblock %}
