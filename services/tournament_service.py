@@ -118,6 +118,7 @@ def _parse_rules(ws):
 
 
 def _parse_important_dates(ws):
+    import datetime as _dt
     dates = []
     row = 4
     while True:
@@ -126,6 +127,9 @@ def _parse_important_dates(ws):
             break
         # Modern sheets have the date in col E; older layouts (e.g. 2022) use col D.
         date_val = ws[f"E{row}"].value or ws[f"D{row}"].value
+        # Stop once we've left the date rows (team name rows have strings, not dates).
+        if not isinstance(date_val, _dt.datetime):
+            break
         dates.append({"label": _clean(label), "date": _fmt_date(date_val)})
         row += 1
     return dates
