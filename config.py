@@ -28,3 +28,6 @@ class Config:
     # area to be reachable. If either is missing, admin login is disabled.
     ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+
+    # Limit upload size (covers profile photo uploads)
+    MAX_CONTENT_LENGTH = 11 * 1024 * 1024  # 11 MB (10 MB limit enforced in service)

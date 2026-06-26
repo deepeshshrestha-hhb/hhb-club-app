@@ -8,6 +8,7 @@ from routes.tournament_routes import tournament_bp
 from routes.admin_routes import admin_bp
 from routes.player_routes import player_bp
 from services import r2_service
+from services.profile_service import name_to_slug
 
 # Log to stdout so messages (incl. R2 sync) surface in the Render logs.
 # force=True is required because under gunicorn the root logger already has
@@ -30,6 +31,8 @@ def create_app():
     # (The Spond member list is refreshed on demand via the Admin page, not on
     # every startup - it rarely changes.)
     r2_service.download_all()
+
+    app.jinja_env.filters["slugify"] = name_to_slug
 
     # Blueprints
     app.register_blueprint(calendar_bp)

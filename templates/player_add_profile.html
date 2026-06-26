@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/players">Players</a></li>
+        <li class="breadcrumb-item active">{{ 'Edit' if form.get('full_name') else 'Add' }} Player Profile</li>
+    </ol>
+</nav>
+
+<div class="card hhb-card mx-auto" style="max-width:600px">
+    <div class="card-body p-4">
+        <h1 class="page-title mb-1" style="font-size:1.5rem">
+            {{ 'Edit' if form.get('full_name') or preselect else 'Add' }} Player Profile
+        </h1>
+        <p class="text-muted small mb-4">Fill in the details below. Saving will create or overwrite the existing profile.</p>
+
+        <form method="POST" enctype="multipart/form-data" novalidate>
+
+            <!-- Player selector -->
+            <div class="mb-4">
+                <label for="full_name" class="form-label fw-semibold">Player <span class="text-danger">*</span></label>
+                <select class="form-select" id="full_name" name="full_name" required>
+                    <option value="">— select a player —</option>
+                    {% for p in players %}
+                    <option value="{{ p.full_name }}"
+                        {% if p.full_name == (form.get('full_name') or preselect) %}selected{% endif %}>
+                        {{ p.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <hr class="mb-4">
+
+            <!-- Q1 -->
+            <div class="mb-3">
+                <label for="fav_opponent" class="form-label">
+                    🏸 Favourite player to play <strong>against</strong>?
+                </label>
+                <input type="text" class="form-control" id="fav_opponent" name="fav_opponent"
+                       placeholder="e.g. John" maxlength="100"
+                       value="{{ form.get('fav_opponent', '') }}">
+            </div>
+
+            <!-- Q2 -->
+            <div class="mb-3">
+                <label for="fav_partner" class="form-label">
+                    🤝 Favourite player to have as a <strong>doubles partner</strong>?
+                </label>
+                <input type="text" class="form-control" id="fav_partner" name="fav_partner"
+                       placeholder="e.g. Priya" maxlength="100"
+                       value="{{ form.get('fav_partner', '') }}">
+            </div>
+
+            <!-- Q3 -->
+            <div class="mb-3">
+                <label for="fav_shot" class="form-label">
+                    ⚡ Favourite badminton shot?
+                </label>
+                <input type="text" class="form-control" id="fav_shot" name="fav_shot"
+                       placeholder="e.g. Drop shot, Smash, Net kill…" maxlength="100"
+                       value="{{ form.get('fav_shot', '') }}">
+            </div>
+
+            <!-- Q4 -->
+            <div class="mb-3">
+                <label for="day_job" class="form-label">
+                    💼 Day job?
+                </label>
+                <input type="text" class="form-control" id="day_job" name="day_job"
+                       placeholder="e.g. Software Engineer" maxlength="120"
+                       value="{{ form.get('day_job', '') }}">
+            </div>
+
+            <!-- Q5 -->
+            <div class="mb-4">
+                <label for="year_joined" class="form-label">
+                    📅 Playing with HHB Club since…
+                </label>
+                <select class="form-select" id="year_joined" name="year_joined">
+                    <option value="">— select year —</option>
+                    {% for y in join_years %}
+                    <option value="{{ y }}"
+                        {% if form.get('year_joined') | string == y | string %}selected{% endif %}>
+                        {{ y }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Photo upload -->
+            <div class="mb-4">
+                <label for="photo" class="form-label">📷 Profile photo <span class="text-muted small">(optional)</span></label>
+                {% if form.get('photo_filename') %}
+                <div class="mb-2">
+                    <img src="{{ url_for('players.player_photo', filename=form.get('photo_filename')) }}"
+                         alt="Current photo" class="rounded-circle border"
+                         style="width:70px;height:70px;object-fit:cover;border-color:var(--hhb-primary)!important;border-width:2px!important;">
+                    <span class="text-muted small ms-2">Current photo — upload a new one to replace it</span>
+                </div>
+                {% endif %}
+                <input class="form-control" type="file" id="photo" name="photo"
+                       accept=".jpg,.jpeg,.png,.gif,.webp">
+                <div class="form-text">jpg, jpeg, png, gif or webp · max 10 MB</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-hhb-primary text-white px-4">Save Profile</button>
+                <a href="/players" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+{% endblock %}

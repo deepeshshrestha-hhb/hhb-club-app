@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block content %}
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/players">Players</a></li>
+        <li class="breadcrumb-item active">{{ player.full_name }}</li>
+    </ol>
+</nav>
+
+{% if profile %}
+<!-- ── Profile card ── -->
+<div class="card hhb-card mx-auto" style="max-width:680px">
+    <div class="card-body p-4">
+
+        <!-- Header: photo + name + rank -->
+        <div class="d-flex align-items-center gap-4 mb-4 flex-wrap">
+            {% if profile.photo_filename %}
+            <img src="{{ url_for('players.player_photo', filename=profile.photo_filename) }}"
+                 alt="{{ player.full_name }}"
+                 class="rounded-circle border"
+                 style="width:110px;height:110px;object-fit:cover;border-color:var(--hhb-primary)!important;border-width:3px!important;">
+            {% else %}
+            <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width:110px;height:110px;background:var(--hhb-primary);font-size:2.4rem;color:#fff;font-weight:700;border:3px solid var(--hhb-accent)">
+                {{ player.full_name[0] | upper }}
+            </div>
+            {% endif %}
+
+            <div>
+                <h1 class="page-title mb-1" style="font-size:1.7rem">{{ player.full_name }}</h1>
+                <div class="d-flex flex-wrap gap-2 align-items-center mt-1">
+                    {% if player.rank %}
+                    <span class="badge" style="background:var(--hhb-primary);font-size:.85rem">
+                        HHB Rank #{{ player.rank }}
+                    </span>
+                    {% endif %}
+                    <span class="badge bg-secondary" style="font-size:.85rem">
+                        {{ player.hhb_score_current }} pts (current)
+                    </span>
+                    {% if profile.year_joined %}
+                    <span class="text-muted small">Playing with HHB since {{ profile.year_joined }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats row -->
+        <div class="row g-2 mb-4 text-center">
+            <div class="col-4">
+                <div class="p-2 rounded" style="background:#f0f7ff">
+                    <div class="fw-bold" style="color:var(--hhb-accent);font-size:1.3rem">{{ player.total_wins or 0 }}</div>
+                    <div class="text-muted small">🏆 Wins</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="p-2 rounded" style="background:#f0f7ff">
+                    <div class="fw-bold" style="color:var(--hhb-primary);font-size:1.3rem">{{ player.total_runner_ups or 0 }}</div>
+                    <div class="text-muted small">🥈 Runner-ups</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="p-2 rounded" style="background:#f0f7ff">
+                    <div class="fw-bold" style="color:#888;font-size:1.3rem">{{ player.total_thirds or 0 }}</div>
+                    <div class="text-muted small">🥉 3rd Places</div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-3">
+
+        <!-- Q&A -->
+        <div class="d-flex flex-column gap-3">
+
+            {% if profile.fav_opponent %}
+            <div class="d-flex gap-3">
+                <div class="flex-shrink-0 text-center" style="width:38px;font-size:1.4rem">🏸</div>
+                <div>
+                    <div class="text-muted small mb-1">Favourite opponent to play against</div>
+                    <div class="fw-semibold">{{ profile.fav_opponent }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if profile.fav_partner %}
+            <div class="d-flex gap-3">
+                <div class="flex-shrink-0 text-center" style="width:38px;font-size:1.4rem">🤝</div>
+                <div>
+                    <div class="text-muted small mb-1">Favourite doubles partner</div>
+                    <div class="fw-semibold">{{ profile.fav_partner }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if profile.fav_shot %}
+            <div class="d-flex gap-3">
+                <div class="flex-shrink-0 text-center" style="width:38px;font-size:1.4rem">⚡</div>
+                <div>
+                    <div class="text-muted small mb-1">Favourite shot</div>
+                    <div class="fw-semibold">{{ profile.fav_shot }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if profile.day_job %}
+            <div class="d-flex gap-3">
+                <div class="flex-shrink-0 text-center" style="width:38px;font-size:1.4rem">💼</div>
+                <div>
+                    <div class="text-muted small mb-1">Day job</div>
+                    <div class="fw-semibold">{{ profile.day_job }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <hr class="mt-4 mb-3">
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ url_for('players.add_profile') }}?player={{ player.full_name | urlencode }}"
+               class="btn btn-sm btn-outline-secondary">Edit Profile</a>
+            <a href="/players" class="btn btn-sm btn-outline-secondary">← All Players</a>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<!-- ── No profile yet ── -->
+<div class="card hhb-card mx-auto" style="max-width:520px">
+    <div class="card-body p-4 text-center">
+        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3"
+             style="width:90px;height:90px;background:var(--hhb-primary);font-size:2rem;color:#fff;font-weight:700">
+            {{ player.full_name[0] | upper }}
+        </div>
+        <h2 class="h4 mb-1">{{ player.full_name }}</h2>
+        {% if player.rank %}
+        <p class="text-muted mb-3">HHB Rank #{{ player.rank }} &middot; {{ player.hhb_score_current }} pts</p>
+        {% endif %}
+        <p class="text-muted mb-4">No profile has been created for this player yet.</p>
+        <a href="{{ url_for('players.add_profile') }}?player={{ player.full_name | urlencode }}"
+           class="btn btn-hhb-primary text-white">Add Profile</a>
+        <a href="/players" class="btn btn-outline-secondary ms-2">← All Players</a>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
