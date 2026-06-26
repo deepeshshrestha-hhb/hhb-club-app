@@ -41,7 +41,7 @@ def get_all_players():
     empty_stats = {
         "dt_count": 0, "ch_count": 0, "lg_count": 0,
         "total_wins": 0, "total_runner_ups": 0, "total_thirds": 0,
-        "hhb_score": 0,
+        "hhb_score_cumulative": 0, "hhb_score_current": 0,
     }
 
     players = []
@@ -57,7 +57,7 @@ def get_all_players():
                 **stats,
             })
 
-    players.sort(key=lambda p: -p["hhb_score"])
+    players.sort(key=lambda p: -p["hhb_score_current"])
     for i, p in enumerate(players):
         p["rank"] = i + 1
     return players

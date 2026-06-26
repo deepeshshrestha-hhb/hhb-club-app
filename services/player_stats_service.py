@@ -24,16 +24,16 @@ ALIASES = {
 
 # Points per best achievement in a season/year
 DT_PTS = {   # Annual Doubles Classic
-    "winner": 100, "runner_up": 75, "third": 55,
-    "semi": 35, "knockout": 20, "group": 10,
+    "winner": 100, "runner_up": 75, "third": 56,
+    "semi": 36, "knockout": 20, "group": 10,
 }
 CH_PTS = {   # Annual Championships (per pool appearance)
-    "winner": 85, "runner_up": 60, "third": 40,
+    "winner": 85, "runner_up": 64, "third": 38,
     "semi": 20, "group": 8,
 }
-LG_PTS = {   # Annual Doubles League
-    "champion": 70, "runner_up": 45, "third": 30,
-    "top5": 20, "top10": 15, "participated": 10,
+LG_PTS = {   # Annual Players League
+    "champion": 70, "runner_up": 56, "third": 42,
+    "top5": 28, "top10": 18, "participated": 10,
 }
 
 _cache = None
@@ -146,6 +146,8 @@ def get_all_player_stats():
             else:               level = "participated"
             raw[fn]["lg"][year] = {"level": level, "rank": rank}
 
+    CURRENT_YEARS = {2024, 2025, 2026}
+
     # ── Summarise ─────────────────────────────────────────────────────────────
     result = {}
     for fn, d in raw.items():
@@ -179,10 +181,22 @@ def get_all_player_stats():
         lg_ru   = _count(lg_ach, "runner_up")
         lg_3rd  = _count(lg_ach, "third")
 
-        # HHB Score
+        # HHB Score (Cumulative) — all years
         dt_pts = sum(DT_PTS.get(v, 0) for v in dt_ach.values())
         ch_pts = sum(CH_PTS.get(lv, 0) for vlist in ch_ach.values() for lv in vlist)
         lg_pts = sum(LG_PTS.get(v.get("level", "participated"), 0) for v in lg_ach.values())
+
+        # HHB Score (Current) — last 3 calendar years only
+        dt_pts_cur = sum(DT_PTS.get(v, 0) for yr, v in dt_ach.items() if yr in CURRENT_YEARS)
+        ch_pts_cur = sum(
+            CH_PTS.get(lv, 0)
+            for yr, vlist in ch_ach.items() if yr in CURRENT_YEARS
+            for lv in vlist
+        )
+        lg_pts_cur = sum(
+            LG_PTS.get(v.get("level", "participated"), 0)
+            for yr, v in lg_ach.items() if yr in CURRENT_YEARS
+        )
 
         result[fn] = {
             "dt_count": len(dt_ach),
@@ -191,7 +205,8 @@ def get_all_player_stats():
             "total_wins": dt_wins + ch_wins + lg_wins,
             "total_runner_ups": dt_ru + ch_ru + lg_ru,
             "total_thirds": dt_3rd + ch_3rd + lg_3rd,
-            "hhb_score": dt_pts + ch_pts + lg_pts,
+            "hhb_score_cumulative": dt_pts + ch_pts + lg_pts,
+            "hhb_score_current": dt_pts_cur + ch_pts_cur + lg_pts_cur,
         }
 
     _cache = result
