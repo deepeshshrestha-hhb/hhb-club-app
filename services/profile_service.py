@@ -102,3 +102,19 @@ def get_photo_path(photo_filename: str) -> Path | None:
 
 def get_all_profile_slugs() -> set:
     return set(_load_all().keys())
+
+
+def delete_profile(slug: str) -> bool:
+    """Delete a profile and its photo. Returns True if a profile existed."""
+    profiles = _load_all()
+    profile = profiles.pop(slug, None)
+    if profile is None:
+        return False
+    # Remove photo file if present
+    photo = profile.get("photo_filename")
+    if photo:
+        photo_path = PHOTOS_DIR / photo
+        if photo_path.exists():
+            photo_path.unlink(missing_ok=True)
+    _save_all(profiles)
+    return True

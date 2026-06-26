@@ -119,6 +119,11 @@
             {% if session.get('is_admin') %}
             <a href="{{ url_for('players.add_profile') }}?player={{ player.full_name | urlencode }}"
                class="btn btn-sm btn-outline-secondary">Edit Profile</a>
+            <form method="POST"
+                  action="{{ url_for('players.delete_player_profile', slug=slug) }}"
+                  onsubmit="return confirm('Delete the profile for {{ player.full_name }}? This cannot be undone.')">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Delete Profile</button>
+            </form>
             {% endif %}
             <a href="/players" class="btn btn-sm btn-outline-secondary">← All Players</a>
         </div>

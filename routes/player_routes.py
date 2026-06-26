@@ -2,7 +2,7 @@ import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, abort, send_file, flash, session
 from services.player_service import get_all_players
 from services.profile_service import (
-    get_profile, save_profile, name_to_slug, get_photo_path, get_all_profile_slugs
+    get_profile, save_profile, name_to_slug, get_photo_path, get_all_profile_slugs, delete_profile
 )
 
 player_bp = Blueprint("players", __name__)
@@ -34,6 +34,22 @@ def player_photo(filename):
     if path is None:
         abort(404)
     return send_file(path)
+
+
+@player_bp.route("/players/<slug>/delete-profile", methods=["POST"])
+def delete_player_profile(slug):
+    if not session.get("is_admin"):
+        abort(403)
+    players = get_all_players()
+    player = next((p for p in players if name_to_slug(p["full_name"]) == slug), None)
+    if player is None:
+        abort(404)
+    deleted = delete_profile(slug)
+    if deleted:
+        flash(f"Profile for {player['full_name']} has been deleted.", "success")
+    else:
+        flash("No profile found to delete.", "warning")
+    return redirect(url_for("players.player_profile", slug=slug))
 
 
 @player_bp.route("/players/add-profile", methods=["GET", "POST"])
