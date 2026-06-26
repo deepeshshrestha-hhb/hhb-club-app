@@ -2,13 +2,7 @@ name: Keep Alive
 
 on:
   schedule:
-    # Active window: 06:30–00:30 UK time (UTC during winter/GMT).
-    # In summer (BST = UTC+1) this shifts to 07:30–01:30 UK time — acceptable.
-    # Quiet window (no pings): 00:30–06:30 UK time, letting Render sleep.
-    # (Re-pushed to activate GitHub's scheduler — new workflows can take 24h to start.)
-    - cron: "30,40,50 6 * * *"   # 06:30–06:50 UTC  (ramp up)
-    - cron: "*/10 7-23 * * *"    # 07:00–23:59 UTC  (main active block)
-    - cron: "0,10,20,30 0 * * *" # 00:00–00:30 UTC  (wind down)
+    - cron: "*/10 * * * *"  # Every 10 minutes, every day
   workflow_dispatch:
 
 jobs:
