@@ -207,6 +207,22 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
 
 ---
 
+## Local Tooling Notes
+
+- **gh CLI** is installed at `C:\Program Files\GitHub CLI\gh.exe` but that
+  directory is NOT on the PATH available to Claude's tool shell. Always invoke
+  it with the full path:
+  ```
+  & "C:\Program Files\GitHub CLI\gh.exe" <command>
+  ```
+- **Flask dev server** — always start with `--no-reload` and track the PID.
+  Multiple background processes can silently accumulate on the same port
+  (Windows doesn't error), causing stale-code responses. Use
+  `netstat -ano | grep ":<port> "` to verify only one LISTENING process exists
+  before testing.
+
+---
+
 ## Commit Message Convention
 
 Once git is initialized, write commit messages that read as a working history —
