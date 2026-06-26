@@ -44,7 +44,7 @@ CH_B_PTS = {   # Championships Pool B — Bronze tier (developing players)
 }
 LG_PTS = {   # Annual Players League — Gold-aligned (season-long consistent match-winning)
     "champion": 200, "runner_up": 150, "third": 105,
-    "top5": 65, "top10": 35, "participated": 15,
+    "top5": 65, "top10": 35, "top15": 15,
 }
 
 _cache = None
@@ -157,6 +157,7 @@ def get_all_player_stats():
             elif rank == 3:     level = "third"
             elif rank <= 5:     level = "top5"
             elif rank <= 10:    level = "top10"
+            elif rank <= 15:    level = "top15"
             else:               level = "participated"
             raw[fn]["lg"][year] = {"level": level, "rank": rank}
 
