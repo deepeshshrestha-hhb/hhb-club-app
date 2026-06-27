@@ -45,6 +45,7 @@ BASE_DIR = Path(Config.BASE_DIR)
 SYNCED_DIRS = {
     "data": BASE_DIR / "data",
     "tournaments": BASE_DIR / "tournaments",
+    "podium": BASE_DIR / "static" / "images" / "podium",
 }
 
 _REQUIRED_VARS = (
@@ -236,3 +237,28 @@ def upload_file(local_path):
         key, last_exc, local_path,
     )
     return False
+
+
+def delete_file(local_path):
+    """Delete one file from R2 (best-effort; local file must be removed by caller).
+
+    Returns True on success, False when R2 is not configured or the delete fails.
+    """
+    if not is_enabled():
+        return False
+
+    local_path = Path(local_path)
+    key = _local_to_key(local_path)
+    if key is None:
+        logger.warning("R2 delete skipped: %s is not under a synced directory.", local_path)
+        return False
+
+    client = get_client()
+    bucket = _env("R2_BUCKET")
+    try:
+        client.delete_object(Bucket=bucket, Key=key)
+        logger.info("R2 delete ok: %s", key)
+        return True
+    except Exception as exc:  # noqa: BLE001
+        logger.error("R2 delete FAILED for %s: %s", key, exc)
+        return False

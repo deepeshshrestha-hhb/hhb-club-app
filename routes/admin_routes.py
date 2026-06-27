@@ -2,13 +2,14 @@ import hmac
 from functools import wraps
 
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, session, flash
+    Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 )
 
 from config import Config
 from services import r2_service
 from services.spond_service import fetch_members_to_csv
 from services.player_stats_service import invalidate_cache
+from services.podium_service import get_podium_photo_list, save_podium_photos, delete_podium_photo
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -74,6 +75,42 @@ def sync_spond_route():
     invalidate_cache()
     flash("Spond member list refreshed.")
     return redirect(url_for("admin.admin_page"))
+
+
+@admin_bp.route("/admin/podium/photos")
+@admin_required
+def podium_photos():
+    """Return existing photos for a podium key as JSON."""
+    key = request.args.get("key", "").strip()
+    if not key:
+        return jsonify({"error": "key required"}), 400
+    return jsonify({"photos": get_podium_photo_list(key)})
+
+
+@admin_bp.route("/admin/podium/upload", methods=["POST"])
+@admin_required
+def podium_upload():
+    """Upload one or more photos for a podium key."""
+    key = request.form.get("key", "").strip()
+    if not key:
+        return jsonify({"error": "key required"}), 400
+    files = request.files.getlist("photos")
+    if not files:
+        return jsonify({"error": "no files"}), 400
+    saved = save_podium_photos(key, files)
+    return jsonify({"ok": True, "saved": saved, "photos": get_podium_photo_list(key)})
+
+
+@admin_bp.route("/admin/podium/delete", methods=["POST"])
+@admin_required
+def podium_delete():
+    """Delete a single podium photo by filename."""
+    data = request.get_json(silent=True) or {}
+    filename = (data.get("filename") or "").strip()
+    if not filename:
+        return jsonify({"error": "filename required"}), 400
+    ok = delete_podium_photo(filename)
+    return jsonify({"ok": ok})
 
 
 @admin_bp.route("/admin/refresh-data", methods=["POST"])

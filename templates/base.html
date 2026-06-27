@@ -116,6 +116,131 @@
     });
     </script>
 
+    <!-- Admin podium photo management modal -->
+    {% if session.get('is_admin') %}
+    <div class="modal fade" id="podiumAdminModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title" id="podiumAdminLabel"></h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <p class="text-muted small mb-2">Existing photos — click ✕ to remove</p>
+                        <div id="podiumAdminGrid" class="d-flex flex-wrap gap-2"></div>
+                        <p id="podiumAdminEmpty" class="text-muted small fst-italic d-none">No photos yet.</p>
+                    </div>
+                    <hr>
+                    <div>
+                        <label class="fw-semibold small mb-2 d-block">Add photos</label>
+                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <input type="file" id="podiumAdminInput" accept="image/*" multiple class="form-control form-control-sm" style="max-width:320px;">
+                            <button class="btn btn-hhb-primary btn-sm text-white" id="podiumAdminUpload">Upload</button>
+                        </div>
+                        <div id="podiumAdminProgress" class="mt-2 d-none">
+                            <div class="progress" style="height:6px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated w-100"></div>
+                            </div>
+                            <p class="text-muted small mt-1 mb-0">Uploading…</p>
+                        </div>
+                        <p id="podiumAdminMsg" class="small mt-2 mb-0"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function() {
+        var _adminKey = '';
+
+        function renderPhotos(photos) {
+            var grid = document.getElementById('podiumAdminGrid');
+            var empty = document.getElementById('podiumAdminEmpty');
+            grid.innerHTML = '';
+            if (!photos.length) { empty.classList.remove('d-none'); return; }
+            empty.classList.add('d-none');
+            photos.forEach(function(p) {
+                var wrap = document.createElement('div');
+                wrap.style.cssText = 'position:relative;width:120px;height:90px;flex-shrink:0;';
+                var img = document.createElement('img');
+                img.src = p.url;
+                img.style.cssText = 'width:120px;height:90px;object-fit:cover;border-radius:4px;';
+                var btn = document.createElement('button');
+                btn.textContent = '✕';
+                btn.title = 'Remove photo';
+                btn.style.cssText = 'position:absolute;top:2px;right:2px;background:rgba(0,0,0,0.65);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:11px;line-height:1;cursor:pointer;padding:0;';
+                btn.addEventListener('click', function() { deletePhoto(p.filename); });
+                wrap.appendChild(img);
+                wrap.appendChild(btn);
+                grid.appendChild(wrap);
+            });
+        }
+
+        function loadPhotos() {
+            fetch('/admin/podium/photos?key=' + encodeURIComponent(_adminKey))
+                .then(function(r) { return r.json(); })
+                .then(function(d) { renderPhotos(d.photos || []); });
+        }
+
+        function deletePhoto(filename) {
+            if (!confirm('Remove this photo?')) return;
+            fetch('/admin/podium/delete', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({filename: filename})
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (d.ok) loadPhotos();
+                else showMsg('Delete failed.', 'danger');
+            });
+        }
+
+        function showMsg(text, type) {
+            var el = document.getElementById('podiumAdminMsg');
+            el.className = 'small mt-2 mb-0 text-' + (type || 'success');
+            el.textContent = text;
+            setTimeout(function() { el.textContent = ''; }, 3000);
+        }
+
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-podium-key]');
+            if (!btn) return;
+            _adminKey = btn.dataset.podiumKey;
+            document.getElementById('podiumAdminLabel').textContent = '📷 Manage — ' + (btn.dataset.podiumLabel || _adminKey);
+            document.getElementById('podiumAdminMsg').textContent = '';
+            document.getElementById('podiumAdminInput').value = '';
+            loadPhotos();
+            new bootstrap.Modal(document.getElementById('podiumAdminModal')).show();
+        });
+
+        document.getElementById('podiumAdminUpload')?.addEventListener('click', function() {
+            var input = document.getElementById('podiumAdminInput');
+            if (!input.files.length) { showMsg('Choose at least one file first.', 'warning'); return; }
+            var fd = new FormData();
+            fd.append('key', _adminKey);
+            Array.from(input.files).forEach(function(f) { fd.append('photos', f); });
+            var prog = document.getElementById('podiumAdminProgress');
+            prog.classList.remove('d-none');
+            fetch('/admin/podium/upload', { method: 'POST', body: fd })
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    prog.classList.add('d-none');
+                    if (d.ok) {
+                        input.value = '';
+                        renderPhotos(d.photos || []);
+                        showMsg(d.saved.length + ' photo(s) uploaded.', 'success');
+                    } else {
+                        showMsg('Upload failed: ' + (d.error || ''), 'danger');
+                    }
+                })
+                .catch(function() { prog.classList.add('d-none'); showMsg('Upload error.', 'danger'); });
+        });
+    })();
+    </script>
+    {% endif %}
+
     {% block extra_js %}{% endblock %}
 
     <footer class="mt-4 py-3 border-top text-center text-muted small">

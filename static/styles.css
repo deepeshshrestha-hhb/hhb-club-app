@@ -153,7 +153,8 @@ h1, h2, h3 {
 .podium-silver { background: linear-gradient(135deg, #f4f6f7, #e2e6e9); }
 .podium-bronze { background: linear-gradient(135deg, #fbe9dd, #f1c9a8); }
 
-/* Podium cards / index rows that have a photo — show pointer + subtle hover */
+/* Podium cards / index rows that have a photo or are admin-editable */
+.podium-card { position: relative; }
 .podium-has-photo {
     cursor: pointer;
 }
