@@ -45,25 +45,28 @@
         <div class="row mb-4">
             {% set winner_key = 'championships_' ~ championship.year ~ '_' ~ pool_key ~ '_winner' %}
             <div class="col-md-4 mb-3">
-                <div class="podium-card podium-gold {% if winner_key in podium_photos %}podium-has-photo{% endif %}"
-                     {% if winner_key in podium_photos %}data-podium-photos="{{ photo_urls(winner_key) }}" data-podium-label="🏆 {{ k.winner }} — {{ championship.year }} {{ pool.name }} Winner" role="button" tabindex="0"{% endif %}>
-                    <div class="small text-muted">WINNER {% if winner_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
+                <div class="podium-card podium-gold {% if session.get('is_admin') or winner_key in podium_photos %}podium-has-photo{% endif %}"
+                     {% if session.get('is_admin') %}data-podium-key="{{ winner_key }}" data-podium-label="🏆 {{ k.winner }} — {{ championship.year }} {{ pool.name }} Winner" role="button" tabindex="0"
+                     {% elif winner_key in podium_photos %}data-podium-photos="{{ photo_urls(winner_key) }}" data-podium-label="🏆 {{ k.winner }} — {{ championship.year }} {{ pool.name }} Winner" role="button" tabindex="0"{% endif %}>
+                    <div class="small text-muted">WINNER {% if session.get('is_admin') %}<span class="podium-cam">✏️</span>{% elif winner_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
                     <div class="h5 mb-0">🏆 {{ k.winner }}</div>
                 </div>
             </div>
             {% set runner_up_key = 'championships_' ~ championship.year ~ '_' ~ pool_key ~ '_runner_up' %}
             <div class="col-md-4 mb-3">
-                <div class="podium-card podium-silver {% if runner_up_key in podium_photos %}podium-has-photo{% endif %}"
-                     {% if runner_up_key in podium_photos %}data-podium-photos="{{ photo_urls(runner_up_key) }}" data-podium-label="🥈 {{ k.runner_up }} — {{ championship.year }} {{ pool.name }} Runner-Up" role="button" tabindex="0"{% endif %}>
-                    <div class="small text-muted">RUNNER-UP {% if runner_up_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
+                <div class="podium-card podium-silver {% if session.get('is_admin') or runner_up_key in podium_photos %}podium-has-photo{% endif %}"
+                     {% if session.get('is_admin') %}data-podium-key="{{ runner_up_key }}" data-podium-label="🥈 {{ k.runner_up }} — {{ championship.year }} {{ pool.name }} Runner-Up" role="button" tabindex="0"
+                     {% elif runner_up_key in podium_photos %}data-podium-photos="{{ photo_urls(runner_up_key) }}" data-podium-label="🥈 {{ k.runner_up }} — {{ championship.year }} {{ pool.name }} Runner-Up" role="button" tabindex="0"{% endif %}>
+                    <div class="small text-muted">RUNNER-UP {% if session.get('is_admin') %}<span class="podium-cam">✏️</span>{% elif runner_up_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
                     <div class="h5 mb-0">🥈 {{ k.runner_up }}</div>
                 </div>
             </div>
             {% set third_key = 'championships_' ~ championship.year ~ '_' ~ pool_key ~ '_third' %}
             <div class="col-md-4 mb-3">
-                <div class="podium-card podium-bronze {% if third_key in podium_photos %}podium-has-photo{% endif %}"
-                     {% if third_key in podium_photos %}data-podium-photos="{{ photo_urls(third_key) }}" data-podium-label="🥉 {{ k.third }} — {{ championship.year }} {{ pool.name }} Third Place" role="button" tabindex="0"{% endif %}>
-                    <div class="small text-muted">THIRD PLACE {% if third_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
+                <div class="podium-card podium-bronze {% if session.get('is_admin') or third_key in podium_photos %}podium-has-photo{% endif %}"
+                     {% if session.get('is_admin') %}data-podium-key="{{ third_key }}" data-podium-label="🥉 {{ k.third or 'N/A' }} — {{ championship.year }} {{ pool.name }} Third Place" role="button" tabindex="0"
+                     {% elif third_key in podium_photos %}data-podium-photos="{{ photo_urls(third_key) }}" data-podium-label="🥉 {{ k.third }} — {{ championship.year }} {{ pool.name }} Third Place" role="button" tabindex="0"{% endif %}>
+                    <div class="small text-muted">THIRD PLACE {% if session.get('is_admin') %}<span class="podium-cam">✏️</span>{% elif third_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
                     <div class="h5 mb-0">🥉 {{ k.third or 'N/A' }}</div>
                 </div>
             </div>

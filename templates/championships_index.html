@@ -17,32 +17,36 @@
                 <h5 class="card-title mb-3">{{ c.year }}</h5>
                 {% if c.pool_a_winner %}
                 {% set pa_winner_key = 'championships_' ~ c.year ~ '_pool_a_winner' %}
-                <div class="mb-1 {% if pa_winner_key in podium_photos %}podium-has-photo{% endif %}"
-                     {% if pa_winner_key in podium_photos %}data-podium-photos="{{ photo_urls(pa_winner_key) }}" data-podium-label="🏆 {{ c.pool_a_winner }} — {{ c.year }} Pool A Winner" role="button" tabindex="0"{% endif %}>
-                    <div class="small text-muted">POOL A WINNER {% if pa_winner_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
+                <div class="mb-1 {% if session.get('is_admin') or pa_winner_key in podium_photos %}podium-has-photo{% endif %}"
+                     {% if session.get('is_admin') %}data-podium-key="{{ pa_winner_key }}" data-podium-label="🏆 {{ c.pool_a_winner }} — {{ c.year }} Pool A Winner" role="button" tabindex="0"
+                     {% elif pa_winner_key in podium_photos %}data-podium-photos="{{ photo_urls(pa_winner_key) }}" data-podium-label="🏆 {{ c.pool_a_winner }} — {{ c.year }} Pool A Winner" role="button" tabindex="0"{% endif %}>
+                    <div class="small text-muted">POOL A WINNER {% if session.get('is_admin') %}<span class="podium-cam">✏️</span>{% elif pa_winner_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
                     <div class="fw-bold">🏆 {{ c.pool_a_winner }}</div>
                 </div>
                 {% if c.pool_a_runner_up %}
                 {% set pa_runner_up_key = 'championships_' ~ c.year ~ '_pool_a_runner_up' %}
-                <div class="mb-2 {% if pa_runner_up_key in podium_photos %}podium-has-photo{% endif %}"
-                     {% if pa_runner_up_key in podium_photos %}data-podium-photos="{{ photo_urls(pa_runner_up_key) }}" data-podium-label="🥈 {{ c.pool_a_runner_up }} — {{ c.year }} Pool A Runner-Up" role="button" tabindex="0"{% endif %}>
-                    <div class="small text-muted">POOL A RUNNER-UP {% if pa_runner_up_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
+                <div class="mb-2 {% if session.get('is_admin') or pa_runner_up_key in podium_photos %}podium-has-photo{% endif %}"
+                     {% if session.get('is_admin') %}data-podium-key="{{ pa_runner_up_key }}" data-podium-label="🥈 {{ c.pool_a_runner_up }} — {{ c.year }} Pool A Runner-Up" role="button" tabindex="0"
+                     {% elif pa_runner_up_key in podium_photos %}data-podium-photos="{{ photo_urls(pa_runner_up_key) }}" data-podium-label="🥈 {{ c.pool_a_runner_up }} — {{ c.year }} Pool A Runner-Up" role="button" tabindex="0"{% endif %}>
+                    <div class="small text-muted">POOL A RUNNER-UP {% if session.get('is_admin') %}<span class="podium-cam">✏️</span>{% elif pa_runner_up_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
                     <div>🥈 {{ c.pool_a_runner_up }}</div>
                 </div>
                 {% endif %}
                 {% endif %}
                 {% if c.pool_b_winner %}
                 {% set pb_winner_key = 'championships_' ~ c.year ~ '_pool_b_winner' %}
-                <div class="mb-1 {% if pb_winner_key in podium_photos %}podium-has-photo{% endif %}"
-                     {% if pb_winner_key in podium_photos %}data-podium-photos="{{ photo_urls(pb_winner_key) }}" data-podium-label="🏆 {{ c.pool_b_winner }} — {{ c.year }} Pool B Winner" role="button" tabindex="0"{% endif %}>
-                    <div class="small text-muted">POOL B WINNER {% if pb_winner_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
+                <div class="mb-1 {% if session.get('is_admin') or pb_winner_key in podium_photos %}podium-has-photo{% endif %}"
+                     {% if session.get('is_admin') %}data-podium-key="{{ pb_winner_key }}" data-podium-label="🏆 {{ c.pool_b_winner }} — {{ c.year }} Pool B Winner" role="button" tabindex="0"
+                     {% elif pb_winner_key in podium_photos %}data-podium-photos="{{ photo_urls(pb_winner_key) }}" data-podium-label="🏆 {{ c.pool_b_winner }} — {{ c.year }} Pool B Winner" role="button" tabindex="0"{% endif %}>
+                    <div class="small text-muted">POOL B WINNER {% if session.get('is_admin') %}<span class="podium-cam">✏️</span>{% elif pb_winner_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
                     <div class="fw-bold">🏆 {{ c.pool_b_winner }}</div>
                 </div>
                 {% if c.pool_b_runner_up %}
                 {% set pb_runner_up_key = 'championships_' ~ c.year ~ '_pool_b_runner_up' %}
-                <div class="mb-3 {% if pb_runner_up_key in podium_photos %}podium-has-photo{% endif %}"
-                     {% if pb_runner_up_key in podium_photos %}data-podium-photos="{{ photo_urls(pb_runner_up_key) }}" data-podium-label="🥈 {{ c.pool_b_runner_up }} — {{ c.year }} Pool B Runner-Up" role="button" tabindex="0"{% endif %}>
-                    <div class="small text-muted">POOL B RUNNER-UP {% if pb_runner_up_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
+                <div class="mb-3 {% if session.get('is_admin') or pb_runner_up_key in podium_photos %}podium-has-photo{% endif %}"
+                     {% if session.get('is_admin') %}data-podium-key="{{ pb_runner_up_key }}" data-podium-label="🥈 {{ c.pool_b_runner_up }} — {{ c.year }} Pool B Runner-Up" role="button" tabindex="0"
+                     {% elif pb_runner_up_key in podium_photos %}data-podium-photos="{{ photo_urls(pb_runner_up_key) }}" data-podium-label="🥈 {{ c.pool_b_runner_up }} — {{ c.year }} Pool B Runner-Up" role="button" tabindex="0"{% endif %}>
+                    <div class="small text-muted">POOL B RUNNER-UP {% if session.get('is_admin') %}<span class="podium-cam">✏️</span>{% elif pb_runner_up_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
                     <div>🥈 {{ c.pool_b_runner_up }}</div>
                 </div>
                 {% endif %}

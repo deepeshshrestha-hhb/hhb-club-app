@@ -32,17 +32,19 @@
                 {% endif %}
                 {% if l.winner %}
                 {% set winner_key = 'league_' ~ l.year ~ '_winner' %}
-                <div class="mb-2 {% if winner_key in podium_photos %}podium-has-photo{% endif %}"
-                     {% if winner_key in podium_photos %}data-podium-photos="{{ photo_urls(winner_key) }}" data-podium-label="🏆 {{ l.winner }} — {{ l.year }} League Champion" role="button" tabindex="0"{% endif %}>
-                    <div class="small text-muted">CHAMPION {% if winner_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
+                <div class="mb-2 {% if session.get('is_admin') or winner_key in podium_photos %}podium-has-photo{% endif %}"
+                     {% if session.get('is_admin') %}data-podium-key="{{ winner_key }}" data-podium-label="🏆 {{ l.winner }} — {{ l.year }} League Champion" role="button" tabindex="0"
+                     {% elif winner_key in podium_photos %}data-podium-photos="{{ photo_urls(winner_key) }}" data-podium-label="🏆 {{ l.winner }} — {{ l.year }} League Champion" role="button" tabindex="0"{% endif %}>
+                    <div class="small text-muted">CHAMPION {% if session.get('is_admin') %}<span class="podium-cam">✏️</span>{% elif winner_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
                     <div class="fw-bold">🏆 {{ l.winner }}</div>
                 </div>
                 {% endif %}
                 {% if l.runner_up %}
                 {% set runner_up_key = 'league_' ~ l.year ~ '_runner_up' %}
-                <div class="mb-3 {% if runner_up_key in podium_photos %}podium-has-photo{% endif %}"
-                     {% if runner_up_key in podium_photos %}data-podium-photos="{{ photo_urls(runner_up_key) }}" data-podium-label="🥈 {{ l.runner_up }} — {{ l.year }} League Runner-Up" role="button" tabindex="0"{% endif %}>
-                    <div class="small text-muted">RUNNER-UP {% if runner_up_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
+                <div class="mb-3 {% if session.get('is_admin') or runner_up_key in podium_photos %}podium-has-photo{% endif %}"
+                     {% if session.get('is_admin') %}data-podium-key="{{ runner_up_key }}" data-podium-label="🥈 {{ l.runner_up }} — {{ l.year }} League Runner-Up" role="button" tabindex="0"
+                     {% elif runner_up_key in podium_photos %}data-podium-photos="{{ photo_urls(runner_up_key) }}" data-podium-label="🥈 {{ l.runner_up }} — {{ l.year }} League Runner-Up" role="button" tabindex="0"{% endif %}>
+                    <div class="small text-muted">RUNNER-UP {% if session.get('is_admin') %}<span class="podium-cam">✏️</span>{% elif runner_up_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
                     <div>🥈 {{ l.runner_up }}</div>
                 </div>
                 {% endif %}
