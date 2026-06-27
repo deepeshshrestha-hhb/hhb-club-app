@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block content %}
 
 <h1 class="page-title">HHB Annual Doubles Classic</h1>
@@ -12,13 +12,17 @@
                 <h5 class="card-title mb-2">{{ t.year }}</h5>
 
                 {% if t.winner %}
-                <div class="mb-2">
-                    <div class="small text-muted">WINNER</div>
+                {% set winner_key = 'doubles_' ~ t.year ~ '_winner' %}
+                <div class="mb-2 {% if winner_key in podium_photos %}podium-has-photo{% endif %}"
+                     {% if winner_key in podium_photos %}data-podium-photos="{{ photo_urls(winner_key) }}" data-podium-label="🏆 {{ t.winner }} — {{ t.year }} Doubles Winner" role="button" tabindex="0"{% endif %}>
+                    <div class="small text-muted">WINNER {% if winner_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
                     <div class="fw-bold">🏆 {{ t.winner }}</div>
                 </div>
                 {% if t.runner_up %}
-                <div class="mb-3">
-                    <div class="small text-muted">RUNNER-UP</div>
+                {% set runner_up_key = 'doubles_' ~ t.year ~ '_runner_up' %}
+                <div class="mb-3 {% if runner_up_key in podium_photos %}podium-has-photo{% endif %}"
+                     {% if runner_up_key in podium_photos %}data-podium-photos="{{ photo_urls(runner_up_key) }}" data-podium-label="🥈 {{ t.runner_up }} — {{ t.year }} Doubles Runner-Up" role="button" tabindex="0"{% endif %}>
+                    <div class="small text-muted">RUNNER-UP {% if runner_up_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
                     <div>🥈 {{ t.runner_up }}</div>
                 </div>
                 {% endif %}
@@ -42,3 +46,4 @@
 </div>
 
 {% endblock %}
+

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
@@ -31,14 +31,18 @@
                 </p>
                 {% endif %}
                 {% if l.winner %}
-                <div class="mb-2">
-                    <div class="small text-muted">CHAMPION</div>
+                {% set winner_key = 'league_' ~ l.year ~ '_winner' %}
+                <div class="mb-2 {% if winner_key in podium_photos %}podium-has-photo{% endif %}"
+                     {% if winner_key in podium_photos %}data-podium-photos="{{ photo_urls(winner_key) }}" data-podium-label="🏆 {{ l.winner }} — {{ l.year }} League Champion" role="button" tabindex="0"{% endif %}>
+                    <div class="small text-muted">CHAMPION {% if winner_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
                     <div class="fw-bold">🏆 {{ l.winner }}</div>
                 </div>
                 {% endif %}
                 {% if l.runner_up %}
-                <div class="mb-3">
-                    <div class="small text-muted">RUNNER-UP</div>
+                {% set runner_up_key = 'league_' ~ l.year ~ '_runner_up' %}
+                <div class="mb-3 {% if runner_up_key in podium_photos %}podium-has-photo{% endif %}"
+                     {% if runner_up_key in podium_photos %}data-podium-photos="{{ photo_urls(runner_up_key) }}" data-podium-label="🥈 {{ l.runner_up }} — {{ l.year }} League Runner-Up" role="button" tabindex="0"{% endif %}>
+                    <div class="small text-muted">RUNNER-UP {% if runner_up_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
                     <div>🥈 {{ l.runner_up }}</div>
                 </div>
                 {% endif %}
@@ -58,3 +62,4 @@
 </div>
 
 {% endblock %}
+

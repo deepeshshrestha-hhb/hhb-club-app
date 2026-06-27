@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block content %}
 
 <div class="d-flex align-items-center justify-content-between flex-wrap mb-3 gap-2">
@@ -27,22 +27,29 @@
 {% endif %}
 
 {% if tournament.knockouts and tournament.knockouts.winner %}
+{% set yr = tournament.year %}
 <div class="row mb-4">
+    {% set winner_key = 'doubles_' ~ yr ~ '_winner' %}
     <div class="col-md-4 mb-3">
-        <div class="podium-card podium-gold">
-            <div class="small text-muted">WINNER</div>
+        <div class="podium-card podium-gold {% if winner_key in podium_photos %}podium-has-photo{% endif %}"
+             {% if winner_key in podium_photos %}data-podium-photos="{{ photo_urls(winner_key) }}" data-podium-label="🏆 {{ tournament.knockouts.winner }} — {{ yr }} Doubles Winner" role="button" tabindex="0"{% endif %}>
+            <div class="small text-muted">WINNER {% if winner_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
             <div class="h5 mb-0">🏆 {{ tournament.knockouts.winner }}</div>
         </div>
     </div>
+    {% set runner_up_key = 'doubles_' ~ yr ~ '_runner_up' %}
     <div class="col-md-4 mb-3">
-        <div class="podium-card podium-silver">
-            <div class="small text-muted">RUNNER-UP</div>
+        <div class="podium-card podium-silver {% if runner_up_key in podium_photos %}podium-has-photo{% endif %}"
+             {% if runner_up_key in podium_photos %}data-podium-photos="{{ photo_urls(runner_up_key) }}" data-podium-label="🥈 {{ tournament.knockouts.runner_up }} — {{ yr }} Doubles Runner-Up" role="button" tabindex="0"{% endif %}>
+            <div class="small text-muted">RUNNER-UP {% if runner_up_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
             <div class="h5 mb-0">🥈 {{ tournament.knockouts.runner_up }}</div>
         </div>
     </div>
+    {% set third_key = 'doubles_' ~ yr ~ '_third' %}
     <div class="col-md-4 mb-3">
-        <div class="podium-card podium-bronze">
-            <div class="small text-muted">THIRD PLACE</div>
+        <div class="podium-card podium-bronze {% if third_key in podium_photos %}podium-has-photo{% endif %}"
+             {% if third_key in podium_photos %}data-podium-photos="{{ photo_urls(third_key) }}" data-podium-label="🥉 {{ tournament.knockouts.third }} — {{ yr }} Doubles Third Place" role="button" tabindex="0"{% endif %}>
+            <div class="small text-muted">THIRD PLACE {% if third_key in podium_photos %}<span class="podium-cam">📷</span>{% endif %}</div>
             <div class="h5 mb-0">🥉 {{ tournament.knockouts.third or 'N/A' }}</div>
         </div>
     </div>
@@ -243,3 +250,4 @@
 </div>
 
 {% endblock %}
+
