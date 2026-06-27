@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+﻿from flask import Blueprint, render_template, request, redirect, url_for
 from services.tournament_service import (
     get_all_tournaments,
     get_tournament_by_id,
@@ -8,6 +8,7 @@ from services.tournament_service import (
 )
 from services.championship_service import list_championship_years, get_championship
 from services.league_service import list_league_years, get_league
+from services.podium_service import get_podium_photos, get_podium_photo_pipe
 
 tournament_bp = Blueprint("tournaments", __name__)
 
@@ -60,6 +61,8 @@ def doubles_index():
     return render_template(
         "tournament_doubles_index.html",
         tournaments=tournaments,
+        podium_photos=get_podium_photos(),
+        photo_urls=get_podium_photo_pipe,
     )
 
 
@@ -73,7 +76,8 @@ def doubles_detail(year):
     prev_year = years[idx - 1] if idx > 0 else None
     next_year = years[idx + 1] if idx >= 0 and idx < len(years) - 1 else None
     return render_template("tournament_doubles_detail.html", tournament=tournament,
-                           prev_year=prev_year, next_year=next_year)
+                           prev_year=prev_year, next_year=next_year,
+                           podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe)
 
 
 # --- HHB Annual Championships ---
@@ -91,7 +95,8 @@ def championships_index():
             "pool_b_winner": data["pool_b"]["knockouts"]["winner"] if data else "",
             "pool_b_runner_up": data["pool_b"]["knockouts"]["runner_up"] if data else "",
         })
-    return render_template("championships_index.html", championships=championships)
+    return render_template("championships_index.html", championships=championships,
+                           podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe)
 
 
 @tournament_bp.route("/tournaments/championships/<int:year>")
@@ -104,7 +109,8 @@ def championships_detail(year):
     prev_year = years[idx - 1] if idx > 0 else None
     next_year = years[idx + 1] if idx >= 0 and idx < len(years) - 1 else None
     return render_template("championships_detail.html", championship=championship,
-                           prev_year=prev_year, next_year=next_year)
+                           prev_year=prev_year, next_year=next_year,
+                           podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe)
 
 
 # --- HHB Annual Doubles League ---
@@ -124,7 +130,8 @@ def league_index():
             "status": data["status"] if data else "complete",
             "off_dates": data["off_dates"] if data else [],
         })
-    return render_template("league_index.html", leagues=leagues)
+    return render_template("league_index.html", leagues=leagues,
+                           podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe)
 
 
 @tournament_bp.route("/tournaments/league/<int:year>")
@@ -137,4 +144,7 @@ def league_detail(year):
     prev_year = years[idx - 1] if idx > 0 else None
     next_year = years[idx + 1] if idx >= 0 and idx < len(years) - 1 else None
     return render_template("league_detail.html", league=league,
-                           prev_year=prev_year, next_year=next_year)
+                           prev_year=prev_year, next_year=next_year,
+                           podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe)
+
+

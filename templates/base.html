@@ -65,6 +65,59 @@
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
     </script>
 
+    <!-- Podium photo lightbox -->
+    <div class="modal fade" id="podiumPhotoModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark border-0">
+                <div class="modal-header border-0 pb-0">
+                    <h6 class="modal-title text-white" id="podiumPhotoLabel"></h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-2">
+                    <div id="podiumCarousel" class="carousel slide" data-bs-ride="false">
+                        <div class="carousel-inner" id="podiumCarouselInner"></div>
+                        <button class="carousel-control-prev" type="button" data-bs-target="#podiumCarousel" data-bs-slide="prev" id="podiumPrev">
+                            <span class="carousel-control-prev-icon"></span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#podiumCarousel" data-bs-slide="next" id="podiumNext">
+                            <span class="carousel-control-next-icon"></span>
+                        </button>
+                    </div>
+                    <div class="text-center text-white-50 small mt-1" id="podiumPhotoCounter"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-podium-photos]');
+        if (!btn) return;
+        var raw = btn.dataset.podiumPhotos || '';
+        var urls = raw ? raw.split('|') : [];
+        if (!urls.length) return;
+        var label = btn.dataset.podiumLabel || '';
+        document.getElementById('podiumPhotoLabel').textContent = label;
+        var inner = document.getElementById('podiumCarouselInner');
+        inner.innerHTML = urls.map(function(url, i) {
+            return '<div class="carousel-item' + (i === 0 ? ' active' : '') + '">' +
+                   '<img src="' + url + '" class="d-block mx-auto img-fluid rounded" style="max-height:75vh;" alt="">' +
+                   '</div>';
+        }).join('');
+        var multi = urls.length > 1;
+        document.getElementById('podiumPrev').style.display = multi ? '' : 'none';
+        document.getElementById('podiumNext').style.display = multi ? '' : 'none';
+        document.getElementById('podiumPhotoCounter').textContent = multi ? '1 / ' + urls.length : '';
+        var carousel = bootstrap.Carousel.getOrCreateInstance(document.getElementById('podiumCarousel'), {wrap: true});
+        carousel.to(0);
+        document.getElementById('podiumCarousel').addEventListener('slid.bs.carousel', function handler(ev) {
+            document.getElementById('podiumPhotoCounter').textContent = multi ? (ev.to + 1) + ' / ' + urls.length : '';
+        });
+        new bootstrap.Modal(document.getElementById('podiumPhotoModal')).show();
+    });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+
     <footer class="mt-4 py-3 border-top text-center text-muted small">
         &copy; 2026 HHB Club. All rights reserved.
     </footer>

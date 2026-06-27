@@ -153,6 +153,20 @@ h1, h2, h3 {
 .podium-silver { background: linear-gradient(135deg, #f4f6f7, #e2e6e9); }
 .podium-bronze { background: linear-gradient(135deg, #fbe9dd, #f1c9a8); }
 
+/* Podium cards / index rows that have a photo — show pointer + subtle hover */
+.podium-has-photo {
+    cursor: pointer;
+}
+.podium-has-photo:hover {
+    filter: brightness(0.96);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.podium-cam {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin-left: 2px;
+}
+
 /* Sticky table: frozen header row + frozen first two columns (Date, Day) */
 .sticky-table-wrapper {
     max-height: 70vh;
