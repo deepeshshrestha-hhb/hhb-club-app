@@ -209,6 +209,14 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   status updates go through `admin_required`.
   *Why:* reuse the proven Excel+R2 storage and `admin_required` decorator rather
   than introduce a database for a low-volume feature.
+- **2026-06-28 — Feedback admin: delete + expanded statuses + public feature
+  requests.** Admins can now delete any entry (General or Feature Request) via
+  `/feedback/delete` (`delete_feedback`, `admin_required`), and feature-request
+  statuses expanded to five: New, Accepted, Rejected, In Progress, Completed.
+  Feature Requests are now visible to **everyone** (read-only, including their
+  status) so members can see what's been raised and not duplicate it; the status
+  dropdown and delete buttons render only for admins (`session.is_admin`) and the
+  routes stay `admin_required`.
 
 ---
 

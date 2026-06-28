@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash, session
+    Blueprint, render_template, request, redirect, url_for, flash
 )
 
 from routes.admin_routes import admin_required, _safe_next
@@ -8,6 +8,7 @@ from services.feedback_service import (
     get_general_feedback,
     get_feature_requests,
     update_status,
+    delete_feedback,
     STATUSES,
 )
 
@@ -16,13 +17,14 @@ feedback_bp = Blueprint("feedback", __name__)
 
 @feedback_bp.route("/feedback")
 def feedback_page():
-    """Display feedback. Everyone sees General feedback; admins additionally see
-    the Feature Requests column with status controls."""
-    is_admin = bool(session.get("is_admin"))
+    """Display feedback. Everyone sees both General feedback and Feature Requests
+    (read-only, including each request's status). Status changes and deletions are
+    admin-only and gated server-side; the template hides those controls for
+    non-admins."""
     return render_template(
         "feedback.html",
         general=get_general_feedback(),
-        feature_requests=get_feature_requests() if is_admin else None,
+        feature_requests=get_feature_requests(),
         statuses=STATUSES,
     )
 
@@ -60,4 +62,16 @@ def feedback_status():
         flash("Status updated.", "success")
     else:
         flash("Could not update status.", "danger")
+    return redirect(url_for("feedback.feedback_page"))
+
+
+@feedback_bp.route("/feedback/delete", methods=["POST"])
+@admin_required
+def feedback_delete():
+    """Admin-only: delete a feedback entry (General or Feature Request)."""
+    feedback_id = request.form.get("id", "").strip()
+    if delete_feedback(feedback_id):
+        flash("Feedback entry deleted.", "success")
+    else:
+        flash("Could not delete feedback entry.", "danger")
     return redirect(url_for("feedback.feedback_page"))

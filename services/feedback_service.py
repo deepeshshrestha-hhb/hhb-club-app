@@ -34,7 +34,7 @@ _COLUMNS = [
 ]
 
 FEEDBACK_TYPES = ("General", "Feature Request")
-STATUSES = ("New", "In Progress", "Completed")
+STATUSES = ("New", "Accepted", "Rejected", "In Progress", "Completed")
 NON_MEMBER = "Non-Member"
 
 _MAX_MESSAGE_LEN = 2000
@@ -131,5 +131,20 @@ def update_status(feedback_id: str, status: str) -> bool:
     if not mask.any():
         return False
     df.loc[mask, "Status"] = status
+    save_excel(df, FEEDBACK_FILE)
+    return True
+
+
+def delete_feedback(feedback_id: str) -> bool:
+    """Delete one feedback entry by ID (any type). Returns True on success,
+    False when the id is unknown."""
+    feedback_id = (feedback_id or "").strip()
+    if not feedback_id:
+        return False
+    df = _load()
+    mask = df["ID"] == feedback_id
+    if not mask.any():
+        return False
+    df = df[~mask].reset_index(drop=True)
     save_excel(df, FEEDBACK_FILE)
     return True
