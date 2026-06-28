@@ -4,6 +4,7 @@ from services.calendar_service import (
     get_annual_events,
     get_weekly_sessions,
 )
+from services.photos_service import get_all_photos
 
 calendar_bp = Blueprint("calendar", __name__)
 
@@ -12,10 +13,16 @@ calendar_bp = Blueprint("calendar", __name__)
 def calendar_page():
     weekly_sessions = get_weekly_sessions()  # live from Spond
     annual_events = get_annual_events()
+    # Build the set of event_ids that have at least one photo uploaded,
+    # so the template can show a "View Photos" link next to the matching year.
+    photo_event_ids = {
+        p["event_id"] for p in get_all_photos(type_filter="event") if p["event_id"]
+    }
     return render_template(
         "calendar.html",
         calendar=weekly_sessions,
         annual_events=annual_events,
+        photo_event_ids=photo_event_ids,
     )
 
 

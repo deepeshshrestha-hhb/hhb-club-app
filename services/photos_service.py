@@ -30,7 +30,7 @@ PHOTOS_FILE = "Photos.xlsx"
 PHOTOS_SUBDIR = Path("static") / "images" / "photos"
 _ALLOWED_EXTS = {".jpg", ".jpeg", ".png", ".webp"}
 
-_COLUMNS = ["photo_id", "filename", "caption", "type", "event_id", "upload_date"]
+_COLUMNS = ["photo_id", "filename", "caption", "type", "event_id", "upload_date", "event_date"]
 
 
 def _photos_dir() -> Path:
@@ -87,6 +87,7 @@ def upload_photo(
     caption: str,
     photo_type: str,
     event_id: str = "",
+    event_date: str = "",
 ) -> dict | None:
     """Save an uploaded photo and record its metadata. Returns the row dict or None
     on invalid file type."""
@@ -111,6 +112,7 @@ def upload_photo(
         "type": photo_type,
         "event_id": event_id or "",
         "upload_date": now,
+        "event_date": event_date or "",
     }
 
     df = _load()

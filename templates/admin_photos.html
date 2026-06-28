@@ -59,7 +59,9 @@
                         {% endif %}
                     </td>
                     <td>
-                        {% if photo.event_id %}
+                        {% if photo.type == 'generic' %}
+                        <a href="{{ url_for('photos.gallery') }}" class="text-muted small" target="_blank">generic</a>
+                        {% elif photo.event_id and photo.event_id != 'nan' %}
                         <a href="{{ url_for('photos.event_gallery', event_id=photo.event_id) }}"
                            class="text-muted small" target="_blank">{{ photo.event_id }}</a>
                         {% else %}—{% endif %}

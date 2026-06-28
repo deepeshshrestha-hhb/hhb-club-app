@@ -16,15 +16,15 @@
             <div class="text-center">
                 <img src="{{ photo.url }}"
                      alt="{{ photo.caption }}"
-                     class="img-fluid rounded shadow"
-                     style="max-height: 520px; width: 100%; object-fit: cover; border-radius: 0.5rem; cursor: pointer;"
-                     data-bs-toggle="modal" data-bs-target="#photoModal"
-                     data-photo-url="{{ photo.url }}"
-                     data-photo-caption="{{ photo.caption }}">
+                     class="photo-trigger img-fluid rounded shadow"
+                     data-index="{{ loop.index0 }}"
+                     style="max-height: 520px; width: 100%; object-fit: cover; border-radius: 0.5rem; cursor: pointer;">
                 {% if photo.caption %}
                 <p class="text-muted small mt-2 mb-0">{{ photo.caption }}</p>
                 {% endif %}
-                <p class="text-muted" style="font-size: 0.75rem;">{{ photo.upload_date[:10] if photo.upload_date else '' }}</p>
+                {% if photo.event_date and photo.event_date not in ('', 'nan') %}
+                <p class="text-muted" style="font-size: 0.75rem;">{{ photo.event_date }}</p>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
@@ -44,28 +44,73 @@
 <!-- Lightbox modal -->
 <div class="modal fade" id="photoModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content bg-dark border-0">
-            <div class="modal-header border-0 pb-0">
+        <div class="modal-content border-0" style="background: rgba(0,0,0,0.92);">
+            <div class="modal-header border-0 pb-0 d-flex justify-content-between align-items-center">
+                <span id="photoCounter" class="text-white-50 small ms-2"></span>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body text-center p-3">
-                <img id="modalPhoto" src="" alt="" class="img-fluid rounded" style="max-height:80vh;">
-                <p id="modalCaption" class="text-white-50 small mt-2 mb-0"></p>
+            <div class="modal-body text-center p-2 position-relative">
+                <!-- Prev button -->
+                <button id="prevBtn" type="button"
+                        class="btn btn-dark position-absolute top-50 start-0 translate-middle-y ms-2"
+                        style="z-index:10; opacity:0.8; font-size:1.4rem; padding: 0.3rem 0.7rem;">&#8592;</button>
+                <img id="modalPhoto" src="" alt="" class="img-fluid rounded" style="max-height:78vh;">
+                <!-- Next button -->
+                <button id="nextBtn" type="button"
+                        class="btn btn-dark position-absolute top-50 end-0 translate-middle-y me-2"
+                        style="z-index:10; opacity:0.8; font-size:1.4rem; padding: 0.3rem 0.7rem;">&#8594;</button>
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center">
+                <p id="modalCaption" class="text-white-50 small mb-0"></p>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const modal = document.getElementById('photoModal');
-    modal.addEventListener('show.bs.modal', function (e) {
-        const img = e.relatedTarget;
-        document.getElementById('modalPhoto').src = img.dataset.photoUrl;
-        document.getElementById('modalPhoto').alt = img.dataset.photoCaption || '';
-        document.getElementById('modalCaption').textContent = img.dataset.photoCaption || '';
+(function () {
+    const PHOTOS = [
+        {% for photo in photos %}
+        { url: {{ photo.url | tojson }}, caption: {{ (photo.caption or '') | tojson }} }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    let idx = 0;
+
+    const modalEl   = document.getElementById('photoModal');
+    const imgEl     = document.getElementById('modalPhoto');
+    const captionEl = document.getElementById('modalCaption');
+    const counterEl = document.getElementById('photoCounter');
+    const prevBtn   = document.getElementById('prevBtn');
+    const nextBtn   = document.getElementById('nextBtn');
+
+    function show(i) {
+        idx = (i + PHOTOS.length) % PHOTOS.length;
+        imgEl.src           = PHOTOS[idx].url;
+        imgEl.alt           = PHOTOS[idx].caption;
+        captionEl.textContent = PHOTOS[idx].caption;
+        counterEl.textContent = PHOTOS.length > 1 ? (idx + 1) + ' / ' + PHOTOS.length : '';
+        prevBtn.style.visibility = PHOTOS.length > 1 ? 'visible' : 'hidden';
+        nextBtn.style.visibility = PHOTOS.length > 1 ? 'visible' : 'hidden';
+    }
+
+    // Open from thumbnail click
+    document.querySelectorAll('.photo-trigger').forEach(function (el) {
+        el.addEventListener('click', function () {
+            show(parseInt(el.dataset.index, 10));
+            new bootstrap.Modal(modalEl).show();
+        });
     });
-});
+
+    prevBtn.addEventListener('click', function () { show(idx - 1); });
+    nextBtn.addEventListener('click', function () { show(idx + 1); });
+
+    // Keyboard navigation
+    modalEl.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft')  show(idx - 1);
+        if (e.key === 'ArrowRight') show(idx + 1);
+    });
+})();
 </script>
 
 {% endblock %}
