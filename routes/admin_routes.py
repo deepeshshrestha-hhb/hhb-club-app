@@ -7,6 +7,7 @@ from flask import (
 
 from config import Config
 from services import r2_service
+from services import analytics_service
 from services.spond_service import fetch_members_to_csv
 from services.player_stats_service import invalidate_cache
 from services.podium_service import get_podium_photo_list, save_podium_photos, delete_podium_photo
@@ -83,6 +84,18 @@ def sync_spond_route():
     fetch_members_to_csv()
     invalidate_cache()
     flash("Spond member list refreshed.")
+    return redirect(url_for("admin.admin_page"))
+
+
+@admin_bp.route("/admin/refresh-signups", methods=["POST"])
+@admin_required
+def refresh_signups_route():
+    """Re-fetch the last 6 months of Spond signups, rebuild the per-player hours
+    cache, and upload both to R2. Use to refresh the signup analytics."""
+    analytics_service.fetch_signups_history()
+    count = analytics_service.aggregate_hours()
+    analytics_service.invalidate_cache()
+    flash(f"Signup analytics refreshed for {count} player(s).")
     return redirect(url_for("admin.admin_page"))
 
 

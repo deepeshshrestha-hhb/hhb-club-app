@@ -4,6 +4,7 @@ import os
 
 from config import Config
 from services.player_stats_service import get_all_player_stats
+from services.analytics_service import get_player_hours
 
 
 def _parse_age(dob_str):
@@ -64,17 +65,22 @@ def get_all_players():
         "breakdown": {"doubles": [], "champ_a": [], "champ_b": [], "league": []},
     }
 
+    hours = get_player_hours()
+    empty_hours = {"hours_last_four_weeks": 0.0, "hours_last_six_months": 0.0}
+
     players = []
     with open(csv_path, newline="", encoding="utf-8") as f:
         for row in csv.DictReader(f):
             fn_key = row["first_name"].strip().lower()
             stats = all_stats.get(fn_key, empty_stats)
+            player_hours = hours.get(row["full_name"], empty_hours)
             players.append({
                 "full_name": row["full_name"],
                 "email": row["email"],
                 "dob": _fmt_dob(row["dob"]),
                 "age": _parse_age(row["dob"]),
                 **stats,
+                **player_hours,
             })
 
     players.sort(key=lambda p: -p["hhb_score_current"])
