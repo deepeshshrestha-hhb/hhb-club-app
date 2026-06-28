@@ -10,6 +10,16 @@ data/hhb_members.csv
 data/player_profiles.json
 data/profile_photos/
 
+# Photo metadata - created on first upload, stored in R2, not source-controlled
+data/Photos.xlsx
+
+# Uploaded images - stored in R2, downloaded to local cache at startup
+static/images/photos/
+static/images/podium/
+
+# Local dev log
+flask_dev.log
+
 # Python
 __pycache__/
 *.py[cod]
