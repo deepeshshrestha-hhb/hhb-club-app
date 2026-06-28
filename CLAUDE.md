@@ -44,7 +44,8 @@ routes/                 # Flask blueprints (thin; delegate to services)
   calendar_routes.py    # /calendar, /api/calendar
   tournament_routes.py  # /tournaments/* (doubles, championships, league)
   player_routes.py      # /players
-  admin_routes.py       # /admin, /admin/sync_spond (placeholder)
+  admin_routes.py       # /admin, /admin/sync_spond (placeholder); admin_required decorator
+  feedback_routes.py    # /feedback, /feedback/submit, /feedback/status (admin)
 services/               # Business logic + data parsing (the heart of the app)
   spond_service.py      # Live Spond fetch: events (calendar) + members (CSV)
   calendar_service.py   # Weekly sessions (via Spond) + annual events (Excel)
@@ -54,6 +55,7 @@ services/               # Business logic + data parsing (the heart of the app)
   league_service.py
   player_service.py     # Reads hhb_members.csv, merges stats, ranks players
   player_stats_service.py # Computes per-player stats + HHB Score (cached)
+  feedback_service.py   # User feedback CRUD (Feedback.xlsx, General + Feature Request)
 models/                 # Lightweight plain classes (Player, Match, etc.) — minimal use
 templates/              # Jinja2 templates; base.html holds the navbar
 static/                 # styles.css, css/, js/ (calendar.js, tournaments.js), images/
@@ -187,6 +189,19 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   to `backups/<key>.<timestamp>` before overwriting.
 - **2026-06-25 — Tolerant workbook loader for backslash-`.xlsm` files.** *Why:*
   the Linux-only `sharedStrings` `KeyError`; see Known issues / gotchas.
+- **2026-06-27 — Added a user feedback system** (`feedback_service.py`,
+  `feedback_routes.py`, `templates/feedback.html`, site-wide modal + floating
+  button in `base.html`). Two types: *General* (public) and *Feature Request*
+  (admin-only). Submitters identify themselves by picking their name from the
+  club player list (a `get_player_names()` dropdown injected site-wide via an
+  `inject_feedback_players` context processor); "Non-Member" reveals an email
+  field instead. Stored in `data/Feedback.xlsx` (cols incl. `Submitted By` +
+  `User Email`) via the existing `load_excel`/`save_excel` + R2 pattern;
+  gitignored as it can hold non-member emails (PII). `/feedback` shows General to
+  everyone and adds a Feature Requests column with status controls for admins;
+  status updates go through `admin_required`.
+  *Why:* reuse the proven Excel+R2 storage and `admin_required` decorator rather
+  than introduce a database for a low-volume feature.
 
 ---
 

@@ -32,6 +32,25 @@ def _fmt_dob(dob_str):
         return ""
 
 
+def get_player_names():
+    """Lightweight, alphabetically sorted list of member full names (no stats).
+
+    Used to populate the feedback "submitting as" dropdown, which renders on every
+    page, so this deliberately just reads the cached members CSV and skips the
+    HHB Score computation that get_all_players() does."""
+    csv_path = os.path.join(Config.DATA_DIR, "hhb_members.csv")
+    if not os.path.exists(csv_path):
+        return []
+    names = []
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            name = (row.get("full_name") or "").strip()
+            if name:
+                names.append(name)
+    names.sort(key=str.casefold)
+    return names
+
+
 def get_all_players():
     csv_path = os.path.join(Config.DATA_DIR, "hhb_members.csv")
     if not os.path.exists(csv_path):

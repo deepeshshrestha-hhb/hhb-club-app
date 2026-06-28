@@ -13,6 +13,9 @@ data/profile_photos/
 # Photo metadata - created on first upload, stored in R2, not source-controlled
 data/Photos.xlsx
 
+# User feedback - contains submitter emails (PII), stored in R2, not source-controlled
+data/Feedback.xlsx
+
 # Uploaded images - stored in R2, downloaded to local cache at startup
 static/images/photos/
 static/images/podium/

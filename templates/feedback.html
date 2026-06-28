@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% set status_class = {"New": "secondary", "In Progress": "warning text-dark", "Completed": "success"} %}
+
+{% macro feedback_card(item) %}
+<div class="card hhb-card mb-3">
+    <div class="card-body">
+        <p class="mb-2" style="white-space: pre-wrap;">{{ item["Message"] }}</p>
+        <div class="d-flex justify-content-between align-items-center flex-wrap text-muted small">
+            <span>👤 {{ item["Submitted By"] or "Anonymous" }}{% if item["User Email"] %} · {{ item["User Email"] }}{% endif %}</span>
+            <span>🕒 {{ item["Timestamp"] }} UTC</span>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap mb-4 gap-2">
+    <h1 class="page-title mb-0">Feedback</h1>
+    <button class="btn btn-hhb-accent text-white btn-sm" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+        ➕ Share Feedback
+    </button>
+</div>
+
+<div class="row">
+    <!-- General feedback (public) -->
+    <div class="{{ 'col-lg-6' if feature_requests is not none else 'col-12' }} mb-4">
+        <h4 class="mb-3">General Feedback</h4>
+        {% if general %}
+            {% for item in general %}{{ feedback_card(item) }}{% endfor %}
+        {% else %}
+            <p class="text-muted fst-italic">No feedback yet. Be the first to share your thoughts!</p>
+        {% endif %}
+    </div>
+
+    <!-- Feature requests (admin only) -->
+    {% if feature_requests is not none %}
+    <div class="col-lg-6 mb-4">
+        <h4 class="mb-3">
+            Feature Requests
+            <span class="badge bg-hhb-primary align-middle">Admin only</span>
+        </h4>
+        {% if feature_requests %}
+            {% for item in feature_requests %}
+            <div class="card hhb-card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <p class="mb-0" style="white-space: pre-wrap;">{{ item["Message"] }}</p>
+                        <span class="badge bg-{{ status_class.get(item['Status'], 'secondary') }} flex-shrink-0">
+                            {{ item["Status"] }}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap text-muted small mb-2">
+                        <span>👤 {{ item["Submitted By"] or "Anonymous" }}{% if item["User Email"] %} · {{ item["User Email"] }}{% endif %}</span>
+                        <span>🕒 {{ item["Timestamp"] }} UTC</span>
+                    </div>
+                    <form action="{{ url_for('feedback.feedback_status') }}" method="post"
+                          class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="id" value="{{ item['ID'] }}">
+                        <label class="form-label small mb-0 text-muted">Status</label>
+                        <select name="status" class="form-select form-select-sm" style="max-width: 160px;"
+                                onchange="this.form.submit()">
+                            {% for s in statuses %}
+                            <option value="{{ s }}" {{ 'selected' if s == item["Status"] else '' }}>{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted fst-italic">No feature requests yet.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
