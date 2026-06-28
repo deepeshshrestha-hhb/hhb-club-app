@@ -72,6 +72,23 @@
             </div>
         </div>
 
+        <!-- Activity: hours played from Spond sign-ups -->
+        <div class="row g-2 mb-1 text-center">
+            <div class="col-6">
+                <div class="p-2 rounded" style="background:#eefaf1">
+                    <div class="fw-bold" style="color:#1b8a5a;font-size:1.3rem">{{ '%g' % (player.hours_last_four_weeks | round(1)) }}<span class="fs-6 fw-normal text-muted"> h</span></div>
+                    <div class="text-muted small">⏱️ Last 4 weeks</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="p-2 rounded" style="background:#eefaf1">
+                    <div class="fw-bold" style="color:#1b8a5a;font-size:1.3rem">{{ '%g' % (player.hours_last_six_months | round(1)) }}<span class="fs-6 fw-normal text-muted"> h</span></div>
+                    <div class="text-muted small">⏱️ Last 6 months</div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center text-muted mb-3" style="font-size:.72rem">Hours played, from Spond session sign-ups</div>
+
         <hr class="my-3">
 
         <!-- Q&A -->
@@ -145,7 +162,10 @@
         </div>
         <h2 class="h4 mb-1">{{ player.full_name }}</h2>
         {% if player.rank %}
-        <p class="text-muted mb-3">HHB Rank #{{ player.rank }} &middot; {{ player.hhb_score_current }} pts</p>
+        <p class="text-muted mb-2">HHB Rank #{{ player.rank }} &middot; {{ player.hhb_score_current }} pts</p>
+        {% endif %}
+        {% if player.hours_last_six_months or player.hours_last_four_weeks %}
+        <p class="text-muted small mb-3">⏱️ {{ '%g' % (player.hours_last_four_weeks | round(1)) }} h last 4 weeks &middot; {{ '%g' % (player.hours_last_six_months | round(1)) }} h last 6 months</p>
         {% endif %}
         <p class="text-muted mb-4">No profile has been created for this player yet.</p>
         <a href="{{ url_for('players.add_profile') }}?player={{ player.full_name | urlencode }}"

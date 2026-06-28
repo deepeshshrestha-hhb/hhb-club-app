@@ -1,17 +1,34 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-start flex-wrap mb-3">
-    <div>
-        <h1 class="page-title mb-1">HHB Members</h1>
-        <p class="text-muted small mb-0">{{ players | length }} members (Synced from Spond on startup) · Ranked by HHB Score (Current)</p>
-    </div>
-    <div class="d-flex align-items-center gap-2 mt-2 mt-sm-0">
-        <span class="text-muted small">Rank by:</span>
-        <div class="btn-group btn-group-sm" role="group" aria-label="Ranking mode">
-            <button type="button" class="btn btn-primary active" id="btn-current" onclick="setRankMode('current')">Current</button>
-            <button type="button" class="btn btn-outline-secondary" id="btn-cumulative" onclick="setRankMode('cumulative')">Cumulative</button>
-        </div>
+<h1 class="page-title mb-1">HHB Members</h1>
+<p class="text-muted small mb-3">{{ players | length }} members (Synced from Spond on startup) · Ranked by HHB Score (Current)</p>
+
+<!-- Tabs: member directory + analytics -->
+<ul class="nav nav-tabs mb-3" id="playersTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="members-tab" data-bs-toggle="tab" data-bs-target="#members-pane"
+                type="button" role="tab" aria-controls="members-pane" aria-selected="true">
+            <i class="bi bi-people-fill me-1"></i>Members
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analytics-pane"
+                type="button" role="tab" aria-controls="analytics-pane" aria-selected="false">
+            <i class="bi bi-bar-chart-line-fill me-1"></i>Analytics
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content">
+<!-- ═══════════════ MEMBERS TAB ═══════════════ -->
+<div class="tab-pane fade show active" id="members-pane" role="tabpanel" aria-labelledby="members-tab">
+
+<div class="d-flex justify-content-end align-items-center gap-2 mb-3">
+    <span class="text-muted small">Rank by:</span>
+    <div class="btn-group btn-group-sm" role="group" aria-label="Ranking mode">
+        <button type="button" class="btn btn-primary active" id="btn-current" onclick="setRankMode('current')">Current</button>
+        <button type="button" class="btn btn-outline-secondary" id="btn-cumulative" onclick="setRankMode('cumulative')">Cumulative</button>
     </div>
 </div>
 
@@ -281,6 +298,83 @@
     DC = Annual Doubles Classic seasons &nbsp;|&nbsp; Champ = Annual Championships &nbsp;|&nbsp; League = Annual Players League seasons.
     Tournament matching is by first name — players who used a different name in older scoresheets may show lower counts.
 </p>
+
+</div><!-- /members-pane -->
+
+<!-- ═══════════════ ANALYTICS TAB ═══════════════ -->
+<div class="tab-pane fade" id="analytics-pane" role="tabpanel" aria-labelledby="analytics-tab">
+
+    {% set total_hours = players | sum(attribute='hours_last_six_months') %}
+    {% set by_hours = players | sort(attribute='hours_last_six_months', reverse=True) %}
+    {% set max_hours = (players | map(attribute='hours_last_six_months') | max) if players else 0 %}
+
+    <!-- ── Hours Played ── -->
+    <div class="card hhb-card mb-3">
+        <div class="card-header bg-white d-flex align-items-center flex-wrap gap-2">
+            <span class="fw-semibold"><i class="bi bi-clock-history me-1"></i>Hours Played</span>
+            <span class="text-muted small">From Spond session sign-ups (confirmed attendees)</span>
+        </div>
+        <div class="card-body">
+            {% if total_hours == 0 %}
+            <div class="alert alert-info mb-0">
+                No signup data yet. An admin can populate it from
+                <a href="{{ url_for('admin.admin_page') }}">Admin → Refresh Signup Analytics</a>.
+            </div>
+            {% else %}
+            <p class="text-muted small mb-3">
+                Each session counts as its scheduled length (1 hour by default). Ranked by hours over the last 6 months.
+            </p>
+            <div class="sticky-table-wrapper" style="max-height:70vh;">
+                <table class="table table-sm table-striped table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th class="text-end">Last 4 Weeks</th>
+                            <th>Last 6 Months</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set medals = ['🏆','🥈','🥉'] %}
+                        {% for p in by_hours %}
+                        <tr>
+                            <td class="fw-semibold">
+                                {%- if loop.index <= 3 and p.hours_last_six_months > 0 %}{{ medals[loop.index0] }}{% else %}{{ loop.index }}{% endif -%}
+                            </td>
+                            <td class="fw-semibold">
+                                {% set slug = p.full_name | slugify %}
+                                <a href="{{ url_for('players.player_profile', slug=slug) }}"
+                                   class="text-decoration-none"
+                                   style="color:{% if slug in profile_slugs %}var(--hhb-primary){% else %}inherit{% endif %}">
+                                    {{ p.full_name }}
+                                </a>
+                            </td>
+                            <td class="text-end">
+                                {% if p.hours_last_four_weeks %}<span class="fw-semibold">{{ '%g' % (p.hours_last_four_weeks | round(1)) }}</span> <span class="text-muted small">h</span>{% else %}<span class="text-muted">—</span>{% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height:8px;min-width:60px">
+                                        <div class="progress-bar" style="width:{{ ((p.hours_last_six_months / (max_hours or 1)) * 100) | round }}%;background:var(--hhb-accent)"></div>
+                                    </div>
+                                    <span class="fw-bold small" style="min-width:46px">
+                                        {%- if p.hours_last_six_months %}{{ '%g' % (p.hours_last_six_months | round(1)) }} h{% else %}<span class="text-muted">0</span>{% endif -%}
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- More analytics (age demographics, years in club, …) can be added as additional cards here. -->
+
+</div><!-- /analytics-pane -->
+</div><!-- /tab-content -->
 
 <script>
 function setRankMode(mode) {
