@@ -100,6 +100,13 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   `tournaments/<exact filename>`, then **Admin → Refresh Data from R2** (or a
   redeploy) pulls them in. Use [scripts/seed_r2.py](scripts/seed_r2.py) to
   (re)seed with round-trip verification.
+- **Pulling prod data locally (read-only snapshot):** to bring live photos,
+  feedback, etc. into your local env, set the `R2_*` vars in `.env` and run
+  [scripts/pull_r2.py](scripts/pull_r2.py) (download-only counterpart to
+  `seed_r2.py`; mirrors all synced prefixes down). ⚠️ There is only one bucket
+  and it *is* production — after pulling, comment the `R2_*` vars back out of
+  `.env` before running the app locally, or the app will upload local changes
+  (feedback, uploads, admin refreshes) back to prod.
 - **Admin:** single-user session login (`/admin/login`, `ADMIN_USERNAME` /
   `ADMIN_PASSWORD`). Buttons: **Spond Refresh** (members → CSV → R2) and
   **Refresh Data from R2**. Members are no longer fetched on every startup.
