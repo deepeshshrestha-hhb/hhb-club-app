@@ -46,6 +46,7 @@ SYNCED_DIRS = {
     "data": BASE_DIR / "data",
     "tournaments": BASE_DIR / "tournaments",
     "podium": BASE_DIR / "static" / "images" / "podium",
+    "photos": BASE_DIR / "static" / "images" / "photos",
 }
 
 _REQUIRED_VARS = (

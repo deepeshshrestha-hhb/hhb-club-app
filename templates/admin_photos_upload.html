@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+
+        <h1 class="page-title mb-1">Upload Photo</h1>
+        <p class="text-muted mb-4">Add a club photo or an event-specific gallery image.</p>
+
+        <div class="card hhb-card">
+            <div class="card-body p-4">
+                <form action="{{ url_for('admin.admin_photos_upload') }}" method="post"
+                      enctype="multipart/form-data" id="uploadForm" novalidate>
+
+                    <!-- Photo type selector -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Photo Type</label>
+                        <div class="d-flex gap-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="type"
+                                       id="typeGeneric" value="generic" checked>
+                                <label class="form-check-label" for="typeGeneric">
+                                    Generic club photo
+                                    <span class="text-muted small d-block">Appears on the About page gallery</span>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="type"
+                                       id="typeEvent" value="event">
+                                <label class="form-check-label" for="typeEvent">
+                                    Event-specific photo
+                                    <span class="text-muted small d-block">Linked from a tournament or event page</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File picker -->
+                    <div class="mb-3">
+                        <label for="photo" class="form-label fw-semibold">
+                            Image File <span class="text-danger">*</span>
+                        </label>
+                        <input type="file" class="form-control" id="photo" name="photo"
+                               accept=".jpg,.jpeg,.png,.webp" required>
+                        <div class="form-text">JPG, PNG, or WebP. Max ~10 MB recommended.</div>
+                    </div>
+
+                    <!-- Caption -->
+                    <div class="mb-3">
+                        <label for="caption" class="form-label fw-semibold">
+                            Caption
+                            <span class="text-danger" id="captionStar">*</span>
+                            <span class="text-muted fw-normal" id="captionOptionalLabel" style="display:none;">(optional)</span>
+                        </label>
+                        <input type="text" class="form-control" id="caption" name="caption"
+                               placeholder="e.g. HHB Sunday session — March 2025">
+                    </div>
+
+                    <!-- Date of event -->
+                    <div class="mb-3">
+                        <label for="event_date" class="form-label fw-semibold">
+                            Date of Event <span class="text-muted fw-normal">(optional)</span>
+                        </label>
+                        <input type="date" class="form-control" id="event_date" name="event_date">
+                        <div class="form-text">Shown in the gallery beneath the photo. Leave blank to omit.</div>
+                    </div>
+
+                    <!-- Event section (shown only when Event type selected) -->
+                    <div id="eventSection" style="display:none;">
+
+                        <!-- Event Type dropdown -->
+                        <div class="mb-3">
+                            <label for="event_type" class="form-label fw-semibold">
+                                Event Type <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="event_type" name="event_type">
+                                <option value="">— Select event type —</option>
+                                <option value="tournament">Tournament</option>
+                                <option value="other">Other Event</option>
+                            </select>
+                        </div>
+
+                        <!-- Tournament dropdown (shown when Tournament selected) -->
+                        <div class="mb-3" id="tournamentSection" style="display:none;">
+                            <label for="tournament_id" class="form-label fw-semibold">
+                                Select Tournament <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="tournament_id" name="tournament_id">
+                                <option value="">— Select tournament —</option>
+                                {% for value, label in tournament_options %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Other Event dropdown (shown when Other Event selected) -->
+                        <div class="mb-3" id="otherEventSection" style="display:none;">
+                            <label for="other_event_id" class="form-label fw-semibold">
+                                Select Event <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="other_event_id" name="other_event_id">
+                                <option value="">— Select event —</option>
+                                {% for value, label in other_event_options %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-hhb-primary text-white px-4">Upload</button>
+                        <a href="{{ url_for('admin.admin_photos') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+(function () {
+    const typeGeneric   = document.getElementById('typeGeneric');
+    const typeEvent     = document.getElementById('typeEvent');
+    const captionInput  = document.getElementById('caption');
+    const captionStar   = document.getElementById('captionStar');
+    const captionOpt    = document.getElementById('captionOptionalLabel');
+    const eventSection  = document.getElementById('eventSection');
+    const eventTypeSel  = document.getElementById('event_type');
+    const tournSect     = document.getElementById('tournamentSection');
+    const tournSel      = document.getElementById('tournament_id');
+    const otherSect     = document.getElementById('otherEventSection');
+    const otherSel      = document.getElementById('other_event_id');
+    const form          = document.getElementById('uploadForm');
+
+    function updatePhotoType() {
+        const isEvent = typeEvent.checked;
+
+        // Caption: required for generic, optional for event
+        captionStar.style.display   = isEvent ? 'none' : '';
+        captionOpt.style.display    = isEvent ? ''     : 'none';
+        if (isEvent) {
+            captionInput.removeAttribute('required');
+        } else {
+            captionInput.setAttribute('required', '');
+        }
+
+        // Show/hide whole event section
+        eventSection.style.display = isEvent ? '' : 'none';
+        if (!isEvent) {
+            eventTypeSel.value = '';
+            updateEventType();
+        }
+    }
+
+    function updateEventType() {
+        const isTournament = eventTypeSel.value === 'tournament';
+        const isOther      = eventTypeSel.value === 'other';
+
+        tournSect.style.display  = isTournament ? '' : 'none';
+        otherSect.style.display  = isOther      ? '' : 'none';
+
+        // Reset the hidden dropdown so it doesn't accidentally submit a stale value
+        if (!isTournament) tournSel.value = '';
+        if (!isOther)      otherSel.value = '';
+    }
+
+    // Client-side validation before submit
+    form.addEventListener('submit', function (e) {
+        if (typeEvent.checked) {
+            if (!eventTypeSel.value) {
+                e.preventDefault();
+                eventTypeSel.classList.add('is-invalid');
+                eventTypeSel.focus();
+                return;
+            }
+            if (eventTypeSel.value === 'tournament' && !tournSel.value) {
+                e.preventDefault();
+                tournSel.classList.add('is-invalid');
+                tournSel.focus();
+                return;
+            }
+            if (eventTypeSel.value === 'other' && !otherSel.value) {
+                e.preventDefault();
+                otherSel.classList.add('is-invalid');
+                otherSel.focus();
+                return;
+            }
+        }
+    });
+
+    // Clear invalid state on change
+    [eventTypeSel, tournSel, otherSel].forEach(el => {
+        el.addEventListener('change', () => el.classList.remove('is-invalid'));
+    });
+
+    typeGeneric.addEventListener('change', updatePhotoType);
+    typeEvent.addEventListener('change', updatePhotoType);
+    eventTypeSel.addEventListener('change', updateEventType);
+
+    // Initialise on load
+    updatePhotoType();
+    updateEventType();
+})();
+</script>
+
+{% endblock %}

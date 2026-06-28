@@ -10,6 +10,15 @@ from services import r2_service
 from services.spond_service import fetch_members_to_csv
 from services.player_stats_service import invalidate_cache
 from services.podium_service import get_podium_photo_list, save_podium_photos, delete_podium_photo
+from services.photos_service import (
+    get_all_photos,
+    upload_photo,
+    delete_photo as delete_club_photo,
+)
+from services.tournament_service import list_doubles_tournament_years
+from services.championship_service import list_championship_years
+from services.league_service import list_league_years
+from services.calendar_service import get_annual_events, get_annual_event_years
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -111,6 +120,114 @@ def podium_delete():
         return jsonify({"error": "filename required"}), 400
     ok = delete_podium_photo(filename)
     return jsonify({"ok": ok})
+
+
+@admin_bp.route("/admin/photos")
+@admin_required
+def admin_photos():
+    type_filter = request.args.get("type", "")
+    photos = get_all_photos(type_filter if type_filter else None)
+    return render_template("admin_photos.html", photos=photos, type_filter=type_filter)
+
+
+def _build_tournament_options():
+    """Return list of (value, label) for all known tournaments, newest first."""
+    options = []
+    for year in sorted(list_doubles_tournament_years(), reverse=True):
+        options.append((f"doubles_{year}", f"Doubles Classic {year}"))
+    for year in sorted(list_championship_years(), reverse=True):
+        options.append((f"championships_{year}", f"Championships {year}"))
+    for year in sorted(list_league_years(), reverse=True):
+        options.append((f"league_{year}", f"Players League {year}"))
+    return options
+
+
+def _build_other_event_options():
+    """Return (value, label) pairs for each annual non-tournament event × year,
+    newest year first within each event. Driven by HHBClubAnnualCalendar.xlsx."""
+    # Tournament events are already covered by the Tournament dropdown
+    _TOURNAMENT_KEYWORDS = {"doubles classic", "championship", "league"}
+
+    events = get_annual_events()
+    years = get_annual_event_years()
+
+    # Fall back to current + next year if the Excel is absent locally
+    if not years:
+        import datetime
+        y = datetime.date.today().year
+        years = [y, y + 1]
+
+    options = []
+    for ev in events:
+        name = ev["name"]
+        name_lower = name.lower()
+        if any(kw in name_lower for kw in _TOURNAMENT_KEYWORDS):
+            continue
+        slug = name_lower.replace(" ", "_")
+        for year in sorted(years, reverse=True):
+            options.append((f"{slug}_{year}", f"{name} {year}"))
+
+    return options
+
+
+@admin_bp.route("/admin/photos/upload", methods=["GET", "POST"])
+@admin_required
+def admin_photos_upload():
+    if request.method == "POST":
+        file = request.files.get("photo")
+        caption = request.form.get("caption", "").strip()
+        photo_type = request.form.get("type", "generic")
+        event_type = request.form.get("event_type", "").strip()   # tournament | other
+        tournament_id = request.form.get("tournament_id", "").strip()
+        other_event_id = request.form.get("other_event_id", "").strip()
+        event_date = request.form.get("event_date", "").strip()
+
+        if not file or not file.filename:
+            flash("No file selected.")
+            return redirect(url_for("admin.admin_photos_upload"))
+        if photo_type == "generic" and not caption:
+            flash("Caption is required for generic photos.")
+            return redirect(url_for("admin.admin_photos_upload"))
+        if photo_type == "event":
+            if not event_type:
+                flash("Please select an event type.")
+                return redirect(url_for("admin.admin_photos_upload"))
+            if event_type == "tournament" and not tournament_id:
+                flash("Please select a tournament.")
+                return redirect(url_for("admin.admin_photos_upload"))
+            if event_type == "other" and not other_event_id:
+                flash("Please select an event.")
+                return redirect(url_for("admin.admin_photos_upload"))
+
+        event_id = ""
+        if photo_type == "event":
+            event_id = tournament_id if event_type == "tournament" else other_event_id
+
+        result = upload_photo(file, caption, photo_type, event_id, event_date)
+        if result is None:
+            flash("Invalid file type. Allowed: JPG, PNG, WebP.")
+            return redirect(url_for("admin.admin_photos_upload"))
+
+        flash("Photo uploaded successfully.")
+        return redirect(url_for("admin.admin_photos"))
+
+    return render_template(
+        "admin_photos_upload.html",
+        tournament_options=_build_tournament_options(),
+        other_event_options=_build_other_event_options(),
+    )
+
+
+@admin_bp.route("/admin/photos/delete", methods=["POST"])
+@admin_required
+def admin_photos_delete():
+    photo_id = request.form.get("photo_id", "").strip()
+    if not photo_id:
+        flash("No photo ID provided.")
+        return redirect(url_for("admin.admin_photos"))
+    ok = delete_club_photo(photo_id)
+    flash("Photo deleted." if ok else "Photo not found.")
+    return redirect(url_for("admin.admin_photos"))
 
 
 @admin_bp.route("/admin/refresh-data", methods=["POST"])

@@ -46,6 +46,19 @@ def _format_date_cell(value):
     return _clean(value)
 
 
+def get_annual_event_years():
+    """Return sorted list of years for which the annual calendar has date columns."""
+    df = load_excel("HHBClubAnnualCalendar.xlsx", header=2)
+    if df.empty:
+        return []
+    years = set()
+    for col in df.columns:
+        for part in str(col).split():
+            if part.isdigit() and len(part) == 4:
+                years.add(int(part))
+    return sorted(years)
+
+
 def get_annual_events():
     """
     Reads HHBClubAnnualCalendar.xlsx, which has a title row, then a header row, then

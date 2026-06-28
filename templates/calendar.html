@@ -84,6 +84,7 @@
 
                         <div class="mb-2">
                             {% if ev.dates_2026 %}
+                            {% set slug_2026 = ev.name | lower | replace(' ', '_') ~ '_2026' %}
                             <div>
                                 <strong>2026:</strong> {{ ev.dates_2026 }}
                                 {% if ev.completed_2026 %}
@@ -107,10 +108,25 @@
                                     <span class="badge ms-1" style="background-color: darkgreen;">COMPLETED</span>
                                     {% endif %}
                                 {% endif %}
+                                {% if slug_2026 in photo_event_ids %}
+                                <a href="{{ url_for('photos.event_gallery', event_id=slug_2026) }}"
+                                   class="badge ms-1 text-decoration-none" style="background-color: #0d6efd;">
+                                    📷 Photos
+                                </a>
+                                {% endif %}
                             </div>
                             {% endif %}
                             {% if ev.dates_2027 %}
-                            <div><strong>2027:</strong> {{ ev.dates_2027 }}</div>
+                            {% set slug_2027 = ev.name | lower | replace(' ', '_') ~ '_2027' %}
+                            <div>
+                                <strong>2027:</strong> {{ ev.dates_2027 }}
+                                {% if slug_2027 in photo_event_ids %}
+                                <a href="{{ url_for('photos.event_gallery', event_id=slug_2027) }}"
+                                   class="badge ms-1 text-decoration-none" style="background-color: #0d6efd;">
+                                    📷 Photos
+                                </a>
+                                {% endif %}
+                            </div>
                             {% endif %}
                         </div>
 

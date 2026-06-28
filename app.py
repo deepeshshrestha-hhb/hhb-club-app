@@ -7,6 +7,7 @@ from routes.calendar_routes import calendar_bp
 from routes.tournament_routes import tournament_bp
 from routes.admin_routes import admin_bp
 from routes.player_routes import player_bp
+from routes.photos_routes import photos_bp
 from services import r2_service
 from services.profile_service import name_to_slug
 
@@ -39,6 +40,7 @@ def create_app():
     app.register_blueprint(tournament_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(player_bp)
+    app.register_blueprint(photos_bp)
 
     @app.route("/")
     def dashboard():

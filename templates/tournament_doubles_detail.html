@@ -18,6 +18,18 @@
     {% endif %}
 </div>
 
+{% if has_event_photos or session.get('is_admin') %}
+<div class="text-center mb-3">
+    <a href="{{ url_for('photos.event_gallery', event_id=event_id) }}"
+       class="btn btn-sm btn-outline-secondary">
+        📷 View Event Photos
+    </a>
+    {% if session.get('is_admin') and not has_event_photos %}
+    <span class="text-muted small ms-2">(no photos yet — <a href="{{ url_for('admin.admin_photos_upload') }}">upload some</a>)</span>
+    {% endif %}
+</div>
+{% endif %}
+
 {% if tournament.important_dates %}
 <div class="d-flex flex-wrap gap-2 mb-4">
     {% for d in tournament.important_dates %}
