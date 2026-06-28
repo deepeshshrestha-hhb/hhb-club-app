@@ -8,6 +8,7 @@ from services.feedback_service import (
     get_general_feedback,
     get_feature_requests,
     update_status,
+    delete_feedback,
     STATUSES,
 )
 
@@ -60,4 +61,16 @@ def feedback_status():
         flash("Status updated.", "success")
     else:
         flash("Could not update status.", "danger")
+    return redirect(url_for("feedback.feedback_page"))
+
+
+@feedback_bp.route("/feedback/delete", methods=["POST"])
+@admin_required
+def feedback_delete():
+    """Admin-only: delete a feedback entry (General or Feature Request)."""
+    feedback_id = request.form.get("id", "").strip()
+    if delete_feedback(feedback_id):
+        flash("Feedback entry deleted.", "success")
+    else:
+        flash("Could not delete feedback entry.", "danger")
     return redirect(url_for("feedback.feedback_page"))

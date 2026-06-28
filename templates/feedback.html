@@ -1,7 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
 
-{% set status_class = {"New": "secondary", "In Progress": "warning text-dark", "Completed": "success"} %}
+{% set status_class = {
+    "New": "secondary",
+    "Accepted": "info text-dark",
+    "Rejected": "danger",
+    "In Progress": "warning text-dark",
+    "Completed": "success",
+} %}
+
+{% macro delete_button(item) %}
+<form action="{{ url_for('feedback.feedback_delete') }}" method="post" class="d-inline"
+      onsubmit="return confirm('Delete this feedback entry? This cannot be undone.');">
+    <input type="hidden" name="id" value="{{ item['ID'] }}">
+    <button type="submit" class="btn btn-outline-danger btn-sm">🗑 Delete</button>
+</form>
+{% endmacro %}
 
 {% macro feedback_card(item) %}
 <div class="card hhb-card mb-3">
@@ -11,6 +25,9 @@
             <span>👤 {{ item["Submitted By"] or "Anonymous" }}{% if item["User Email"] %} · {{ item["User Email"] }}{% endif %}</span>
             <span>🕒 {{ item["Timestamp"] }} UTC</span>
         </div>
+        {% if session.get('is_admin') %}
+        <div class="text-end mt-2">{{ delete_button(item) }}</div>
+        {% endif %}
     </div>
 </div>
 {% endmacro %}
@@ -54,17 +71,20 @@
                         <span>👤 {{ item["Submitted By"] or "Anonymous" }}{% if item["User Email"] %} · {{ item["User Email"] }}{% endif %}</span>
                         <span>🕒 {{ item["Timestamp"] }} UTC</span>
                     </div>
-                    <form action="{{ url_for('feedback.feedback_status') }}" method="post"
-                          class="d-flex align-items-center gap-2">
-                        <input type="hidden" name="id" value="{{ item['ID'] }}">
-                        <label class="form-label small mb-0 text-muted">Status</label>
-                        <select name="status" class="form-select form-select-sm" style="max-width: 160px;"
-                                onchange="this.form.submit()">
-                            {% for s in statuses %}
-                            <option value="{{ s }}" {{ 'selected' if s == item["Status"] else '' }}>{{ s }}</option>
-                            {% endfor %}
-                        </select>
-                    </form>
+                    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                        <form action="{{ url_for('feedback.feedback_status') }}" method="post"
+                              class="d-flex align-items-center gap-2">
+                            <input type="hidden" name="id" value="{{ item['ID'] }}">
+                            <label class="form-label small mb-0 text-muted">Status</label>
+                            <select name="status" class="form-select form-select-sm" style="max-width: 160px;"
+                                    onchange="this.form.submit()">
+                                {% for s in statuses %}
+                                <option value="{{ s }}" {{ 'selected' if s == item["Status"] else '' }}>{{ s }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                        {{ delete_button(item) }}
+                    </div>
                 </div>
             </div>
             {% endfor %}
