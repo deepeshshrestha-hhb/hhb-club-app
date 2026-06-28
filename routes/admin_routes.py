@@ -10,6 +10,11 @@ from services import r2_service
 from services.spond_service import fetch_members_to_csv
 from services.player_stats_service import invalidate_cache
 from services.podium_service import get_podium_photo_list, save_podium_photos, delete_podium_photo
+from services.photos_service import (
+    get_all_photos,
+    upload_photo,
+    delete_photo as delete_club_photo,
+)
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -111,6 +116,56 @@ def podium_delete():
         return jsonify({"error": "filename required"}), 400
     ok = delete_podium_photo(filename)
     return jsonify({"ok": ok})
+
+
+@admin_bp.route("/admin/photos")
+@admin_required
+def admin_photos():
+    type_filter = request.args.get("type", "")
+    photos = get_all_photos(type_filter if type_filter else None)
+    return render_template("admin_photos.html", photos=photos, type_filter=type_filter)
+
+
+@admin_bp.route("/admin/photos/upload", methods=["GET", "POST"])
+@admin_required
+def admin_photos_upload():
+    if request.method == "POST":
+        file = request.files.get("photo")
+        caption = request.form.get("caption", "").strip()
+        photo_type = request.form.get("type", "generic")
+        event_id = request.form.get("event_id", "").strip()
+
+        if not file or not file.filename:
+            flash("No file selected.")
+            return redirect(url_for("admin.admin_photos_upload"))
+        if photo_type == "generic" and not caption:
+            flash("Caption is required for generic photos.")
+            return redirect(url_for("admin.admin_photos_upload"))
+        if photo_type == "event" and not event_id:
+            flash("Event ID is required for event photos.")
+            return redirect(url_for("admin.admin_photos_upload"))
+
+        result = upload_photo(file, caption, photo_type, event_id)
+        if result is None:
+            flash("Invalid file type. Allowed: JPG, PNG, WebP.")
+            return redirect(url_for("admin.admin_photos_upload"))
+
+        flash("Photo uploaded successfully.")
+        return redirect(url_for("admin.admin_photos"))
+
+    return render_template("admin_photos_upload.html")
+
+
+@admin_bp.route("/admin/photos/delete", methods=["POST"])
+@admin_required
+def admin_photos_delete():
+    photo_id = request.form.get("photo_id", "").strip()
+    if not photo_id:
+        flash("No photo ID provided.")
+        return redirect(url_for("admin.admin_photos"))
+    ok = delete_club_photo(photo_id)
+    flash("Photo deleted." if ok else "Photo not found.")
+    return redirect(url_for("admin.admin_photos"))
 
 
 @admin_bp.route("/admin/refresh-data", methods=["POST"])

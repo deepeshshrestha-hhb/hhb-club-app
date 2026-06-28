@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+
+        <h1 class="page-title mb-1">Upload Photo</h1>
+        <p class="text-muted mb-4">Add a club photo or an event-specific gallery image.</p>
+
+        <div class="card hhb-card">
+            <div class="card-body p-4">
+                <form action="{{ url_for('admin.admin_photos_upload') }}" method="post"
+                      enctype="multipart/form-data" id="uploadForm">
+
+                    <!-- Photo type selector -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Photo Type</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="type"
+                                       id="typeGeneric" value="generic" checked>
+                                <label class="form-check-label" for="typeGeneric">
+                                    Generic club photo
+                                    <span class="text-muted small d-block">Appears on the About page gallery</span>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="type"
+                                       id="typeEvent" value="event">
+                                <label class="form-check-label" for="typeEvent">
+                                    Event-specific photo
+                                    <span class="text-muted small d-block">Linked from a tournament or event page</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File picker -->
+                    <div class="mb-3">
+                        <label for="photo" class="form-label fw-semibold">Image File <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="photo" name="photo"
+                               accept=".jpg,.jpeg,.png,.webp" required>
+                        <div class="form-text">JPG, PNG, or WebP. Max ~10 MB recommended.</div>
+                    </div>
+
+                    <!-- Caption (required for generic, optional for event) -->
+                    <div class="mb-3" id="captionField">
+                        <label for="caption" class="form-label fw-semibold">
+                            Caption <span class="text-danger" id="captionRequired">*</span>
+                            <span class="text-muted fw-normal" id="captionOptional" style="display:none;">(optional)</span>
+                        </label>
+                        <input type="text" class="form-control" id="caption" name="caption"
+                               placeholder="e.g. HHB Sunday session — March 2025">
+                    </div>
+
+                    <!-- Event ID (shown only for event type) -->
+                    <div class="mb-4" id="eventIdField" style="display:none;">
+                        <label for="event_id" class="form-label fw-semibold">
+                            Event ID <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="event_id" name="event_id"
+                               placeholder="e.g. doubles_2024, championships_2023, league_2024">
+                        <div class="form-text">
+                            Use the convention <code>doubles_&lt;year&gt;</code>,
+                            <code>championships_&lt;year&gt;</code>, or
+                            <code>league_&lt;year&gt;</code> to link automatically from the
+                            tournament page. You can also use a custom ID for other events.
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-hhb-primary text-white px-4">Upload</button>
+                        <a href="{{ url_for('admin.admin_photos') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+(function () {
+    const radios = document.querySelectorAll('input[name="type"]');
+    const eventIdField = document.getElementById('eventIdField');
+    const captionRequired = document.getElementById('captionRequired');
+    const captionOptional = document.getElementById('captionOptional');
+    const captionInput = document.getElementById('caption');
+
+    function update() {
+        const isEvent = document.getElementById('typeEvent').checked;
+        eventIdField.style.display = isEvent ? '' : 'none';
+        captionRequired.style.display = isEvent ? 'none' : '';
+        captionOptional.style.display = isEvent ? '' : 'none';
+        if (isEvent) {
+            captionInput.removeAttribute('required');
+        } else {
+            captionInput.setAttribute('required', '');
+        }
+    }
+
+    radios.forEach(r => r.addEventListener('change', update));
+    update();
+})();
+</script>
+
+{% endblock %}

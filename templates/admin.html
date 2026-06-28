@@ -40,4 +40,21 @@
     </div>
 </div>
 
+<div class="row mt-2">
+    <div class="col-md-6 mb-3">
+        <div class="card hhb-card h-100">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">Photo Management</h5>
+                <p class="card-text text-muted small">
+                    Upload generic club photos (shown on the About page gallery) and
+                    event-specific photos (linked from tournament pages).
+                </p>
+                <a href="{{ url_for('admin.admin_photos') }}" class="btn btn-hhb-accent mt-auto" style="width:fit-content;">
+                    Manage Photos
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

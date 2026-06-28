@@ -9,6 +9,7 @@ from services.tournament_service import (
 from services.championship_service import list_championship_years, get_championship
 from services.league_service import list_league_years, get_league
 from services.podium_service import get_podium_photos, get_podium_photo_pipe
+from services.photos_service import has_event_photos
 
 tournament_bp = Blueprint("tournaments", __name__)
 
@@ -75,9 +76,11 @@ def doubles_detail(year):
     idx = years.index(year) if year in years else -1
     prev_year = years[idx - 1] if idx > 0 else None
     next_year = years[idx + 1] if idx >= 0 and idx < len(years) - 1 else None
+    event_id = f"doubles_{year}"
     return render_template("tournament_doubles_detail.html", tournament=tournament,
                            prev_year=prev_year, next_year=next_year,
-                           podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe)
+                           podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe,
+                           event_id=event_id, has_event_photos=has_event_photos(event_id))
 
 
 # --- HHB Annual Championships ---
@@ -108,9 +111,11 @@ def championships_detail(year):
     idx = years.index(year) if year in years else -1
     prev_year = years[idx - 1] if idx > 0 else None
     next_year = years[idx + 1] if idx >= 0 and idx < len(years) - 1 else None
+    event_id = f"championships_{year}"
     return render_template("championships_detail.html", championship=championship,
                            prev_year=prev_year, next_year=next_year,
-                           podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe)
+                           podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe,
+                           event_id=event_id, has_event_photos=has_event_photos(event_id))
 
 
 # --- HHB Annual Doubles League ---
@@ -143,8 +148,10 @@ def league_detail(year):
     idx = years.index(year) if year in years else -1
     prev_year = years[idx - 1] if idx > 0 else None
     next_year = years[idx + 1] if idx >= 0 and idx < len(years) - 1 else None
+    event_id = f"league_{year}"
     return render_template("league_detail.html", league=league,
                            prev_year=prev_year, next_year=next_year,
-                           podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe)
+                           podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe,
+                           event_id=event_id, has_event_photos=has_event_photos(event_id))
 
 
