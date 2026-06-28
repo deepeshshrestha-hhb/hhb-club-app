@@ -8,6 +8,7 @@ from routes.tournament_routes import tournament_bp
 from routes.admin_routes import admin_bp
 from routes.player_routes import player_bp
 from routes.photos_routes import photos_bp
+from routes.feedback_routes import feedback_bp
 from services import r2_service
 from services.profile_service import name_to_slug
 
@@ -41,6 +42,18 @@ def create_app():
     app.register_blueprint(admin_bp)
     app.register_blueprint(player_bp)
     app.register_blueprint(photos_bp)
+    app.register_blueprint(feedback_bp)
+
+    @app.context_processor
+    def inject_feedback_players():
+        """Member names for the site-wide feedback modal dropdown (rendered on
+        every page). Falls back to an empty list so pages still render if the
+        member CSV is missing."""
+        from services.player_service import get_player_names
+        try:
+            return {"feedback_player_names": get_player_names()}
+        except Exception:
+            return {"feedback_player_names": []}
 
     @app.route("/")
     def dashboard():

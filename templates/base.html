@@ -36,6 +36,7 @@
                     <li class="nav-item"><a class="nav-link" href="/tournaments/annual">Annual Tournaments</a></li>
                     <li class="nav-item"><a class="nav-link" href="/players">Players</a></li>
                     <li class="nav-item"><a class="nav-link" href="/about">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/feedback">Feedback</a></li>
                     {% if session.get('is_admin') %}
                     <li class="nav-item"><a class="nav-link" href="/admin">Admin</a></li>
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.logout') }}">Logout</a></li>
@@ -240,6 +241,79 @@
     })();
     </script>
     {% endif %}
+
+    <!-- Site-wide feedback form (modal) + persistent trigger -->
+    <button type="button" class="btn btn-hhb-accent text-white feedback-fab"
+            data-bs-toggle="modal" data-bs-target="#feedbackModal" title="Share feedback">
+        💬 Feedback
+    </button>
+
+    <div class="modal fade" id="feedbackModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form action="{{ url_for('feedback.feedback_submit') }}" method="post">
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <div class="modal-header hhb-modal-header">
+                        <h5 class="modal-title text-white mb-0">💬 Share Feedback</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Feedback type</label>
+                            <select name="feedback_type" class="form-select">
+                                <option value="General" selected>General Feedback</option>
+                                <option value="Feature Request">Feature Request</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Submitting as</label>
+                            <select name="player" id="feedbackPlayer" class="form-select" required>
+                                <option value="" selected disabled>Select your name…</option>
+                                {% for name in feedback_player_names %}
+                                <option value="{{ name }}">{{ name }}</option>
+                                {% endfor %}
+                                <option value="Non-Member">Non-Member</option>
+                            </select>
+                        </div>
+                        <div class="mb-3 d-none" id="feedbackEmailWrap">
+                            <label class="form-label fw-semibold">Email address</label>
+                            <input type="email" name="email" id="feedbackEmail" class="form-control"
+                                   placeholder="you@example.com" maxlength="200">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold">Message</label>
+                            <textarea name="message" class="form-control" rows="4" maxlength="2000"
+                                      required placeholder="Tell us what you think…"></textarea>
+                        </div>
+                        <p class="text-muted small mb-0">
+                            General feedback is visible to all members. Feature requests are
+                            reviewed privately by the admins.
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-hhb-accent text-white btn-sm">Submit Feedback</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+    (function() {
+        var sel = document.getElementById('feedbackPlayer');
+        var wrap = document.getElementById('feedbackEmailWrap');
+        var email = document.getElementById('feedbackEmail');
+        if (!sel || !wrap || !email) return;
+        function toggleEmail() {
+            var isNonMember = sel.value === 'Non-Member';
+            wrap.classList.toggle('d-none', !isNonMember);
+            email.required = isNonMember;
+            if (!isNonMember) email.value = '';
+        }
+        sel.addEventListener('change', toggleEmail);
+        toggleEmail();
+    })();
+    </script>
 
     {% block extra_js %}{% endblock %}
 
