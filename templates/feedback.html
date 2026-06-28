@@ -41,7 +41,7 @@
 
 <div class="row">
     <!-- General feedback (public) -->
-    <div class="{{ 'col-lg-6' if feature_requests is not none else 'col-12' }} mb-4">
+    <div class="col-lg-6 mb-4">
         <h4 class="mb-3">General Feedback</h4>
         {% if general %}
             {% for item in general %}{{ feedback_card(item) }}{% endfor %}
@@ -50,13 +50,9 @@
         {% endif %}
     </div>
 
-    <!-- Feature requests (admin only) -->
-    {% if feature_requests is not none %}
+    <!-- Feature requests (public, read-only; status/delete controls are admin-only) -->
     <div class="col-lg-6 mb-4">
-        <h4 class="mb-3">
-            Feature Requests
-            <span class="badge bg-hhb-primary align-middle">Admin only</span>
-        </h4>
+        <h4 class="mb-3">Feature Requests</h4>
         {% if feature_requests %}
             {% for item in feature_requests %}
             <div class="card hhb-card mb-3">
@@ -71,6 +67,7 @@
                         <span>👤 {{ item["Submitted By"] or "Anonymous" }}{% if item["User Email"] %} · {{ item["User Email"] }}{% endif %}</span>
                         <span>🕒 {{ item["Timestamp"] }} UTC</span>
                     </div>
+                    {% if session.get('is_admin') %}
                     <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
                         <form action="{{ url_for('feedback.feedback_status') }}" method="post"
                               class="d-flex align-items-center gap-2">
@@ -85,6 +82,7 @@
                         </form>
                         {{ delete_button(item) }}
                     </div>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -92,7 +90,6 @@
             <p class="text-muted fst-italic">No feature requests yet.</p>
         {% endif %}
     </div>
-    {% endif %}
 </div>
 
 {% endblock %}

@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash, session
+    Blueprint, render_template, request, redirect, url_for, flash
 )
 
 from routes.admin_routes import admin_required, _safe_next
@@ -17,13 +17,14 @@ feedback_bp = Blueprint("feedback", __name__)
 
 @feedback_bp.route("/feedback")
 def feedback_page():
-    """Display feedback. Everyone sees General feedback; admins additionally see
-    the Feature Requests column with status controls."""
-    is_admin = bool(session.get("is_admin"))
+    """Display feedback. Everyone sees both General feedback and Feature Requests
+    (read-only, including each request's status). Status changes and deletions are
+    admin-only and gated server-side; the template hides those controls for
+    non-admins."""
     return render_template(
         "feedback.html",
         general=get_general_feedback(),
-        feature_requests=get_feature_requests() if is_admin else None,
+        feature_requests=get_feature_requests(),
         statuses=STATUSES,
     )
 
