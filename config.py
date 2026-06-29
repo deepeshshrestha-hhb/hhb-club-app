@@ -29,5 +29,13 @@ class Config:
     ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
     ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
+    # --- Claude AI assist (optional) ---
+    # Powers the admin "Summarize / Rewrite / change tone" helpers on event
+    # summaries. Leave unset to disable the AI buttons; the summary field still
+    # works as a plain editable text box. ANTHROPIC_MODEL is optional and
+    # defaults to a fast, low-cost model in ai_service.py.
+    ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+    ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL")
+
     # Limit upload size (covers profile photo uploads)
     MAX_CONTENT_LENGTH = 11 * 1024 * 1024  # 11 MB (10 MB limit enforced in service)

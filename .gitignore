@@ -16,6 +16,9 @@ data/Photos.xlsx
 # User feedback - contains submitter emails (PII), stored in R2, not source-controlled
 data/Feedback.xlsx
 
+# Event summaries - admin-authored, created on first save, stored in R2, not source-controlled
+data/EventSummaries.xlsx
+
 # Signup analytics caches - derived from Spond, stored in R2, not source-controlled
 data/signups_history.csv
 data/player_hours.csv
