@@ -32,43 +32,71 @@
 
 ---
 
+## Commands
+
+- **Install deps:** `pip install -r requirements.txt` (Python 3.12; see
+  `PYTHON_VERSION` in [render.yaml](render.yaml)).
+- **Run locally:** `python app.py` → serves on `http://localhost:5000`.
+  Locally the `R2_*` env vars are unset, so the app skips R2 and reads/writes
+  your local `data/` + `tournaments/` files — nothing touches production.
+- **Production server (Render):**
+  `gunicorn app:app --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT`.
+  `app = create_app()` is exposed at module level for gunicorn.
+- **Config:** copy `.env.example` → `.env` and fill in Spond creds (required for
+  the live calendar/members), plus optional `R2_*` / `ADMIN_*` vars. `.env` is
+  gitignored.
+- **Tests / lint:** there is **no** test suite or linter configured. For
+  data-format changes the real confirmation is the page rendering **on Render**
+  (Linux), since some `.xlsm` quirks are hidden on Windows (see Known issues).
+- **Flask dev server caveat:** prefer `--no-reload` and track the PID — stale
+  background processes can silently accumulate on the same port on Windows (see
+  Local Tooling Notes).
+
 ## Architecture Notes
 
-Standard Flask blueprint layout. App factory in [app.py](app.py) registers four
-blueprints and refreshes the Spond member CSV on startup.
+Standard Flask blueprint layout. App factory `create_app()` in [app.py](app.py)
+registers six blueprints and, on startup, pulls the canonical data files from R2
+into local `data/` + `tournaments/` via `r2_service.download_all()` (a no-op
+locally when `R2_*` is unset). The Spond member CSV is **no longer** refreshed on
+startup — it's fetched on demand via Admin → Spond Refresh. Top-level routes
+`/` (dashboard), `/about`, and `/health` live directly in `app.py`.
 
 ```
-app.py                  # create_app(); registers blueprints; / and /about routes
-config.py               # Config class; loads .env (SECRET_KEY, Spond creds, DATA_DIR)
+app.py                  # create_app(); registers blueprints; /, /about, /health routes
+config.py               # Config class; loads .env (SECRET_KEY, Spond creds, DATA_DIR, ADMIN_*)
 routes/                 # Flask blueprints (thin; delegate to services)
   calendar_routes.py    # /calendar, /api/calendar
   tournament_routes.py  # /tournaments/* (doubles, championships, league)
-  player_routes.py      # /players
-  admin_routes.py       # /admin, /admin/sync_spond (placeholder); admin_required decorator
-  feedback_routes.py    # /feedback, /feedback/submit, /feedback/status (admin)
+  player_routes.py      # /players, player profile pages
+  photos_routes.py      # photo gallery + profile photo uploads
+  admin_routes.py       # /admin, /admin/login, Spond Refresh, Refresh Data from R2; admin_required
+  feedback_routes.py    # /feedback, /feedback/submit, /feedback/status, /feedback/delete (admin)
 services/               # Business logic + data parsing (the heart of the app)
   spond_service.py      # Live Spond fetch: events (calendar) + members (CSV)
   calendar_service.py   # Weekly sessions (via Spond) + annual events (Excel)
-  excel_service.py      # Thin load_excel/save_excel helpers over data/
+  excel_service.py      # load_excel/save_excel + load_workbook_normalized() (backslash-zip fix)
   tournament_service.py # Generic tournament CRUD + Doubles .xlsm parser
   championship_service.py
   league_service.py
   player_service.py     # Reads hhb_members.csv, merges stats, ranks players
   player_stats_service.py # Computes per-player stats + HHB Score (cached)
+  profile_service.py    # name_to_slug() + player profile data (jinja `slugify` filter)
   feedback_service.py   # User feedback CRUD (Feedback.xlsx, General + Feature Request)
+  r2_service.py         # Cloudflare R2 download-on-startup / upload-on-write (no-op locally)
 models/                 # Lightweight plain classes (Player, Match, etc.) — minimal use
-templates/              # Jinja2 templates; base.html holds the navbar
+templates/              # Jinja2 templates; base.html holds the navbar + feedback modal
 static/                 # styles.css, css/, js/ (calendar.js, tournaments.js), images/
 data/                   # Excel club data + hhb_members.csv (regenerated from Spond)
 tournaments/            # Per-year tournament scoresheets (.xlsm) — source of truth
+scripts/                # seed_r2.py (upload+verify), pull_r2.py (download-only snapshot)
 ```
 
 **Key data-flow facts:**
 - **Spond is the live source** for calendar sessions and the member list.
-  `fetch_members_to_csv()` runs on every app startup and writes
-  `data/hhb_members.csv`; it fails silently so the app still boots offline (uses
-  the cached CSV). Calendar sessions are fetched **live per page load**
-  (`get_weekly_sessions`), returning `[]` on failure so the page still renders.
+  `fetch_members_to_csv()` writes `data/hhb_members.csv` **on demand** (Admin →
+  Spond Refresh), failing silently so the app still boots offline from the cached
+  CSV. Calendar sessions are fetched **live per page load** (`get_weekly_sessions`),
+  returning `[]` on failure so the page still renders.
 - **Tournament results are parsed read-only from `.xlsm` files** in
   `tournaments/`. Each tournament type/era has its own parser because the Excel
   layouts differ year to year (see Decisions Log).

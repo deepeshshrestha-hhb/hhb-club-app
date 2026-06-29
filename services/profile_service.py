@@ -104,6 +104,11 @@ def get_all_profile_slugs() -> set:
     return set(_load_all().keys())
 
 
+def get_all_profiles() -> dict:
+    """All saved profiles keyed by slug. Used by club analytics (e.g. tenure)."""
+    return _load_all()
+
+
 def delete_profile(slug: str) -> bool:
     """Delete a profile and its photo. Returns True if a profile existed."""
     profiles = _load_all()
