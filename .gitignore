@@ -19,6 +19,7 @@ data/Feedback.xlsx
 # Signup analytics caches - derived from Spond, stored in R2, not source-controlled
 data/signups_history.csv
 data/player_hours.csv
+data/signups_meta.json
 
 # Uploaded images - stored in R2, downloaded to local cache at startup
 static/images/photos/

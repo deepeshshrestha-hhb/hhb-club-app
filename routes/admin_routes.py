@@ -91,10 +91,9 @@ def sync_spond_route():
 @admin_required
 def refresh_signups_route():
     """Re-fetch the last 6 months of Spond signups, rebuild the per-player hours
-    cache, and upload both to R2. Use to refresh the signup analytics."""
-    analytics_service.fetch_signups_history()
-    count = analytics_service.aggregate_hours()
-    analytics_service.invalidate_cache()
+    cache, and upload both to R2. Use to force-refresh the signup analytics (the
+    Players/Calendar pages also auto-refresh it weekly in the background)."""
+    count = analytics_service.refresh_now()
     flash(f"Signup analytics refreshed for {count} player(s).")
     return redirect(url_for("admin.admin_page"))
 

@@ -1,7 +1,7 @@
 import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, abort, send_file, flash, session
 from services.player_service import get_all_players
-from services.analytics_service import get_club_analytics
+from services.analytics_service import get_club_analytics, maybe_refresh_async
 from services.profile_service import (
     get_profile, save_profile, name_to_slug, get_photo_path, get_all_profile_slugs, delete_profile
 )
@@ -14,6 +14,7 @@ JOIN_YEARS = list(range(CURRENT_YEAR, CURRENT_YEAR - 21, -1))
 
 @player_bp.route("/players")
 def players_page():
+    maybe_refresh_async()  # weekly background refresh of signup hours
     players = get_all_players()
     profile_slugs = get_all_profile_slugs()
     analytics = get_club_analytics(players)
