@@ -33,6 +33,7 @@ import os
 import time
 import logging
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -58,6 +59,12 @@ _REQUIRED_VARS = (
 
 _client = None
 _client_lock = threading.Lock()
+
+# How many objects to download from R2 concurrently. The download is network-
+# bound (many small files, each a separate round-trip), so a pool well above the
+# core count is the right call. boto3's low-level S3 client is thread-safe, and
+# the cached client is shared across workers.
+_DOWNLOAD_WORKERS = 16
 
 
 def _env(name):
@@ -119,12 +126,41 @@ def _local_to_key(local_path):
     return None
 
 
+def _download_one(client, bucket, key, size):
+    """Download a single object to its mirrored local path and verify its size.
+
+    Returns (key, ok). Logs and returns ok=False on a transfer error or a
+    size mismatch (a sign of a corrupt object). Runs in a worker thread."""
+    local = _key_to_local(key)
+    if local is None:
+        return key, False
+    local.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        client.download_file(bucket, key, str(local))
+        got = local.stat().st_size
+        if got != size:
+            logger.error(
+                "R2 download SIZE MISMATCH for %s: expected %d, got %d bytes "
+                "(file may be corrupt).", key, size, got,
+            )
+            return key, False
+        logger.info("R2 downloaded %s (%d bytes).", key, got)
+        return key, True
+    except Exception as exc:  # noqa: BLE001 - log and keep going
+        logger.error("R2 download FAILED for %s: %s", key, exc)
+        return key, False
+
+
 def download_all():
     """Pull every object under the mirrored prefixes from R2 onto local disk.
 
     Safe to call on startup and on demand. Creates the local dirs even when a
     prefix is empty in the bucket. No-op (returns skipped=True) when R2 is not
     configured, so local dev is unaffected.
+
+    The downloads run concurrently (the workload is many small files, each its
+    own round-trip), so adding more scoresheets/photos doesn't make startup and
+    the Admin "Refresh Data from R2" action scale linearly with file count.
     """
     # Always make sure the local dirs exist, R2 or not.
     for root in SYNCED_DIRS.values():
@@ -141,34 +177,37 @@ def download_all():
     client = get_client()
     bucket = _env("R2_BUCKET")
     logger.info("R2 download starting from bucket %r ...", bucket)
-    downloaded, failed, names = 0, 0, []
+
+    # 1. List every object to fetch (cheap; paginated metadata only).
+    objects = []  # (key, size)
     paginator = client.get_paginator("list_objects_v2")
     for prefix in SYNCED_DIRS:
         for page in paginator.paginate(Bucket=bucket, Prefix=f"{prefix}/"):
             for obj in page.get("Contents", []):
-                key, size = obj["Key"], obj["Size"]
+                key = obj["Key"]
                 if key.endswith("/"):
                     continue  # skip "folder" placeholder keys
-                local = _key_to_local(key)
-                if local is None:
+                if _key_to_local(key) is None:
                     continue
-                local.parent.mkdir(parents=True, exist_ok=True)
-                try:
-                    client.download_file(bucket, key, str(local))
-                    got = local.stat().st_size
-                    if got != size:
-                        failed += 1
-                        logger.error(
-                            "R2 download SIZE MISMATCH for %s: expected %d, got %d bytes "
-                            "(file may be corrupt).", key, size, got,
-                        )
-                    else:
-                        downloaded += 1
-                        names.append(key)
-                        logger.info("R2 downloaded %s (%d bytes).", key, got)
-                except Exception as exc:  # noqa: BLE001 - log and keep going
+                objects.append((key, obj["Size"]))
+
+    # 2. Download them concurrently, capping the pool at the number of objects.
+    downloaded, failed, names = 0, 0, []
+    if objects:
+        workers = min(_DOWNLOAD_WORKERS, len(objects))
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = [
+                pool.submit(_download_one, client, bucket, key, size)
+                for key, size in objects
+            ]
+            for fut in as_completed(futures):
+                key, ok = fut.result()
+                if ok:
+                    downloaded += 1
+                    names.append(key)
+                else:
                     failed += 1
-                    logger.error("R2 download FAILED for %s: %s", key, exc)
+
     logger.info(
         "R2 download complete: %d ok, %d failed. Files: %s",
         downloaded, failed, ", ".join(names) or "none",
