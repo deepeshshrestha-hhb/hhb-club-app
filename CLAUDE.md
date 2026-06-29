@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # HHB Club App — Project Memory
 
 > Persistent working notes for this repo. Keep it concise (bullets, not essays).
@@ -27,8 +31,16 @@
     - **Championships** (Annual Championships, pools A & B)
     - **League** (Annual Players League)
   - **Players** (`/players`) — directory synced from Spond + computed all-time
-    stats and HHB Score leaderboard
-  - **Admin** (`/admin`) — placeholder Spond-sync button
+    stats and HHB Score leaderboard, plus a **Club Analytics** tab (age
+    demographics, longest-serving, most-active / inactive by signup hours)
+  - **Hours Played** — signup-derived activity (last 4 weeks / 6 months)
+    computed from Spond RSVPs; surfaced via `/api/hours-played/*` JSON and on
+    profile/analytics views (distinct from the tournament-based HHB Score)
+  - **Photos** — club gallery (`/photos/gallery`), per-event photos linked from
+    tournament pages, podium photos, and per-player profile photos
+  - **Feedback** — site-wide modal (General + Feature Request); `/feedback`
+  - **Admin** (`/admin`) — Spond Refresh, Refresh Signup Analytics, Refresh Data
+    from R2, and photo management (club + podium), behind a single-user login
 
 ---
 
@@ -55,7 +67,7 @@
 ## Architecture Notes
 
 Standard Flask blueprint layout. App factory `create_app()` in [app.py](app.py)
-registers six blueprints and, on startup, pulls the canonical data files from R2
+registers seven blueprints and, on startup, pulls the canonical data files from R2
 into local `data/` + `tournaments/` via `r2_service.download_all()` (a no-op
 locally when `R2_*` is unset). The Spond member CSV is **no longer** refreshed on
 startup — it's fetched on demand via Admin → Spond Refresh. Top-level routes
@@ -67,26 +79,33 @@ config.py               # Config class; loads .env (SECRET_KEY, Spond creds, DAT
 routes/                 # Flask blueprints (thin; delegate to services)
   calendar_routes.py    # /calendar, /api/calendar
   tournament_routes.py  # /tournaments/* (doubles, championships, league)
-  player_routes.py      # /players, player profile pages
-  photos_routes.py      # photo gallery + profile photo uploads
-  admin_routes.py       # /admin, /admin/login, Spond Refresh, Refresh Data from R2; admin_required
+  player_routes.py      # /players (+ Analytics tab), profile pages, add/edit/delete profile
+  photos_routes.py      # /photos gallery + per-event photos + profile photo uploads
+  hours_routes.py       # /api/hours-played/* JSON (most-active, inactive, per-player)
+  admin_routes.py       # /admin, /admin/login, Spond Refresh, Refresh Signup Analytics,
+                        #   Refresh Data from R2, club + podium photo mgmt; admin_required
   feedback_routes.py    # /feedback, /feedback/submit, /feedback/status, /feedback/delete (admin)
 services/               # Business logic + data parsing (the heart of the app)
-  spond_service.py      # Live Spond fetch: events (calendar) + members (CSV)
+  spond_service.py      # Live Spond fetch: events (calendar) + members (CSV); _parse_timestamp, LOCAL_TZ
   calendar_service.py   # Weekly sessions (via Spond) + annual events (Excel)
   excel_service.py      # load_excel/save_excel + load_workbook_normalized() (backslash-zip fix)
   tournament_service.py # Generic tournament CRUD + Doubles .xlsm parser
   championship_service.py
   league_service.py
-  player_service.py     # Reads hhb_members.csv, merges stats, ranks players
-  player_stats_service.py # Computes per-player stats + HHB Score (cached)
+  player_service.py     # Reads hhb_members.csv, merges stats + signup hours, ranks players
+  player_stats_service.py # Computes per-player tournament stats + HHB Score (cached)
+  analytics_service.py  # Signup-hours pipeline (Spond RSVPs → CSV → per-player hours) +
+                        #   club analytics + lazy weekly background auto-refresh
   profile_service.py    # name_to_slug() + player profile data (jinja `slugify` filter)
+  photos_service.py     # Club + event photo CRUD (Photos.xlsx + static/images/photos/)
+  podium_service.py     # Podium photos in static/images/podium/ (numbered _1, _2 …)
   feedback_service.py   # User feedback CRUD (Feedback.xlsx, General + Feature Request)
-  r2_service.py         # Cloudflare R2 download-on-startup / upload-on-write (no-op locally)
+  r2_service.py         # Cloudflare R2 download-on-startup / upload-on-write/delete (no-op locally)
 models/                 # Lightweight plain classes (Player, Match, etc.) — minimal use
 templates/              # Jinja2 templates; base.html holds the navbar + feedback modal
-static/                 # styles.css, css/, js/ (calendar.js, tournaments.js), images/
-data/                   # Excel club data + hhb_members.csv (regenerated from Spond)
+static/                 # styles.css, css/, js/ (calendar.js, tournaments.js), images/ (+ photos/, podium/)
+data/                   # Excel club data + hhb_members.csv, player_hours.csv,
+                        #   signups_history.csv, signups_meta.json (all regenerated from Spond)
 tournaments/            # Per-year tournament scoresheets (.xlsm) — source of truth
 scripts/                # seed_r2.py (upload+verify), pull_r2.py (download-only snapshot)
 ```
@@ -104,6 +123,23 @@ scripts/                # seed_r2.py (upload+verify), pull_r2.py (download-only 
   aggregates achievements across all three tournament types into one ranked
   leaderboard. Player name matching across tournaments uses lowercase first
   names + an `ALIASES` map for nicknames/spellings. Results are cached in-process.
+- **Signup "Hours Played" is a separate pipeline** from HHB Score
+  ([analytics_service.py](services/analytics_service.py)): Spond RSVPs
+  (accepted attendees only) for the last ~6 months →
+  `data/signups_history.csv` → aggregated per player into
+  `data/player_hours.csv` (last 4 weeks / 6 months). It joins on **full name**
+  (no first-name/alias ambiguity), so it's distinct from the tournament join.
+  `player_service.get_all_players()` merges these hours into each player record.
+  Refreshed via **Admin → Refresh Signup Analytics** *and* a throttled
+  **background auto-refresh** kicked off on Players/Calendar page load when the
+  data is older than 7 days (`maybe_refresh_async`); staleness is tracked in
+  `data/signups_meta.json` by **content**, not file mtime, because the R2 pull
+  resets mtimes on every cold start. `get_club_analytics()` builds the Players
+  Analytics tab (age bands, longest-serving from profile "year joined",
+  most-active/inactive) — pure computation over the already-merged list.
+- **Photos** live as files under `static/images/photos/` (club/event, metadata
+  in `data/Photos.xlsx`) and `static/images/podium/` (numbered variants, no
+  metadata file), each mirrored to R2 and editable via the Admin photo pages.
 - Secrets live only in `.env` (gitignored). `.env.example` documents required
   vars: `SECRET_KEY`, `SPOND_USERNAME`, `SPOND_PASSWORD`, `SPOND_GROUP_ID`,
   `R2_*` (durable storage), `ADMIN_USERNAME`/`ADMIN_PASSWORD` (admin login).
@@ -136,8 +172,10 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   `.env` before running the app locally, or the app will upload local changes
   (feedback, uploads, admin refreshes) back to prod.
 - **Admin:** single-user session login (`/admin/login`, `ADMIN_USERNAME` /
-  `ADMIN_PASSWORD`). Buttons: **Spond Refresh** (members → CSV → R2) and
-  **Refresh Data from R2**. Members are no longer fetched on every startup.
+  `ADMIN_PASSWORD`). Buttons: **Spond Refresh** (members → CSV → R2),
+  **Refresh Signup Analytics** (RSVPs → hours → R2), **Refresh Data from R2**,
+  plus club + podium photo management. Members are no longer fetched on every
+  startup.
 - **Cloudflare** now only provides DNS for the domain (A `@`→`216.24.57.1`,
   CNAME `www`→`hhb-club.onrender.com`, both DNS-only/grey-cloud). The old
   `cloudflared` tunnel has been deleted.
@@ -156,6 +194,9 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   one-off year formats: 2018 (single league + eliminator), 2019/2021
   (direct-to-semis), 2022 (Super 6/Super 3 + walkover).
 - Championships and League parsers + HHB Score leaderboard.
+- Club Analytics tab + signup "Hours Played" (Spond-RSVP derived) with weekly
+  background auto-refresh and an admin force-refresh.
+- Club/event/podium photo galleries + per-player profile photos (R2-backed).
 
 **In progress / partial:**
 - `/api/calendar` still serves `ClubCalendar.xlsx` data, not live Spond — noted
@@ -245,6 +286,20 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   status) so members can see what's been raised and not duplicate it; the status
   dropdown and delete buttons render only for admins (`session.is_admin`) and the
   routes stay `admin_required`.
+- **2026-06-28 — Added signup "Hours Played" analytics + photo galleries.**
+  New `analytics_service.py` derives per-player hours from Spond RSVPs
+  (`signups_history.csv` → `player_hours.csv`), kept **separate** from the
+  member CSV (which is rewritten wholesale on Spond Refresh) and merged at read
+  time. Deliberately a **distinct pipeline from HHB Score**: it joins on full
+  name and measures attendance, not tournament achievement. Refresh is both
+  admin-triggered and a throttled background auto-refresh on page load, with
+  staleness judged from `signups_meta.json` content (mtimes are unreliable after
+  R2 cold-start downloads). Also added `photos_service.py` (club/event photos,
+  `Photos.xlsx`) and `podium_service.py` (podium images), both R2-backed, with
+  Admin upload/delete pages and a new `hours_bp` blueprint exposing
+  `/api/hours-played/*`. *Why:* members wanted activity/attendance insights
+  separate from competitive results, plus a place for event photos — all reusing
+  the existing Excel/CSV + R2 storage pattern rather than a database.
 
 ---
 
