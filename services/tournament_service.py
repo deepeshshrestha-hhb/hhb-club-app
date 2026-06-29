@@ -68,10 +68,6 @@ def create_tournament(name: str, date: str):
 
 TOURNAMENTS_DIR = Path(Config.BASE_DIR) / "tournaments"
 
-# Years confirmed to use the modern 2-group / QF-SF-Final template.
-# Extend this as more years are checked and confirmed to fit the same layout.
-SUPPORTED_DOUBLES_YEARS = [2018, 2021, 2023, 2024, 2025, 2026]
-
 
 def _doubles_filename(year):
     return f"HHB Annual Doubles Classic - {year}.xlsm"
