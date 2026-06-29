@@ -74,6 +74,12 @@ def add_profile():
             return render_template("player_add_profile.html", players=players,
                                    join_years=JOIN_YEARS, form=request.form, is_admin=is_admin)
 
+        # Year joined is required (powers the Longest-Serving leaderboard)
+        if not request.form.get("year_joined", "").strip():
+            flash("Please select the year you joined HHB Club.", "danger")
+            return render_template("player_add_profile.html", players=players,
+                                   join_years=JOIN_YEARS, form=request.form, is_admin=is_admin)
+
         slug = name_to_slug(full_name)
         profile_exists = get_profile(slug) is not None
 

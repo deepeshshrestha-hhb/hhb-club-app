@@ -48,6 +48,26 @@
                 </select>
             </div>
 
+            <!-- Year joined — required; powers the Longest-Serving leaderboard -->
+            <div class="mb-4 p-3 rounded" style="background:#f0f7ff;border:1px solid var(--hhb-primary)">
+                <label for="year_joined" class="form-label fw-semibold mb-1">
+                    📅 Playing with HHB Club since… <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="year_joined" name="year_joined" required>
+                    <option value="">— select year —</option>
+                    {% for y in join_years %}
+                    <option value="{{ y }}"
+                        {% if form.get('year_joined') | string == y | string %}selected{% endif %}>
+                        {{ y }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">
+                    Used for the club's <strong>Longest-Serving Members</strong> leaderboard on the
+                    Players → Analytics tab.
+                </div>
+            </div>
+
             <hr class="mb-4">
 
             <!-- Q1 -->
@@ -115,22 +135,6 @@
                 <input type="text" class="form-control" id="day_job" name="day_job"
                        placeholder="e.g. Software Engineer" maxlength="120"
                        value="{{ form.get('day_job', '') }}">
-            </div>
-
-            <!-- Q5 -->
-            <div class="mb-4">
-                <label for="year_joined" class="form-label">
-                    📅 Playing with HHB Club since…
-                </label>
-                <select class="form-select" id="year_joined" name="year_joined">
-                    <option value="">— select year —</option>
-                    {% for y in join_years %}
-                    <option value="{{ y }}"
-                        {% if form.get('year_joined') | string == y | string %}selected{% endif %}>
-                        {{ y }}
-                    </option>
-                    {% endfor %}
-                </select>
             </div>
 
             <!-- Photo upload -->
