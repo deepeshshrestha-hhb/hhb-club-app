@@ -9,7 +9,7 @@ from routes.admin_routes import admin_bp
 from routes.player_routes import player_bp
 from routes.photos_routes import photos_bp
 from routes.feedback_routes import feedback_bp
-from routes.analytics_routes import analytics_bp
+from routes.hours_routes import hours_bp
 from services import r2_service
 from services.profile_service import name_to_slug
 
@@ -44,7 +44,7 @@ def create_app():
     app.register_blueprint(player_bp)
     app.register_blueprint(photos_bp)
     app.register_blueprint(feedback_bp)
-    app.register_blueprint(analytics_bp)
+    app.register_blueprint(hours_bp)
 
     @app.context_processor
     def inject_feedback_players():

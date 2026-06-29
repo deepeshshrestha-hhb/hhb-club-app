@@ -4,12 +4,18 @@
 <h1 class="page-title mb-1">HHB Members</h1>
 <p class="text-muted small mb-3">{{ players | length }} members (Synced from Spond on startup) · Ranked by HHB Score (Current)</p>
 
-<!-- Tabs: member directory + analytics -->
+<!-- Tabs: member directory + hours played + analytics -->
 <ul class="nav nav-tabs mb-3" id="playersTab" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="members-tab" data-bs-toggle="tab" data-bs-target="#members-pane"
                 type="button" role="tab" aria-controls="members-pane" aria-selected="true">
             <i class="bi bi-people-fill me-1"></i>Members
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="hours-tab" data-bs-toggle="tab" data-bs-target="#hours-pane"
+                type="button" role="tab" aria-controls="hours-pane" aria-selected="false">
+            <i class="bi bi-clock-history me-1"></i>Hours Played
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -301,8 +307,8 @@
 
 </div><!-- /members-pane -->
 
-<!-- ═══════════════ ANALYTICS TAB ═══════════════ -->
-<div class="tab-pane fade" id="analytics-pane" role="tabpanel" aria-labelledby="analytics-tab">
+<!-- ═══════════════ HOURS PLAYED TAB ═══════════════ -->
+<div class="tab-pane fade" id="hours-pane" role="tabpanel" aria-labelledby="hours-tab">
 
     {% set total_hours = players | sum(attribute='hours_last_six_months') %}
     {% set by_hours = players | sort(attribute='hours_last_six_months', reverse=True) %}
@@ -371,7 +377,122 @@
         </div>
     </div>
 
-    <!-- More analytics (age demographics, years in club, …) can be added as additional cards here. -->
+</div><!-- /hours-pane -->
+
+<!-- ═══════════════ ANALYTICS TAB ═══════════════ -->
+<div class="tab-pane fade" id="analytics-pane" role="tabpanel" aria-labelledby="analytics-tab">
+
+    <div class="row g-3">
+
+        <!-- ── Age demographics ── -->
+        <div class="col-lg-6">
+            <div class="card hhb-card h-100">
+                <div class="card-header bg-white d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <span class="fw-semibold"><i class="bi bi-people me-1"></i>Age Demographics</span>
+                    {% if analytics.age.average %}
+                    <span class="text-muted small">Avg age <strong class="text-body">{{ analytics.age.average }}</strong></span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if analytics.age.known == 0 %}
+                    <p class="text-muted mb-0">No ages available (members need a date of birth in Spond).</p>
+                    {% else %}
+                    {% for b in analytics.age.bands %}
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="text-muted small" style="width:64px">{{ b.label }}</div>
+                        <div class="progress flex-grow-1" style="height:14px">
+                            <div class="progress-bar" role="progressbar"
+                                 style="width:{{ ((b.count / (analytics.age.max_band or 1)) * 100) | round }}%;background:var(--hhb-primary)">
+                            </div>
+                        </div>
+                        <div class="fw-semibold small text-end" style="width:28px">{{ b.count }}</div>
+                    </div>
+                    {% endfor %}
+                    <p class="text-muted mb-0" style="font-size:.72rem">
+                        Based on {{ analytics.age.known }} member{{ '' if analytics.age.known == 1 else 's' }} with a known age{% if analytics.age.unknown %} · {{ analytics.age.unknown }} unknown{% endif %}.
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Longest-serving members ── -->
+        <div class="col-lg-6">
+            <div class="card hhb-card h-100">
+                <div class="card-header bg-white">
+                    <span class="fw-semibold"><i class="bi bi-award me-1"></i>Longest-Serving Members</span>
+                </div>
+                <div class="card-body">
+                    {% if analytics.longest_serving %}
+                    <ol class="list-group list-group-numbered list-group-flush">
+                        {% for m in analytics.longest_serving %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                            <a href="{{ url_for('players.player_profile', slug=m.slug) }}" class="text-decoration-none fw-semibold">{{ m.full_name }}</a>
+                            <span class="text-muted small">since {{ m.year_joined }} · {{ m.years }} yr{{ '' if m.years == 1 else 's' }}</span>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                    <p class="text-muted mb-0 mt-2" style="font-size:.72rem">
+                        From the “year joined” set on player profiles. Add yours via a profile to appear here.
+                    </p>
+                    {% else %}
+                    <p class="text-muted mb-0">No “year joined” data yet — it comes from player profiles.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Most active (6 months) ── -->
+        <div class="col-lg-6">
+            <div class="card hhb-card h-100">
+                <div class="card-header bg-white">
+                    <span class="fw-semibold"><i class="bi bi-fire me-1"></i>Most Active</span>
+                    <span class="text-muted small ms-1">top {{ analytics.most_hours | length }}, last 6 months</span>
+                </div>
+                <div class="card-body">
+                    {% if analytics.most_hours %}
+                    <ol class="list-group list-group-numbered list-group-flush">
+                        {% for p in analytics.most_hours %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                            <a href="{{ url_for('players.player_profile', slug=p.full_name | slugify) }}" class="text-decoration-none fw-semibold">{{ p.full_name }}</a>
+                            <span class="badge rounded-pill" style="background:var(--hhb-accent)">{{ '%g' % (p.hours_last_six_months | round(1)) }} h</span>
+                        </li>
+                        {% endfor %}
+                    </ol>
+                    {% else %}
+                    <p class="text-muted mb-0">No signup hours yet. Populate via <a href="{{ url_for('admin.admin_page') }}">Admin → Refresh Signup Analytics</a>.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Inactive (0 hours, 6 months) ── -->
+        <div class="col-lg-6">
+            <div class="card hhb-card h-100">
+                <div class="card-header bg-white d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <span class="fw-semibold"><i class="bi bi-moon me-1"></i>Inactive Members</span>
+                    <span class="text-muted small">{{ analytics.inactive_count }} with 0 h in last 6 months</span>
+                </div>
+                <div class="card-body">
+                    {% if not analytics.has_hours %}
+                    <p class="text-muted mb-0">No signup data yet to determine activity.</p>
+                    {% elif analytics.inactive %}
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for p in analytics.inactive %}
+                        <a href="{{ url_for('players.player_profile', slug=p.full_name | slugify) }}"
+                           class="badge rounded-pill bg-light text-body border text-decoration-none fw-normal">{{ p.full_name }}</a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-success mb-0">Everyone has played in the last 6 months. 🎉</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- More analytics cards can be added to the row above (e.g. busiest sessions, new joiners). -->
 
 </div><!-- /analytics-pane -->
 </div><!-- /tab-content -->

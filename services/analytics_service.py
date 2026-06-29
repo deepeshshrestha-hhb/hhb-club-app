@@ -24,6 +24,7 @@ Design notes:
 """
 import asyncio
 import csv
+import datetime as _dt
 import logging
 import os
 from datetime import datetime, timedelta
@@ -287,3 +288,75 @@ def _to_float(value):
         return float(value)
     except (TypeError, ValueError):
         return 0.0
+
+
+# --------------------------------------------------------------------------- #
+# 4. Club analytics (demographics, tenure, activity) for the Analytics tab
+# --------------------------------------------------------------------------- #
+
+AGE_BANDS = [
+    ("Under 18", lambda a: a < 18),
+    ("18–29", lambda a: 18 <= a <= 29),
+    ("30–39", lambda a: 30 <= a <= 39),
+    ("40–49", lambda a: 40 <= a <= 49),
+    ("50+", lambda a: a >= 50),
+]
+
+
+def get_club_analytics(players, top_n=5):
+    """Aggregate club-level insights from the already-merged players list (which
+    carries age + hours) plus profile data (year joined). Pure computation, no I/O
+    beyond reading the profiles file."""
+    from services import profile_service  # local import avoids any import cycle
+
+    # --- Age demographics ---
+    ages = [p["age"] for p in players if p.get("age")]
+    bands = [
+        {"label": label, "count": sum(1 for a in ages if pred(a))}
+        for label, pred in AGE_BANDS
+    ]
+    age = {
+        "average": round(sum(ages) / len(ages), 1) if ages else None,
+        "known": len(ages),
+        "unknown": len(players) - len(ages),
+        "bands": bands,
+        "max_band": max((b["count"] for b in bands), default=0),
+    }
+
+    # --- Activity (last 6 months) ---
+    def h6(p):
+        return p.get("hours_last_six_months", 0) or 0
+
+    ranked = sorted(players, key=h6, reverse=True)
+    most_hours = [p for p in ranked if h6(p) > 0][:top_n]
+    inactive = sorted(
+        (p for p in players if h6(p) == 0),
+        key=lambda p: p["full_name"].casefold(),
+    )
+
+    # --- Club tenure (longest-serving, from profile "year joined") ---
+    current_year = _dt.date.today().year
+    serving = []
+    for slug, prof in profile_service.get_all_profiles().items():
+        yj = str(prof.get("year_joined", "")).strip()
+        if not yj.isdigit():
+            continue
+        year = int(yj)
+        if year < 1990 or year > current_year:
+            continue
+        serving.append({
+            "full_name": prof.get("full_name", ""),
+            "slug": slug,
+            "year_joined": year,
+            "years": current_year - year,
+        })
+    serving.sort(key=lambda x: (x["year_joined"], x["full_name"].casefold()))
+
+    return {
+        "age": age,
+        "most_hours": most_hours,
+        "inactive": inactive,
+        "inactive_count": len(inactive),
+        "longest_serving": serving[:top_n],
+        "has_hours": any(h6(p) > 0 for p in players),
+    }

@@ -1,5 +1,5 @@
 """
-Public JSON analytics endpoints for player signup activity (hours played).
+Public JSON endpoints for player "hours played" (from Spond signups).
 
 All three read from player_service.get_all_players(), which already carries the
 hours_last_four_weeks / hours_last_six_months fields merged from
@@ -11,7 +11,7 @@ from flask import Blueprint, jsonify, abort
 from services.player_service import get_all_players
 from services.profile_service import name_to_slug
 
-analytics_bp = Blueprint("analytics", __name__)
+hours_bp = Blueprint("hours_played", __name__)
 
 TOP_N = 20
 
@@ -24,7 +24,7 @@ def _summary(player):
     }
 
 
-@analytics_bp.route("/api/analytics/most-active")
+@hours_bp.route("/api/hours-played/most-active")
 def most_active():
     """Top 20 players by hours played in the last six months (descending)."""
     players = sorted(
@@ -35,7 +35,7 @@ def most_active():
     return jsonify([_summary(p) for p in players[:TOP_N]])
 
 
-@analytics_bp.route("/api/analytics/inactive")
+@hours_bp.route("/api/hours-played/inactive")
 def inactive():
     """Players with zero hours played in the last six months."""
     players = [
@@ -46,7 +46,7 @@ def inactive():
     return jsonify([_summary(p) for p in players])
 
 
-@analytics_bp.route("/api/analytics/player/<slug>/four-weeks")
+@hours_bp.route("/api/hours-played/player/<slug>/four-weeks")
 def player_four_weeks(slug):
     """A single player's last-four-weeks hours, for their profile card."""
     player = next(
