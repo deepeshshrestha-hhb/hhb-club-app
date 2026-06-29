@@ -183,8 +183,9 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   CNAME `www`→`hhb-club.onrender.com`, both DNS-only/grey-cloud). The old
   `cloudflared` tunnel has been deleted.
 - **Day-to-day change → deploy workflow:** see
-  [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (and the phone cheat-sheet
-  `docs/dev-workflow.png`). System diagram: `docs/architecture.png`.
+  [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (and the cheat-sheet
+  `docs/dev-workflow.html` — open in a browser; export to an image if you want a
+  phone copy). System diagram: `docs/architecture.png`.
 
 ---
 
