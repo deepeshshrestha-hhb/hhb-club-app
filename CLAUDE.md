@@ -80,7 +80,8 @@ routes/                 # Flask blueprints (thin; delegate to services)
   calendar_routes.py    # /calendar, /api/calendar
   tournament_routes.py  # /tournaments/* (doubles, championships, league)
   player_routes.py      # /players (+ Analytics tab), profile pages, add/edit/delete profile
-  photos_routes.py      # /photos gallery + per-event photos + profile photo uploads
+  photos_routes.py      # /photos gallery + per-event photos + profile photo uploads;
+                        #   event summary view/save + Claude AI assist endpoint (admin)
   hours_routes.py       # /api/hours-played/* JSON (most-active, inactive, per-player)
   admin_routes.py       # /admin, /admin/login, Spond Refresh, Refresh Signup Analytics,
                         #   Refresh Data from R2, club + podium photo mgmt; admin_required
@@ -100,6 +101,8 @@ services/               # Business logic + data parsing (the heart of the app)
   photos_service.py     # Club + event photo CRUD (Photos.xlsx + static/images/photos/)
   podium_service.py     # Podium photos in static/images/podium/ (numbered _1, _2 …)
   feedback_service.py   # User feedback CRUD (Feedback.xlsx, General + Feature Request)
+  event_summary_service.py # Per-event overview text (EventSummaries.xlsx, keyed by event_id)
+  ai_service.py         # Optional Claude text-assist (summarize/rewrite/tone) for summaries
   r2_service.py         # Cloudflare R2 download-on-startup / upload-on-write/delete (no-op locally)
 models/                 # Lightweight plain classes (Player, Match, etc.) — minimal use
 templates/              # Jinja2 templates; base.html holds the navbar + feedback modal
@@ -197,6 +200,10 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
 - Club Analytics tab + signup "Hours Played" (Spond-RSVP derived) with weekly
   background auto-refresh and an admin force-refresh.
 - Club/event/podium photo galleries + per-player profile photos (R2-backed).
+- Per-event summary paragraph (admin-editable, shown above the gallery) with an
+  optional Claude AI "Summarize / Rewrite / change tone" assist (needs
+  `ANTHROPIC_API_KEY`; degrades to a plain text field when unset).
+- League "Final Standings" table is sortable by Played / Won / Win %.
 
 **In progress / partial:**
 - `/api/calendar` still serves `ClubCalendar.xlsx` data, not live Spond — noted
@@ -300,6 +307,23 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   `/api/hours-played/*`. *Why:* members wanted activity/attendance insights
   separate from competitive results, plus a place for event photos — all reusing
   the existing Excel/CSV + R2 storage pattern rather than a database.
+- **2026-06-28 — Sortable League standings + event summaries with Claude AI
+  assist.** (1) The League year "Final Standings" table is now client-side
+  sortable by **Played / Won / Win %** (clickable headers, toggle asc/desc);
+  default stays the official league order (by Won), and the `#` column always
+  shows each player's true league rank/medal regardless of sort. (2) New
+  `event_summary_service.py` stores an admin-authored overview paragraph per
+  event in `data/EventSummaries.xlsx` (keyed by the same `event_id` photos use,
+  e.g. `league_2024`, `annual_picnic_2025`), shown to everyone at the top of the
+  event photo gallery and editable inline by admins. The gallery page now also
+  renders for admins (and when a summary exists) even with zero photos.
+  (3) Optional `ai_service.py` adds Claude "Summarize / Rewrite / change tone"
+  helpers in the admin editor via `POST /photos/event/<id>/summary/ai`; gated by
+  `ANTHROPIC_API_KEY` (+ optional `ANTHROPIC_MODEL`, default Haiku 4.5) — when
+  the key is unset the AI buttons are simply hidden and the field works as plain
+  text. New dep: `anthropic`. *Why:* reuse the proven Excel + R2 pattern and the
+  `admin_required` decorator; keep the AI strictly optional so prod can adopt it
+  whenever a key is added, with no hard dependency for local/offline runs.
 
 ---
 

@@ -3,11 +3,59 @@
 
 {% set title = event_id | replace('_', ' ') | title %}
 
-<div class="text-center mb-5">
+<div class="text-center mb-4">
     <h1 class="page-title mb-1">{{ title }} — Photos</h1>
     <h2 class="h5 text-muted fw-normal">HH Badminton Club</h2>
     <hr class="mt-3">
 </div>
+
+<!-- Event summary (overview shown above the photos) -->
+{% if summary %}
+<div class="card hhb-card mb-4">
+    <div class="card-body">
+        <p class="mb-0" style="white-space: pre-line;">{{ summary }}</p>
+    </div>
+</div>
+{% endif %}
+
+{% if session.get('is_admin') %}
+<div class="card hhb-card mb-4 border-warning">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-bold mb-0">✏️ Event Summary <span class="text-muted small">(admin only)</span></h6>
+            {% if ai_enabled %}
+            <span class="badge bg-secondary">✨ AI assist on</span>
+            {% endif %}
+        </div>
+        <form action="{{ url_for('photos.save_event_summary', event_id=event_id) }}" method="post">
+            <textarea id="summaryText" name="summary" class="form-control mb-2" rows="5"
+                      placeholder="Write a short overview of this event. Shown to everyone at the top of this gallery.">{{ summary }}</textarea>
+
+            {% if ai_enabled %}
+            <div class="d-flex flex-wrap gap-1 mb-2" id="aiPresets">
+                {% for key, label in [
+                    ('summarize', 'Summarize'), ('rewrite', 'Rewrite'), ('shorten', 'Shorten'),
+                    ('expand', 'Expand'), ('formal', 'More formal'), ('fun', 'More fun'),
+                    ('grammar', 'Fix grammar')
+                ] %}
+                <button type="button" class="btn btn-sm btn-outline-secondary ai-preset" data-preset="{{ key }}">{{ label }}</button>
+                {% endfor %}
+            </div>
+            <div class="input-group input-group-sm mb-2">
+                <input type="text" id="aiInstruction" class="form-control"
+                       placeholder="Or type your own instruction (e.g. 'mention it was a sunny day')…">
+                <button type="button" class="btn btn-outline-primary" id="aiCustomBtn">Apply</button>
+            </div>
+            <div id="aiStatus" class="small text-muted mb-2" style="display:none;"></div>
+            {% endif %}
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-hhb-primary text-white">Save Summary</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
 
 {% if photos %}
 <div class="row g-3">
@@ -107,5 +155,71 @@
     });
 })();
 </script>
+
+{% if session.get('is_admin') and ai_enabled %}
+<script>
+(function () {
+    const AI_URL = {{ url_for('photos.ai_assist', event_id=event_id) | tojson }};
+    const textarea = document.getElementById('summaryText');
+    const statusEl = document.getElementById('aiStatus');
+    const presetBtns = document.querySelectorAll('.ai-preset');
+    const customBtn = document.getElementById('aiCustomBtn');
+    const instructionEl = document.getElementById('aiInstruction');
+    let busy = false;
+
+    function setBusy(on, msg) {
+        busy = on;
+        statusEl.style.display = msg ? 'block' : 'none';
+        statusEl.textContent = msg || '';
+        statusEl.classList.toggle('text-danger', false);
+        [...presetBtns, customBtn].forEach(b => b && (b.disabled = on));
+    }
+
+    function fail(msg) {
+        statusEl.style.display = 'block';
+        statusEl.textContent = msg;
+        statusEl.classList.add('text-danger');
+        [...presetBtns, customBtn].forEach(b => b && (b.disabled = false));
+        busy = false;
+    }
+
+    async function run(payload) {
+        if (busy) return;
+        setBusy(true, '✨ Asking Claude…');
+        try {
+            const res = await fetch(AI_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(Object.assign({ draft: textarea.value }, payload))
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                fail(data.error || 'AI request failed.');
+                return;
+            }
+            textarea.value = data.text;
+            setBusy(false, '✓ Updated — review and Save to keep it.');
+        } catch (e) {
+            fail('Network error — please try again.');
+        }
+    }
+
+    presetBtns.forEach(btn => btn.addEventListener('click', function () {
+        run({ preset: btn.dataset.preset });
+    }));
+
+    if (customBtn) {
+        customBtn.addEventListener('click', function () {
+            const instruction = instructionEl.value.trim();
+            if (!instruction) { instructionEl.focus(); return; }
+            run({ instruction: instruction });
+        });
+        instructionEl.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); customBtn.click(); }
+        });
+    }
+})();
+</script>
+{% endif %}
 
 {% endblock %}

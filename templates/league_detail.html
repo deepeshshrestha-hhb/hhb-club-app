@@ -90,14 +90,22 @@
         <div class="card hhb-card">
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-sm table-striped align-middle mb-0">
+                    <table class="table table-sm table-striped align-middle mb-0" id="standingsTable">
                         <thead class="table-dark">
-                            <tr><th>#</th><th>Player</th><th>Played</th><th>Won</th><th>Lost</th><th>Win %</th></tr>
+                            <tr>
+                                <th>#</th>
+                                <th>Player</th>
+                                <th class="sortable-col" data-sort-key="played" role="button" style="cursor:pointer; white-space:nowrap;">Played <span class="sort-arrow"></span></th>
+                                <th class="sortable-col" data-sort-key="wins" data-default-sort role="button" style="cursor:pointer; white-space:nowrap;">Won <span class="sort-arrow"></span></th>
+                                <th>Lost</th>
+                                <th class="sortable-col" data-sort-key="win_pct" role="button" style="cursor:pointer; white-space:nowrap;">Win % <span class="sort-arrow"></span></th>
+                            </tr>
                         </thead>
                         <tbody>
                             {% for s in league.standings %}
-                            <tr class="{{ 'table-warning fw-bold' if s.rank == 1 else ('table-light' if s.rank <= 3) }}">
-                                <td>{% if s.rank == 1 %}🏆{% elif s.rank == 2 %}🥈{% elif s.rank == 3 %}🥉{% else %}{{ s.rank }}{% endif %}</td>
+                            <tr class="{{ 'table-warning fw-bold' if s.rank == 1 else ('table-light' if s.rank <= 3) }}"
+                                data-rank="{{ s.rank }}" data-played="{{ s.played }}" data-wins="{{ s.wins }}" data-win_pct="{{ s.win_pct }}">
+                                <td class="rank-cell">{% if s.rank == 1 %}🏆{% elif s.rank == 2 %}🥈{% elif s.rank == 3 %}🥉{% else %}{{ s.rank }}{% endif %}</td>
                                 <td>{{ s.player }}</td>
                                 <td>{{ s.played }}</td>
                                 <td>{{ s.wins }}</td>
@@ -110,7 +118,7 @@
                 </div>
             </div>
         </div>
-        <p class="text-muted small mt-2">Ranked by win percentage. Wins and losses from completed matches only.</p>
+        <p class="text-muted small mt-2">Default rank is the league result (by Won). Click <strong>Played</strong>, <strong>Won</strong> or <strong>Win %</strong> to re-sort — the # column always shows each player's final league position. Wins and losses from completed matches only.</p>
     </div>
 
     <!-- Matches -->
@@ -365,6 +373,69 @@
 
     filter.addEventListener('change', applyFilter);
     applyFilter();
+})();
+</script>
+
+<script>
+(function () {
+    const table = document.getElementById('standingsTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    const headers = table.querySelectorAll('th.sortable-col');
+    // Original DOM order = league result order (by rank). Used to restore the
+    // default view so equal values keep their official tie-break.
+    const defaultOrder = Array.from(tbody.querySelectorAll('tr'));
+
+    let activeKey = null;
+    let activeDir = 'desc';
+
+    function clearArrows() {
+        headers.forEach(h => {
+            const a = h.querySelector('.sort-arrow');
+            if (a) a.textContent = '';
+        });
+    }
+
+    function sortBy(key, dir) {
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const isDefault = key === 'wins' && dir === 'desc';
+        if (isDefault) {
+            // Restore the canonical league order (respects points/tie-breaks).
+            defaultOrder.forEach(r => tbody.appendChild(r));
+        } else {
+            rows.sort((a, b) => {
+                const av = parseFloat(a.dataset[key]) || 0;
+                const bv = parseFloat(b.dataset[key]) || 0;
+                if (av === bv) {
+                    // Stable tie-break: fall back to official rank.
+                    return (parseInt(a.dataset.rank) || 0) - (parseInt(b.dataset.rank) || 0);
+                }
+                return dir === 'desc' ? bv - av : av - bv;
+            });
+            rows.forEach(r => tbody.appendChild(r));
+        }
+        clearArrows();
+        const h = table.querySelector('th[data-sort-key="' + key + '"] .sort-arrow');
+        if (h) h.textContent = dir === 'desc' ? ' ▼' : ' ▲';
+        activeKey = key;
+        activeDir = dir;
+    }
+
+    headers.forEach(h => {
+        h.addEventListener('click', function () {
+            const key = h.dataset.sortKey;
+            // Toggle direction if re-clicking the active column, else start desc.
+            const dir = (key === activeKey && activeDir === 'desc') ? 'asc' : 'desc';
+            sortBy(key, dir);
+        });
+    });
+
+    // Initial state: show the default arrow on Won without reordering.
+    clearArrows();
+    const def = table.querySelector('th[data-default-sort] .sort-arrow');
+    if (def) def.textContent = ' ▼';
+    activeKey = 'wins';
+    activeDir = 'desc';
 })();
 </script>
 
