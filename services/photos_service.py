@@ -44,7 +44,9 @@ def _load() -> pd.DataFrame:
     for col in _COLUMNS:
         if col not in df.columns:
             df[col] = ""
-    return df[_COLUMNS]
+    # pandas reads blank cells as float NaN; normalize to "" so optional fields
+    # (caption, event_date) don't render as the literal string "nan" in templates.
+    return df[_COLUMNS].fillna("")
 
 
 def get_all_photos(type_filter: str | None = None) -> list[dict]:
