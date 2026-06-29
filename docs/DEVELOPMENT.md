@@ -62,9 +62,13 @@ anymore.
    - Bulk/initial load: run `python scripts/seed_r2.py` (with `R2_*` vars set).
      It uploads **and round-trip-verifies** each file (OneDrive-safe).
 2. **Admin → Refresh Data from R2** to pull it into the live app (no redeploy).
-3. For a **new Doubles year**, also add the year to `SUPPORTED_DOUBLES_YEARS`
-   in [tournament_service.py](../services/tournament_service.py) — that's a code
-   change (PR + deploy). Championships/League auto-discover by filename.
+3. That's it — all three archives (Doubles, Championships, League) auto-discover
+   years by globbing the `tournaments/` folder for the matching filename, so no
+   code change is needed for a new year. Just confirm the page renders correctly
+   (winner/runner-up populate): each parser targets a specific Excel layout, so a
+   new file must follow the same template as the most recent working year. If the
+   layout differs the year will list but show empty, which is a parser fix — not
+   a config change.
 
 ---
 

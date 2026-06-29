@@ -213,8 +213,12 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
 **Known issues / gotchas:**
 - `COMPLETED_2026_EVENTS` set in [calendar_service.py](services/calendar_service.py)
   is hand-maintained — update it as 2026 events pass.
-- `SUPPORTED_DOUBLES_YEARS` in [tournament_service.py](services/tournament_service.py)
-  must be extended manually as more years are confirmed to fit a parser.
+- All three tournament archives (Doubles, Championships, League) auto-discover
+  years by globbing the `tournaments/` folder for the matching filename — no
+  per-year code change is needed. The catch is the **parser**: each targets a
+  specific Excel layout, so a new scoresheet must follow the same template as the
+  most recent working year, otherwise the year lists but renders empty (a parser
+  fix, not config).
 - `get_doubles_tournament` has a duplicated unreachable `return` block at the end
   (harmless dead code).
 - **Backslash-separator `.xlsm` files:** some scoresheets were saved with `\`
@@ -337,7 +341,8 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   (currently Excel-backed).
 - [ ] Remove the duplicated dead `return` block at the end of
   `get_doubles_tournament` in [tournament_service.py](services/tournament_service.py).
-- [ ] Confirm/extend `SUPPORTED_DOUBLES_YEARS` as remaining years are validated.
+- [x] **Removed the dead `SUPPORTED_DOUBLES_YEARS` constant** — it was never read;
+  years are discovered by filename glob. Done 2026-06-29.
 - [ ] Keep `COMPLETED_2026_EVENTS` current as the season progresses.
 - [ ] Optional: re-enable Cloudflare proxy (orange cloud) with SSL/TLS mode
   **Full (strict)** if you want CDN/WAF in front of Render.
