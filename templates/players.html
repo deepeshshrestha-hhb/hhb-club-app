@@ -334,8 +334,8 @@
                 <table class="table table-sm table-striped table-hover align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
-                            <th>#</th>
-                            <th>Name</th>
+                            <th style="left:0;">#</th>
+                            <th style="left:36px;">Name</th>
                             <th class="text-end">Last 4 Weeks</th>
                             <th>Last 6 Months</th>
                         </tr>
@@ -344,10 +344,10 @@
                         {% set medals = ['🏆','🥈','🥉'] %}
                         {% for p in by_hours %}
                         <tr>
-                            <td class="fw-semibold">
+                            <td class="fw-semibold" style="left:0;">
                                 {%- if loop.index <= 3 and p.hours_last_six_months > 0 %}{{ medals[loop.index0] }}{% else %}{{ loop.index }}{% endif -%}
                             </td>
-                            <td class="fw-semibold">
+                            <td class="fw-semibold" style="left:36px;">
                                 {% set slug = p.full_name | slugify %}
                                 <a href="{{ url_for('players.player_profile', slug=slug) }}"
                                    class="text-decoration-none"
