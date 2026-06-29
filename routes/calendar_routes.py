@@ -5,12 +5,14 @@ from services.calendar_service import (
     get_weekly_sessions,
 )
 from services.photos_service import get_all_photos
+from services.analytics_service import maybe_refresh_async
 
 calendar_bp = Blueprint("calendar", __name__)
 
 
 @calendar_bp.route("/calendar")
 def calendar_page():
+    maybe_refresh_async()  # weekly background refresh of signup hours
     weekly_sessions = get_weekly_sessions()  # live from Spond
     annual_events = get_annual_events()
     # Build the set of event_ids that have at least one photo uploaded,

@@ -25,8 +25,10 @@ Design notes:
 import asyncio
 import csv
 import datetime as _dt
+import json
 import logging
 import os
+import threading
 from datetime import datetime, timedelta
 
 from config import Config
@@ -360,3 +362,103 @@ def get_club_analytics(players, top_n=5):
         "longest_serving": serving[:top_n],
         "has_hours": any(h6(p) > 0 for p in players),
     }
+
+
+# --------------------------------------------------------------------------- #
+# 5. Lazy auto-refresh — throttled background refresh triggered on page load
+# --------------------------------------------------------------------------- #
+#
+# Visiting the Players or Calendar page calls maybe_refresh_async(): if the
+# signup data is missing or older than STALE_AFTER, it kicks off a refresh in a
+# daemon thread so the page never blocks on the ~6-month Spond fetch.
+#
+# Staleness is judged from a persisted last-fetched timestamp in
+# signups_meta.json (read by CONTENT, not file mtime) because r2_service resets
+# local file mtimes on every Render cold-start download.
+
+META_FILE = "signups_meta.json"
+STALE_AFTER = timedelta(days=7)
+MIN_RETRY = timedelta(hours=1)  # don't re-attempt within this window after a try
+
+_refresh_lock = threading.Lock()
+_refreshing = False
+_last_attempt = None  # in-process: last time we kicked off (or tried) a refresh
+
+
+def _meta_path():
+    return _data_path(META_FILE)
+
+
+def _read_last_fetched():
+    """Persisted last-fetched datetime (tz-aware), or None. Read from file
+    content so it survives R2 round-trips (which reset mtimes)."""
+    path = _meta_path()
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            return _parse_iso(json.load(f).get("last_fetched"))
+    except (json.JSONDecodeError, OSError, AttributeError):
+        return None
+
+
+def _write_last_fetched():
+    path = _meta_path()
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({"last_fetched": datetime.now(LOCAL_TZ).isoformat()}, f)
+        r2_service.upload_file(path)
+    except OSError as exc:  # noqa: BLE001
+        logger.warning("Could not write signups meta: %s", exc)
+
+
+def _spond_configured():
+    return bool(Config.SPOND_USERNAME and Config.SPOND_PASSWORD and Config.SPOND_GROUP_ID)
+
+
+def refresh_now():
+    """Fetch signups + aggregate hours + stamp last-fetched. Returns the player
+    count. Used by both the admin button and the background auto-refresh."""
+    fetch_signups_history()
+    count = aggregate_hours()
+    _write_last_fetched()
+    return count
+
+
+def _is_stale():
+    last = _read_last_fetched()
+    if last is None:
+        return True
+    return (datetime.now(LOCAL_TZ) - last) > STALE_AFTER
+
+
+def _background_refresh():
+    global _refreshing
+    try:
+        n = refresh_now()
+        logger.info("Auto-refresh of signup analytics complete (%d players).", n)
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Auto-refresh of signup analytics failed: %s", exc)
+    finally:
+        _refreshing = False
+
+
+def maybe_refresh_async():
+    """If signup data is missing or older than STALE_AFTER (7 days), refresh it
+    in a daemon thread. Non-blocking, at most one refresh at a time, and
+    throttled (MIN_RETRY) so a failing Spond can't cause a retry storm. No-op
+    when Spond isn't configured (e.g. local dev without creds)."""
+    global _refreshing, _last_attempt
+    if not _spond_configured():
+        return
+    now = datetime.now(LOCAL_TZ)
+    if _last_attempt is not None and (now - _last_attempt) < MIN_RETRY:
+        return
+    if not _is_stale():
+        return
+    with _refresh_lock:
+        if _refreshing:
+            return
+        _refreshing = True
+        _last_attempt = now
+    threading.Thread(target=_background_refresh, daemon=True).start()
