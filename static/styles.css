@@ -261,3 +261,44 @@ h1, h2, h3 {
         white-space: nowrap;
     }
 }
+
+/* ---- Photo lightbox navigation buttons ----
+   Translucent circular arrows that sit lightly over the image rather than
+   blocking it. On touch/small screens they fade right back so the photo is
+   unobstructed; swipe and tap-to-toggle (see gallery JS) drive navigation. */
+.lightbox-nav {
+    z-index: 10;
+    border: none;
+    color: #fff;
+    background-color: rgba(0, 0, 0, 0.45);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    line-height: 1;
+    opacity: 0.8;
+    transition: opacity 0.25s ease, background-color 0.2s ease;
+}
+.lightbox-nav:hover,
+.lightbox-nav:focus {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.65);
+    color: #fff;
+}
+@media (max-width: 575px) {
+    .lightbox-nav {
+        width: 40px;
+        height: 40px;
+        font-size: 1.15rem;
+        background-color: rgba(0, 0, 0, 0.3);
+        opacity: 0.4;
+    }
+    /* Tapping the photo adds .nav-hidden to take the arrows fully out of view */
+    .nav-hidden .lightbox-nav {
+        opacity: 0;
+        pointer-events: none;
+    }
+}
