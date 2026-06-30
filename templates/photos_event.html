@@ -20,8 +20,13 @@
             <span class="summary-chevron">&#9656;</span>
         </button>
         <div id="eventSummaryCollapse" class="collapse">
-            <div class="px-3 pb-3">
-                <p class="mb-0" style="white-space: pre-line;">{{ summary }}</p>
+            <div class="px-3 pb-2">
+                <p class="mb-2" style="white-space: pre-line;">{{ summary }}</p>
+                <button class="btn btn-sm btn-link p-0 text-decoration-none"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#eventSummaryCollapse"
+                        aria-controls="eventSummaryCollapse">
+                    &#9652; Collapse
+                </button>
             </div>
         </div>
     </div>
