@@ -11,19 +11,22 @@
         </div>
 
         {% if photos %}
-        <div class="d-flex flex-column gap-5">
+        <div class="row g-3">
             {% for photo in photos %}
-            <div class="text-center">
-                <img src="{{ photo.url }}"
-                     alt="{{ photo.caption }}"
-                     class="photo-trigger img-fluid rounded shadow"
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="ratio ratio-4x3 photo-trigger"
                      data-index="{{ loop.index0 }}"
-                     style="max-height: 520px; width: 100%; object-fit: cover; border-radius: 0.5rem; cursor: pointer;">
+                     style="cursor:pointer;">
+                    <img src="{{ photo.url }}"
+                         alt="{{ photo.caption }}"
+                         class="img-fluid rounded shadow-sm"
+                         style="object-fit: cover; border-radius: 0.4rem;">
+                </div>
                 {% if photo.caption %}
-                <p class="text-muted small mt-2 mb-0">{{ photo.caption }}</p>
+                <p class="text-muted small mt-1 mb-0 text-center">{{ photo.caption }}</p>
                 {% endif %}
                 {% if photo.event_date and photo.event_date not in ('', 'nan') %}
-                <p class="text-muted" style="font-size: 0.75rem;">{{ photo.event_date }}</p>
+                <p class="text-muted text-center" style="font-size: 0.72rem;">{{ photo.event_date }}</p>
                 {% endif %}
             </div>
             {% endfor %}
@@ -58,8 +61,9 @@
                 <button id="nextBtn" type="button" aria-label="Next photo"
                         class="lightbox-nav position-absolute top-50 end-0 translate-middle-y me-2">&#8594;</button>
             </div>
-            <div class="modal-footer border-0 pt-0 justify-content-center">
+            <div class="modal-footer border-0 pt-0 justify-content-center flex-column text-center">
                 <p id="modalCaption" class="text-white-50 small mb-0"></p>
+                <p id="modalDate" class="text-white-50 mb-0" style="font-size: 0.72rem;"></p>
             </div>
         </div>
     </div>
@@ -69,7 +73,7 @@
 (function () {
     const PHOTOS = [
         {% for photo in photos %}
-        { url: {{ photo.url | tojson }}, caption: {{ (photo.caption or '') | tojson }} }{% if not loop.last %},{% endif %}
+        { url: {{ photo.url | tojson }}, caption: {{ (photo.caption or '') | tojson }}, date: {{ (photo.event_date if photo.event_date not in ('', 'nan') else '') | tojson }} }{% if not loop.last %},{% endif %}
         {% endfor %}
     ];
 
@@ -78,6 +82,7 @@
     const modalEl   = document.getElementById('photoModal');
     const imgEl     = document.getElementById('modalPhoto');
     const captionEl = document.getElementById('modalCaption');
+    const dateEl    = document.getElementById('modalDate');
     const counterEl = document.getElementById('photoCounter');
     const prevBtn   = document.getElementById('prevBtn');
     const nextBtn   = document.getElementById('nextBtn');
@@ -87,6 +92,7 @@
         imgEl.src           = PHOTOS[idx].url;
         imgEl.alt           = PHOTOS[idx].caption;
         captionEl.textContent = PHOTOS[idx].caption;
+        dateEl.textContent    = PHOTOS[idx].date;
         counterEl.textContent = PHOTOS.length > 1 ? (idx + 1) + ' / ' + PHOTOS.length : '';
         prevBtn.style.visibility = PHOTOS.length > 1 ? 'visible' : 'hidden';
         nextBtn.style.visibility = PHOTOS.length > 1 ? 'visible' : 'hidden';

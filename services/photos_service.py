@@ -37,6 +37,49 @@ def _photos_dir() -> Path:
     return Path(current_app.root_path) / PHOTOS_SUBDIR
 
 
+def _parse_event_date(raw) -> datetime | None:
+    """Parse a stored event date string into a datetime, or None if blank/invalid."""
+    s = str(raw or "").strip()
+    if s in ("", "nan"):
+        return None
+    for fmt in ("%Y-%m-%d", "%d-%b-%Y", "%Y-%m-%d %H:%M:%S"):
+        try:
+            return datetime.strptime(s, fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def _parse_upload(raw) -> datetime:
+    """Parse an upload_date string; falls back to datetime.min so it always sorts."""
+    s = str(raw or "").strip()
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(s, fmt)
+        except ValueError:
+            continue
+    return datetime.min
+
+
+def _format_event_date(raw) -> str:
+    """Format a stored ISO date (YYYY-MM-DD) as a friendly '4-Jul-2023'.
+
+    Returns "" for blank/missing dates and leaves unparseable values untouched."""
+    dt = _parse_event_date(raw)
+    if dt is None:
+        s = str(raw or "").strip()
+        return "" if s in ("", "nan") else s
+    return f"{dt.day}-{dt.strftime('%b-%Y')}"
+
+
+def _decorate(records: list[dict]) -> list[dict]:
+    """Add the public image URL and friendly date to each photo record."""
+    for r in records:
+        r["url"] = photo_url(r["filename"])
+        r["event_date"] = _format_event_date(r["event_date"])
+    return records
+
+
 def _load() -> pd.DataFrame:
     df = load_excel(PHOTOS_FILE)
     if df.empty:
@@ -55,24 +98,29 @@ def get_all_photos(type_filter: str | None = None) -> list[dict]:
     if type_filter:
         df = df[df["type"] == type_filter]
     df = df.sort_values("upload_date", ascending=False)
-    records = df.to_dict("records")
-    for r in records:
-        r["url"] = photo_url(r["filename"])
-    return records
+    return _decorate(df.to_dict("records"))
 
 
 def get_generic_photos() -> list[dict]:
-    return get_all_photos(type_filter="generic")
+    """Generic club photos, most recent first by the photo's own date.
+
+    Sorts chronologically on event_date (newest first); photos without a date
+    fall back to their upload time so they still appear."""
+    df = _load()
+    df = df[df["type"] == "generic"].copy()
+    df["_sort"] = df.apply(
+        lambda r: _parse_event_date(r["event_date"]) or _parse_upload(r["upload_date"]),
+        axis=1,
+    )
+    df = df.sort_values("_sort", ascending=False).drop(columns="_sort")
+    return _decorate(df.to_dict("records"))
 
 
 def get_event_photos(event_id: str) -> list[dict]:
     df = _load()
     df = df[(df["type"] == "event") & (df["event_id"] == event_id)]
     df = df.sort_values("upload_date", ascending=False)
-    records = df.to_dict("records")
-    for r in records:
-        r["url"] = photo_url(r["filename"])
-    return records
+    return _decorate(df.to_dict("records"))
 
 
 def has_event_photos(event_id: str) -> bool:
