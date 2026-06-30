@@ -12,8 +12,18 @@
 <!-- Event summary (overview shown above the photos) -->
 {% if summary %}
 <div class="card hhb-card mb-4">
-    <div class="card-body">
-        <p class="mb-0" style="white-space: pre-line;">{{ summary }}</p>
+    <div class="card-body p-0">
+        <button class="btn w-100 d-flex justify-content-between align-items-center fw-bold text-start collapsed"
+                type="button" data-bs-toggle="collapse" data-bs-target="#eventSummaryCollapse"
+                aria-expanded="false" aria-controls="eventSummaryCollapse">
+            <span>Event Summary</span>
+            <span class="summary-chevron">&#9656;</span>
+        </button>
+        <div id="eventSummaryCollapse" class="collapse">
+            <div class="px-3 pb-3">
+                <p class="mb-0" style="white-space: pre-line;">{{ summary }}</p>
+            </div>
+        </div>
     </div>
 </div>
 {% endif %}
@@ -247,5 +257,14 @@
 })();
 </script>
 {% endif %}
+
+<style>
+    .summary-chevron {
+        transition: transform 0.2s ease;
+    }
+    button[aria-expanded="true"] .summary-chevron {
+        transform: rotate(90deg);
+    }
+</style>
 
 {% endblock %}
