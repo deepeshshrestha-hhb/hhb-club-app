@@ -8,6 +8,8 @@ from flask import (
 from config import Config
 from services import r2_service
 from services import analytics_service
+from services import committee_service
+from services import about_content_service
 from services.spond_service import fetch_members_to_csv
 from services.player_stats_service import invalidate_cache
 from services.podium_service import get_podium_photo_list, save_podium_photos, delete_podium_photo
@@ -73,7 +75,7 @@ def logout():
 @admin_bp.route("/admin")
 @admin_required
 def admin_page():
-    return render_template("admin.html")
+    return render_template("admin.html", committee_visible=committee_service.is_visible())
 
 
 @admin_bp.route("/admin/sync_spond", methods=["POST"])
@@ -240,6 +242,43 @@ def admin_photos_delete():
     ok = delete_club_photo(photo_id)
     flash("Photo deleted." if ok else "Photo not found.")
     return redirect(url_for("admin.admin_photos"))
+
+
+@admin_bp.route("/admin/committee/toggle", methods=["POST"])
+@admin_required
+def toggle_committee():
+    """Show or hide the HHB Committee tab on the About page."""
+    committee_service.set_visible(request.form.get("visible") == "1")
+    flash("Committee tab is now shown." if committee_service.is_visible() else "Committee tab is now hidden.")
+    return redirect(url_for("admin.admin_page"))
+
+
+@admin_bp.route("/admin/committee/member/<member_id>", methods=["POST"])
+@admin_required
+def update_committee_member(member_id):
+    """Edit one committee card's text and which player's profile photo it uses."""
+    ok = committee_service.update_member(member_id, request.form)
+    flash("Committee card updated." if ok else "Committee member not found.")
+    return redirect(url_for("about") + "?tab=committee")
+
+
+@admin_bp.route("/admin/about/paragraph/<key>", methods=["POST"])
+@admin_required
+def update_about_paragraph(key):
+    """Edit one of the freeform About Us paragraph sections (Who Are We,
+    Our Community, Why Badminton)."""
+    ok = about_content_service.update_paragraph_section(key, request.form.get("content", ""))
+    flash("About Us section updated." if ok else "Unknown section.")
+    return redirect(url_for("about"))
+
+
+@admin_bp.route("/admin/about/when-where", methods=["POST"])
+@admin_required
+def update_about_when_where():
+    """Edit the structured "When & Where We Play" session details."""
+    about_content_service.update_when_where(request.form)
+    flash("Session details updated.")
+    return redirect(url_for("about"))
 
 
 @admin_bp.route("/admin/refresh-data", methods=["POST"])
