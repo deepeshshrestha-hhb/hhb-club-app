@@ -2,6 +2,72 @@
 {% block content %}
 
 <div class="row">
+    <div class="col-12 mb-4">
+        <div class="accordion hhb-help-accordion" id="helpAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingGettingStarted">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGettingStarted">
+                        <span class="hhb-help-toggle-icon">🧭</span> Getting Started — Tap to see what HHB Club Website offers
+                    </button>
+                </h2>
+                <div id="collapseGettingStarted" class="accordion-collapse collapse" data-bs-parent="#helpAccordion">
+                    <div class="accordion-body">
+                        <div class="hhb-help-list">
+                            <div class="hhb-help-item">
+                                <span class="hhb-help-icon">📅</span>
+                                <div>
+                                    <h6 class="mb-1">Club Calendar</h6>
+                                    <p class="mb-1 text-muted small">View upcoming badminton sessions and stay on top of what's happening at HHB Club.</p>
+                                    <a href="/calendar">Go to Club Calendar &raquo;</a>
+                                </div>
+                            </div>
+                            <div class="hhb-help-item">
+                                <span class="hhb-help-icon">🏆</span>
+                                <div>
+                                    <h6 class="mb-1">Player Scores</h6>
+                                    <p class="mb-1 text-muted small">Check out the current player rankings and see how everyone's performing this season.</p>
+                                    <a href="/players">Go to Player Scores &raquo;</a>
+                                </div>
+                            </div>
+                            <div class="hhb-help-item">
+                                <span class="hhb-help-icon">📂</span>
+                                <div>
+                                    <h6 class="mb-1">Tournament Archive</h6>
+                                    <p class="mb-1 text-muted small">Browse our historical tournaments with brackets, results, and photos from past events.</p>
+                                    <a href="/tournaments/annual">Go to Tournament Archive &raquo;</a>
+                                </div>
+                            </div>
+                            <div class="hhb-help-item">
+                                <span class="hhb-help-icon">📸</span>
+                                <div>
+                                    <h6 class="mb-1">Photos</h6>
+                                    <p class="mb-1 text-muted small">Relive memorable moments from club tournaments and social events.</p>
+                                    <a href="/photos/gallery">Go to Photos &raquo;</a>
+                                </div>
+                            </div>
+                            <div class="hhb-help-item">
+                                <span class="hhb-help-icon">ℹ️</span>
+                                <div>
+                                    <h6 class="mb-1">About Us</h6>
+                                    <p class="mb-1 text-muted small">Learn more about HHB Club, our mission, and what makes us tick.</p>
+                                    <a href="/about">Go to About Us &raquo;</a>
+                                </div>
+                            </div>
+                            <div class="hhb-help-item">
+                                <span class="hhb-help-icon">💬</span>
+                                <div>
+                                    <h6 class="mb-1">Feedback</h6>
+                                    <p class="mb-1 text-muted small">Have a suggestion or found a bug? Send us feedback directly from any page on the site, we'd love to hear from you.</p>
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#feedbackModal">Share Feedback &raquo;</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="col-12 mb-3">
         <h1 class="page-title">Badminton Club Dashboard</h1>
         <p class="text-muted">Welcome. Quick overview of sessions, tournaments, and players.</p>
