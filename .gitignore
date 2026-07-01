@@ -19,6 +19,12 @@ data/Feedback.xlsx
 # Event summaries - admin-authored, created on first save, stored in R2, not source-controlled
 data/EventSummaries.xlsx
 
+# Committee roster - admin-editable, created on first save, stored in R2, not source-controlled
+data/committee.json
+
+# About Us page copy - admin-editable, created on first save, stored in R2, not source-controlled
+data/about_content.json
+
 # Signup analytics caches - derived from Spond, stored in R2, not source-controlled
 data/signups_history.csv
 data/player_hours.csv

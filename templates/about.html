@@ -5,11 +5,32 @@
     <div class="col-lg-9">
 
         <!-- Page Header -->
-        <div class="text-center mb-5">
+        <div class="text-center mb-4">
             <h1 class="page-title mb-1">About Us</h1>
             <h2 class="h4 text-muted fw-normal">Haggis and Haleem Badminton Club</h2>
             <hr class="mt-3">
         </div>
+
+        {% if committee_members %}
+        <ul class="nav nav-tabs justify-content-center mb-5" id="aboutTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="about-tab" data-bs-toggle="tab"
+                        data-bs-target="#about-pane" type="button" role="tab" aria-controls="about-pane" aria-selected="true">
+                    About Us
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="committee-tab" data-bs-toggle="tab"
+                        data-bs-target="#committee-pane" type="button" role="tab" aria-controls="committee-pane" aria-selected="false">
+                    HHB Committee
+                    {% if not committee_visible %}<span class="badge bg-secondary ms-1">Hidden</span>{% endif %}
+                </button>
+            </li>
+        </ul>
+        {% endif %}
+
+        <div class="tab-content">
+        <div class="tab-pane fade show active" id="about-pane" role="tabpanel" aria-labelledby="about-tab">
 
         <!-- Club Photo -->
         <div class="text-center mb-5">
@@ -22,46 +43,32 @@
             <p class="text-muted small mt-2">HHB Annual Doubles Classic 2026 — Eastwood High School</p>
         </div>
 
-        <!-- Who Are We -->
-        <div class="card hhb-card mb-4">
+        {% set ww = about_content.when_where %}
+        {% for key in about_sections %}
+        <!-- {{ about_section_titles[key] }} -->
+        <div class="card hhb-card {{ 'mb-4' if key in ('who_are_we', 'when_where') else 'mb-5' }} position-relative">
             <div class="card-body p-4">
-                <h3 class="h5 fw-bold mb-3" style="color: var(--hhb-primary);">Who Are We?</h3>
-                <p>
-                    We are the <strong>Haggis and Haleem Badminton Club</strong> — a friendly, social badminton club
-                    based in <strong>Newton Mearns, Glasgow</strong>. Our name is a nod to the wonderful mix of
-                    cultures that make up our club: the Scottish haggis and the South Asian haleem, two hearty
-                    dishes that bring people together, much like we do on the badminton court.
-                </p>
-                <p>
-                    With <strong>40+ members</strong> drawn from India, Pakistan, Bangladesh, Nepal, Malaysia, and Scotland, our club
-                    is a vibrant, multicultural community united by a shared love of the game. Our members range
-                    in age from their early 40s to their 60s, and while the competitive spirit is always alive,
-                    the camaraderie off the court is just as important to us.
-                </p>
-                <p class="mb-0">
-                    We are also proud of our <strong>HHB Junior Members</strong> — the teenage children of our veteran
-                    members and the club's upcoming badminton superstars. They bring fresh energy to the courts and
-                    are very much part of the HHB family, learning the game alongside the generation that came before them.
-                </p>
-            </div>
-        </div>
+                {% if session.get('is_admin') %}
+                <button type="button" class="btn btn-sm btn-light border position-absolute top-0 end-0 m-2"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editAboutModal-{{ key }}" title="Edit section">
+                    ✏️
+                </button>
+                {% endif %}
+                <h3 class="h5 fw-bold mb-3" style="color: var(--hhb-primary);">{{ about_section_titles[key] }}</h3>
 
-        <!-- When & Where We Play -->
-        <div class="card hhb-card mb-4">
-            <div class="card-body p-4">
-                <h3 class="h5 fw-bold mb-3" style="color: var(--hhb-primary);">When &amp; Where We Play</h3>
-                <p>We run <strong>two weekly sessions</strong>, both focused on doubles badminton:</p>
-
+                {% if key == 'when_where' %}
+                <p>{{ ww.intro }}</p>
                 <div class="row g-3 mt-1">
                     <div class="col-md-6">
                         <div class="card h-100 border-0" style="background: #eaf4ff; border-radius: 0.5rem;">
                             <div class="card-body">
-                                <h6 class="fw-bold mb-2">Sunday Sessions</h6>
+                                <h6 class="fw-bold mb-2">{{ ww.sunday.title }}</h6>
                                 <ul class="mb-0 ps-3">
-                                    <li><strong>Time:</strong> 9:00 am – 11:00 am</li>
-                                    <li><strong>Venue:</strong> Eastwood High School</li>
-                                    <li><strong>Courts:</strong> 4 courts</li>
-                                    <li><strong>Capacity:</strong> 20 players max</li>
+                                    <li><strong>Time:</strong> {{ ww.sunday.time }}</li>
+                                    <li><strong>Venue:</strong> {{ ww.sunday.venue }}</li>
+                                    <li><strong>Courts:</strong> {{ ww.sunday.courts }}</li>
+                                    <li><strong>Capacity:</strong> {{ ww.sunday.capacity }}</li>
                                 </ul>
                             </div>
                         </div>
@@ -69,59 +76,118 @@
                     <div class="col-md-6">
                         <div class="card h-100 border-0" style="background: #eafaf4; border-radius: 0.5rem;">
                             <div class="card-body">
-                                <h6 class="fw-bold mb-2">Wednesday Sessions</h6>
+                                <h6 class="fw-bold mb-2">{{ ww.wednesday.title }}</h6>
                                 <ul class="mb-0 ps-3">
-                                    <li><strong>Time:</strong> 7:00 pm – 9:00 pm</li>
-                                    <li><strong>Venue:</strong> Parklands Country Club</li>
-                                    <li><strong>Courts:</strong> 2 courts</li>
-                                    <li><strong>Capacity:</strong> 10 players max</li>
+                                    <li><strong>Time:</strong> {{ ww.wednesday.time }}</li>
+                                    <li><strong>Venue:</strong> {{ ww.wednesday.venue }}</li>
+                                    <li><strong>Courts:</strong> {{ ww.wednesday.courts }}</li>
+                                    <li><strong>Capacity:</strong> {{ ww.wednesday.capacity }}</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <p class="mt-3 mb-0 text-muted small">
-                    Sessions fill up quickly — sign-up is managed through the <strong>Spond app</strong>. Members will receive an invite via Spond for each session.
-                </p>
+                <p class="mt-3 mb-0 text-muted small">{{ ww.note }}</p>
+                {% else %}
+                <p class="mb-0" style="white-space: pre-line;">{{ about_content[key] }}</p>
+                {% endif %}
             </div>
         </div>
 
-        <!-- Our Community -->
-        <div class="card hhb-card mb-5">
-            <div class="card-body p-4">
-                <h3 class="h5 fw-bold mb-3" style="color: var(--hhb-primary);">Our Community</h3>
-                <p>
-                    We are proud of the diversity and warmth within our group. Whether you are a seasoned player
-                    or just looking to stay active and social, the spirit here is always welcoming. Banter,
-                    competitive doubles, post-game chai — it is all part of the HHB experience.
-                </p>
-                <p class="mb-0">
-                    We are more than just a badminton club — we are a community that has been playing, competing,
-                    and growing together for years, right here in the heart of Newton Mearns.
-                </p>
+        {% if session.get('is_admin') %}
+        <div class="modal fade" id="editAboutModal-{{ key }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog {{ 'modal-lg' if key == 'when_where' }}">
+                <div class="modal-content">
+                    {% if key == 'when_where' %}
+                    <form action="{{ url_for('admin.update_about_when_where') }}" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit "When &amp; Where We Play"</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label small">Intro line</label>
+                                <input type="text" class="form-control form-control-sm" name="intro" value="{{ ww.intro }}">
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <h6 class="small fw-bold text-muted">Sunday Sessions</h6>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Title</label>
+                                        <input type="text" class="form-control form-control-sm" name="sunday_title" value="{{ ww.sunday.title }}">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Time</label>
+                                        <input type="text" class="form-control form-control-sm" name="sunday_time" value="{{ ww.sunday.time }}">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Venue</label>
+                                        <input type="text" class="form-control form-control-sm" name="sunday_venue" value="{{ ww.sunday.venue }}">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Courts</label>
+                                        <input type="text" class="form-control form-control-sm" name="sunday_courts" value="{{ ww.sunday.courts }}">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Capacity</label>
+                                        <input type="text" class="form-control form-control-sm" name="sunday_capacity" value="{{ ww.sunday.capacity }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="small fw-bold text-muted">Wednesday Sessions</h6>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Title</label>
+                                        <input type="text" class="form-control form-control-sm" name="wednesday_title" value="{{ ww.wednesday.title }}">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Time</label>
+                                        <input type="text" class="form-control form-control-sm" name="wednesday_time" value="{{ ww.wednesday.time }}">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Venue</label>
+                                        <input type="text" class="form-control form-control-sm" name="wednesday_venue" value="{{ ww.wednesday.venue }}">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Courts</label>
+                                        <input type="text" class="form-control form-control-sm" name="wednesday_courts" value="{{ ww.wednesday.courts }}">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Capacity</label>
+                                        <input type="text" class="form-control form-control-sm" name="wednesday_capacity" value="{{ ww.wednesday.capacity }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-2 mt-2">
+                                <label class="form-label small">Closing note</label>
+                                <textarea class="form-control form-control-sm" name="note" rows="2">{{ ww.note }}</textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-hhb-primary text-white">Save</button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <form action="{{ url_for('admin.update_about_paragraph', key=key) }}" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit "{{ about_section_titles[key] }}"</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <textarea class="form-control" name="content" rows="10">{{ about_content[key] }}</textarea>
+                            <div class="form-text mt-1">Leave a blank line between paragraphs.</div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-hhb-primary text-white">Save</button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
             </div>
         </div>
-
-        <!-- Why Badminton? -->
-        <div class="card hhb-card mb-5">
-            <div class="card-body p-4">
-                <h3 class="h5 fw-bold mb-3" style="color: var(--hhb-primary);">Why Badminton?</h3>
-                <p>
-                    Badminton is one of the most rewarding racket sports for overall health and wellbeing. Research has shown that
-                    regular badminton players benefit from improved hand-eye coordination, enhanced cognitive function, and better brain development.
-                    The dynamic nature of the sport — with its rapid directional changes, quick decision-making, and strategic thinking — keeps both
-                    body and mind sharp, contributing to increased longevity and a healthier lifestyle.
-                </p>
-                <p class="mb-0">
-                    But beyond the physical benefits, badminton is deeply rooted in social connection. The doubles format — which we
-                    emphasise at HHB — creates natural partnerships and teamwork, fostering meaningful friendships and a sense of belonging.
-                    Studies show that this social aspect of sport is equally vital to health and wellbeing, reducing stress, combating isolation,
-                    and improving mental health. At HHB, we believe that the combination of vigorous physical activity, mental engagement, and
-                    genuine community is what makes badminton such a transformative experience.
-                </p>
-            </div>
-        </div>
+        {% endif %}
+        {% endfor %}
 
         <!-- Club Photo Gallery -->
         <div class="text-center mb-5">
@@ -130,6 +196,114 @@
             </a>
         </div>
 
+        </div> {# /about-pane #}
+
+        {% if committee_members %}
+        <div class="tab-pane fade" id="committee-pane" role="tabpanel" aria-labelledby="committee-tab">
+
+            {% if not committee_visible %}
+            <div class="alert alert-secondary text-center small">
+                This tab is currently <strong>hidden</strong> from members. Only admins can see it. Toggle it
+                back on from the <a href="{{ url_for('admin.admin_page') }}">Admin</a> page.
+            </div>
+            {% endif %}
+
+            <div class="text-center mb-4">
+                <h3 class="h5 fw-bold mb-1" style="color: var(--hhb-primary);">Committee Roster</h3>
+                <p class="text-muted small mb-0">The people who keep the shuttle flying, the courts booked, and the dues paid.</p>
+            </div>
+
+            <div class="row g-4 mb-4">
+                {% for m in committee_members %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card hhb-card h-100 committee-card {{ 'founder' if m.founder }} text-center position-relative">
+                        {% if session.get('is_admin') %}
+                        <button type="button" class="btn btn-sm btn-light border position-absolute top-0 end-0 m-2"
+                                data-bs-toggle="modal" data-bs-target="#editCommitteeModal{{ m.id }}" title="Edit card">
+                            ✏️
+                        </button>
+                        {% endif %}
+                        <span class="committee-roster-no">{{ m.roster_no }}</span>
+                        <div class="card-body d-flex flex-column align-items-center pt-4">
+                            <div class="committee-photo-frame mb-3">
+                                {% if m.photo_filename %}
+                                <img src="{{ url_for('players.player_photo', filename=m.photo_filename) }}" alt="{{ m.name }}">
+                                {% else %}
+                                <span class="committee-initials">{{ m.name[0] | upper }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="fw-bold" style="color: var(--hhb-primary); font-size: 1.05rem;">{{ m.name }}</div>
+                            <div class="committee-badge small fw-bold mb-1">{{ m.badge }}</div>
+                            <div class="small fw-bold text-muted mb-2">{{ m.title_line }}</div>
+                            <p class="small text-muted mb-0">{{ m.desc }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {% if session.get('is_admin') %}
+                <div class="modal fade" id="editCommitteeModal{{ m.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form action="{{ url_for('admin.update_committee_member', member_id=m.id) }}" method="post">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Edit Committee Card</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-2">
+                                        <label class="form-label small">Roster No.</label>
+                                        <input type="text" class="form-control form-control-sm" name="roster_no" value="{{ m.roster_no }}">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Name</label>
+                                        <input type="text" class="form-control form-control-sm" name="name" value="{{ m.name }}" required>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Profile photo (linked player)</label>
+                                        <select class="form-select form-select-sm" name="linked_player">
+                                            <option value="{{ m.linked_player }}">{{ m.linked_player }} (current)</option>
+                                            {% for pname in committee_player_names %}
+                                            {% if pname != m.linked_player %}
+                                            <option value="{{ pname }}">{{ pname }}</option>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                        <div class="form-text">Uses that player's uploaded profile photo, if any.</div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Badge / Role</label>
+                                        <input type="text" class="form-control form-control-sm" name="badge" value="{{ m.badge }}">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Tagline</label>
+                                        <input type="text" class="form-control form-control-sm" name="title_line" value="{{ m.title_line }}">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Description</label>
+                                        <textarea class="form-control form-control-sm" name="desc" rows="3">{{ m.desc }}</textarea>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" name="founder" id="founderCheck{{ m.id }}" {{ 'checked' if m.founder }}>
+                                        <label class="form-check-label small" for="founderCheck{{ m.id }}">Founder styling (accent border)</label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-sm btn-hhb-primary text-white">Save</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+        </div> {# /committee-pane #}
+        {% endif %}
+
+        </div> {# /tab-content #}
+
         <!-- Back to Dashboard -->
         <div class="text-center mb-4">
             <a href="/" class="btn btn-hhb-primary text-white px-4">Back to Dashboard</a>
@@ -137,5 +311,14 @@
 
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    if (new URLSearchParams(window.location.search).get('tab') === 'committee') {
+        var trigger = document.getElementById('committee-tab');
+        if (trigger) new bootstrap.Tab(trigger).show();
+    }
+});
+</script>
 
 {% endblock %}

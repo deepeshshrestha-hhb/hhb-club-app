@@ -1,7 +1,7 @@
 import sys
 import logging
 
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, session
 from config import Config
 from routes.calendar_routes import calendar_bp
 from routes.tournament_routes import tournament_bp
@@ -11,7 +11,9 @@ from routes.photos_routes import photos_bp
 from routes.feedback_routes import feedback_bp
 from routes.hours_routes import hours_bp
 from services import r2_service
-from services.profile_service import name_to_slug
+from services import committee_service
+from services import about_content_service
+from services.profile_service import name_to_slug, get_profile
 
 # Log to stdout so messages (incl. R2 sync) surface in the Render logs.
 # force=True is required because under gunicorn the root logger already has
@@ -63,7 +65,37 @@ def create_app():
 
     @app.route("/about")
     def about():
-        return render_template("about.html")
+        about_content = about_content_service.get_about_content()
+        committee = committee_service.get_committee()
+        is_admin = bool(session.get("is_admin"))
+        if not committee["visible"] and not is_admin:
+            return render_template(
+                "about.html", committee_visible=False, committee_members=[],
+                about_content=about_content, about_sections=about_content_service.SECTION_ORDER,
+                about_section_titles=about_content_service.SECTION_TITLES,
+            )
+
+        members = []
+        for m in committee["members"]:
+            slug = name_to_slug(m.get("linked_player") or m["name"])
+            profile = get_profile(slug)
+            photo_filename = profile.get("photo_filename") if profile else None
+            members.append({**m, "slug": slug, "photo_filename": photo_filename})
+
+        player_names = []
+        if is_admin:
+            from services.player_service import get_player_names
+            player_names = get_player_names()
+
+        return render_template(
+            "about.html",
+            committee_visible=committee["visible"],
+            committee_members=members,
+            committee_player_names=player_names,
+            about_content=about_content,
+            about_sections=about_content_service.SECTION_ORDER,
+            about_section_titles=about_content_service.SECTION_TITLES,
+        )
 
     @app.route("/health")
     def health():
