@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!.env.r2.example
 
 # Member PII - regenerated from Spond on app startup, do not version
 data/hhb_members.csv

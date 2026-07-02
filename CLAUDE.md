@@ -168,12 +168,15 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   redeploy) pulls them in. Use [scripts/seed_r2.py](scripts/seed_r2.py) to
   (re)seed with round-trip verification.
 - **Pulling prod data locally (read-only snapshot):** to bring live photos,
-  feedback, etc. into your local env, set the `R2_*` vars in `.env` and run
-  [scripts/pull_r2.py](scripts/pull_r2.py) (download-only counterpart to
-  `seed_r2.py`; mirrors all synced prefixes down). ⚠️ There is only one bucket
-  and it *is* production — after pulling, comment the `R2_*` vars back out of
-  `.env` before running the app locally, or the app will upload local changes
-  (feedback, uploads, admin refreshes) back to prod.
+  player profiles, feedback, etc. into your local env, copy `.env.r2.example`
+  → `.env.r2`, fill in the four `R2_*` values (Render dashboard → hhb-club
+  service → Environment), and run [scripts/pull_r2.py](scripts/pull_r2.py)
+  (download-only counterpart to `seed_r2.py`; mirrors all synced prefixes
+  down). `.env.r2` is a **dedicated** file, separate from `.env` — `config.py`
+  only loads `.env`, so the main app never sees these credentials and stays
+  local-only even if `.env.r2` is left filled in. There is only one bucket and
+  it *is* production, but because the app can't read `.env.r2`, there's no
+  cleanup step needed after pulling (unlike the old `.env`-based flow).
 - **Admin:** single-user session login (`/admin/login`, `ADMIN_USERNAME` /
   `ADMIN_PASSWORD`). Buttons: **Spond Refresh** (members → CSV → R2),
   **Refresh Signup Analytics** (RSVPs → hours → R2), **Refresh Data from R2**,
@@ -329,6 +332,24 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   text. New dep: `anthropic`. *Why:* reuse the proven Excel + R2 pattern and the
   `admin_required` decorator; keep the AI strictly optional so prod can adopt it
   whenever a key is added, with no hard dependency for local/offline runs.
+- **2026-07-02 — Moved `pull_r2.py` credentials into a dedicated `.env.r2`
+  file.** `scripts/pull_r2.py` now calls `load_dotenv(".env.r2")` itself
+  instead of relying on `R2_*` vars in the main `.env`. *Why:* the old flow
+  required commenting the `R2_*` vars back out of `.env` after every pull, or
+  the next `python app.py` would re-upload local writes to production R2 —
+  an easy step to forget. Since `config.py` only loads `.env`, the main app
+  now structurally cannot see R2 credentials that live in `.env.r2`, so a
+  prod-data resync is a single `python scripts/pull_r2.py` with nothing to
+  clean up afterward. Added `.env.r2.example` as the template (gitignore
+  updated to track it, mirroring the existing `.env.example` exception).
+- **2026-07-02 — Claude merges its own PRs via `gh pr merge`, no manual
+  checkpoint.** Previously the Git Workflow reserved the actual merge step for
+  the user via the GitHub UI. Per explicit user instruction, that checkpoint is
+  removed: after opening a PR, immediately run
+  `gh pr merge <n> --merge --delete-branch` (merge commit, not squash/rebase,
+  to match this repo's history) and sync local master. *Why:* the user wants
+  the full branch → PR → merge → sync cycle to run end-to-end without waiting
+  for a manual approval step on GitHub.
 
 ---
 
@@ -361,9 +382,15 @@ git checkout -b feature/<short-description>   # 1. branch from master
 # ... make changes, commit ...
 git push -u origin feature/<short-description> # 2. push branch
 gh pr create ...                               # 3. open PR (PowerShell, full gh path)
-# merge on GitHub                              # 4. user merges via GitHub UI
+gh pr merge <n> --merge --delete-branch        # 4. merge immediately via gh CLI
 git checkout master && git pull                # 5. sync local master
 ```
+
+**Claude merges every PR itself via `gh pr merge --merge --delete-branch`
+right after opening it — do not wait for a manual GitHub UI merge as a
+checkpoint.** Use `--merge` (not squash/rebase) to match this repo's
+merge-commit convention (see recent history, e.g. "Merge pull request #27
+from ..."). This applies every time, not just when explicitly asked per-PR.
 
 A `PreToolUse` hook in `.claude/settings.local.json` will fire a ⚠ warning
 if a `git commit` or `git push` is attempted directly on `master` as a reminder.
