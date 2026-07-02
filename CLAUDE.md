@@ -168,12 +168,15 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   redeploy) pulls them in. Use [scripts/seed_r2.py](scripts/seed_r2.py) to
   (re)seed with round-trip verification.
 - **Pulling prod data locally (read-only snapshot):** to bring live photos,
-  feedback, etc. into your local env, set the `R2_*` vars in `.env` and run
-  [scripts/pull_r2.py](scripts/pull_r2.py) (download-only counterpart to
-  `seed_r2.py`; mirrors all synced prefixes down). ⚠️ There is only one bucket
-  and it *is* production — after pulling, comment the `R2_*` vars back out of
-  `.env` before running the app locally, or the app will upload local changes
-  (feedback, uploads, admin refreshes) back to prod.
+  player profiles, feedback, etc. into your local env, copy `.env.r2.example`
+  → `.env.r2`, fill in the four `R2_*` values (Render dashboard → hhb-club
+  service → Environment), and run [scripts/pull_r2.py](scripts/pull_r2.py)
+  (download-only counterpart to `seed_r2.py`; mirrors all synced prefixes
+  down). `.env.r2` is a **dedicated** file, separate from `.env` — `config.py`
+  only loads `.env`, so the main app never sees these credentials and stays
+  local-only even if `.env.r2` is left filled in. There is only one bucket and
+  it *is* production, but because the app can't read `.env.r2`, there's no
+  cleanup step needed after pulling (unlike the old `.env`-based flow).
 - **Admin:** single-user session login (`/admin/login`, `ADMIN_USERNAME` /
   `ADMIN_PASSWORD`). Buttons: **Spond Refresh** (members → CSV → R2),
   **Refresh Signup Analytics** (RSVPs → hours → R2), **Refresh Data from R2**,
@@ -329,6 +332,16 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   text. New dep: `anthropic`. *Why:* reuse the proven Excel + R2 pattern and the
   `admin_required` decorator; keep the AI strictly optional so prod can adopt it
   whenever a key is added, with no hard dependency for local/offline runs.
+- **2026-07-02 — Moved `pull_r2.py` credentials into a dedicated `.env.r2`
+  file.** `scripts/pull_r2.py` now calls `load_dotenv(".env.r2")` itself
+  instead of relying on `R2_*` vars in the main `.env`. *Why:* the old flow
+  required commenting the `R2_*` vars back out of `.env` after every pull, or
+  the next `python app.py` would re-upload local writes to production R2 —
+  an easy step to forget. Since `config.py` only loads `.env`, the main app
+  now structurally cannot see R2 credentials that live in `.env.r2`, so a
+  prod-data resync is a single `python scripts/pull_r2.py` with nothing to
+  clean up afterward. Added `.env.r2.example` as the template (gitignore
+  updated to track it, mirroring the existing `.env.example` exception).
 
 ---
 
