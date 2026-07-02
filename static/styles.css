@@ -127,6 +127,22 @@ h1, h2, h3 {
     flex-shrink: 0;
 }
 
+/* --- Dashboard hero banner --- */
+.hhb-hero-banner {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    max-width: 1100px;
+    margin: 0 auto;
+    aspect-ratio: 3.5 / 1;
+    max-height: 420px;
+    background-size: cover;
+    background-position: center 42%;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+.hhb-welcome .page-title {
+    margin-bottom: 0.25rem;
+}
+
 /* --- Feedback --- */
 .bg-hhb-primary {
     background-color: var(--hhb-primary) !important;
