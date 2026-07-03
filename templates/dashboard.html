@@ -69,7 +69,25 @@
     </div>
 
     <div class="col-12 mb-2">
-        <div class="hhb-hero-banner" style="background-image: url('/static/images/photos/5568b66a-b840-4943-8841-8e58afe6c9a9.jpg');"></div>
+        <div class="hhb-hero-banner" style="background-image: url('/static/images/photos/5568b66a-b840-4943-8841-8e58afe6c9a9.jpg'); cursor:pointer;"
+             data-bs-toggle="modal" data-bs-target="#heroPhotoModal" title="Click to view full photo"></div>
+    </div>
+
+    <!-- Hero banner lightbox -->
+    <div class="modal fade" id="heroPhotoModal" tabindex="-1" aria-label="Full photo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark border-0">
+                <div class="modal-header border-0 pb-0">
+                    <span class="text-white fw-semibold">Welcome to HHB Club</span>
+                    <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-2 text-center">
+                    <img src="/static/images/photos/5568b66a-b840-4943-8841-8e58afe6c9a9.jpg"
+                         alt="HHB Club"
+                         style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:.5rem;">
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="col-12 mb-2 hhb-welcome">
