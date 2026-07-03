@@ -143,6 +143,15 @@ h1, h2, h3 {
     margin-bottom: 0.25rem;
 }
 
+/* --- About Us club photo --- */
+.hhb-about-photo {
+    width: 100%;
+    aspect-ratio: 4 / 1;
+    max-height: 420px;
+    object-fit: cover;
+    object-position: center 35%;
+}
+
 /* --- Feedback --- */
 .bg-hhb-primary {
     background-color: var(--hhb-primary) !important;

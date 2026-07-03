@@ -36,11 +36,30 @@
         <div class="text-center mb-5">
             <img
                 src="{{ url_for('static', filename='images/Annual Doubles Classic 2026 - 20260607_090756.jpg') }}"
-                class="img-fluid rounded shadow"
+                class="img-fluid rounded shadow hhb-about-photo"
                 alt="Haggis and Haleem Badminton Club"
-                style="max-height: 480px; width: 100%; object-fit: cover; border-radius: 0.5rem;"
+                style="cursor:pointer;"
+                data-bs-toggle="modal" data-bs-target="#aboutPhotoModal"
+                title="Click to view full photo"
             >
             <p class="text-muted small mt-2">HHB Annual Doubles Classic 2026 — Eastwood High School</p>
+        </div>
+
+        <!-- Club Photo lightbox -->
+        <div class="modal fade" id="aboutPhotoModal" tabindex="-1" aria-label="Full photo" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content bg-dark border-0">
+                    <div class="modal-header border-0 pb-0">
+                        <span class="text-white fw-semibold">HHB Annual Doubles Classic 2026 — Eastwood High School</span>
+                        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-2 text-center">
+                        <img src="{{ url_for('static', filename='images/Annual Doubles Classic 2026 - 20260607_090756.jpg') }}"
+                             alt="Haggis and Haleem Badminton Club"
+                             style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:.5rem;">
+                    </div>
+                </div>
+            </div>
         </div>
 
         {% set ww = about_content.when_where %}
