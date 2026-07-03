@@ -5,14 +5,14 @@
     <div class="col-lg-9">
 
         <!-- Page Header -->
-        <div class="text-center mb-4">
+        <div class="text-center mb-2">
             <h1 class="page-title mb-1">About Us</h1>
             <h2 class="h4 text-muted fw-normal">Haggis and Haleem Badminton Club</h2>
-            <hr class="mt-3">
+            <hr class="my-2">
         </div>
 
         {% if committee_members %}
-        <ul class="nav nav-tabs justify-content-center mb-5" id="aboutTabs" role="tablist">
+        <ul class="nav nav-tabs justify-content-center mb-3" id="aboutTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="about-tab" data-bs-toggle="tab"
                         data-bs-target="#about-pane" type="button" role="tab" aria-controls="about-pane" aria-selected="true">
@@ -33,7 +33,7 @@
         <div class="tab-pane fade show active" id="about-pane" role="tabpanel" aria-labelledby="about-tab">
 
         <!-- Club Photo -->
-        <div class="text-center mb-5">
+        <div class="text-center mb-3">
             <img
                 src="{{ url_for('static', filename='images/Annual Doubles Classic 2026 - 20260607_090756.jpg') }}"
                 class="img-fluid rounded shadow hhb-about-photo"
@@ -63,18 +63,25 @@
         </div>
 
         {% set ww = about_content.when_where %}
+        <div class="accordion hhb-about-accordion mb-5" id="aboutSectionsAccordion">
         {% for key in about_sections %}
         <!-- {{ about_section_titles[key] }} -->
-        <div class="card hhb-card {{ 'mb-4' if key in ('who_are_we', 'when_where') else 'mb-5' }} position-relative">
-            <div class="card-body p-4">
+        <div class="accordion-item position-relative">
+            <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseAbout-{{ key }}" aria-expanded="true" aria-controls="collapseAbout-{{ key }}">
+                    {{ about_section_titles[key] }}
+                </button>
                 {% if session.get('is_admin') %}
                 <button type="button" class="btn btn-sm btn-light border position-absolute top-0 end-0 m-2"
                         data-bs-toggle="modal"
-                        data-bs-target="#editAboutModal-{{ key }}" title="Edit section">
+                        data-bs-target="#editAboutModal-{{ key }}" title="Edit section" style="z-index: 5;">
                     ✏️
                 </button>
                 {% endif %}
-                <h3 class="h5 fw-bold mb-3" style="color: var(--hhb-primary);">{{ about_section_titles[key] }}</h3>
+            </h2>
+            <div id="collapseAbout-{{ key }}" class="accordion-collapse collapse show">
+                <div class="accordion-body">
 
                 {% if key == 'when_where' %}
                 <p>{{ ww.intro }}</p>
@@ -110,6 +117,8 @@
                 {% else %}
                 <p class="mb-0" style="white-space: pre-line;">{{ about_content[key] }}</p>
                 {% endif %}
+
+                </div>
             </div>
         </div>
 
@@ -207,6 +216,7 @@
         </div>
         {% endif %}
         {% endfor %}
+        </div>
 
         <!-- Club Photo Gallery -->
         <div class="text-center mb-5">
