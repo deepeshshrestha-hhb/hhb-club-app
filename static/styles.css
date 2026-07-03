@@ -152,6 +152,32 @@ h1, h2, h3 {
     object-position: center 35%;
 }
 
+/* --- About Us collapsible sections --- */
+.hhb-about-accordion .accordion-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+.hhb-about-accordion .accordion-item:last-child {
+    margin-bottom: 0;
+}
+.hhb-about-accordion .accordion-button {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--hhb-primary);
+    background-color: #ffffff;
+    box-shadow: none;
+}
+.hhb-about-accordion .accordion-button:not(.collapsed) {
+    color: var(--hhb-primary);
+    background-color: #ffffff;
+    box-shadow: inset 0 -1px 0 #e0e0e0;
+}
+.hhb-about-accordion .accordion-button:focus {
+    box-shadow: 0 0 0 0.2rem rgba(0, 179, 134, 0.35);
+}
+
 /* --- Feedback --- */
 .bg-hhb-primary {
     background-color: var(--hhb-primary) !important;
