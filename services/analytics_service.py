@@ -15,7 +15,10 @@ Design notes:
     waiting-list are excluded. The club does not record reliable check-in data, so
     no-shows cannot be distinguished from accepted attendees.
   - Each session is 1 hour at this club, so we use (end - start) when both
-    timestamps are present and positive, otherwise fall back to 1.0 hour.
+    timestamps are present and positive, otherwise fall back to 1.0 hour, capped
+    at MAX_EVENT_HOURS. Non-badminton Spond events (holidays, socials) are
+    excluded by heading keyword and by venue, so a multi-day event like a club
+    holiday trip can't inflate "Hours Played" (see EXCLUDE_KEYWORDS / VENUE_KEYWORDS).
   - Everything joins on full_name (resolved from the same Spond member list that
     backs hhb_members.csv), so there is no alias/first-name ambiguity here.
   - hhb_members.csv is rewritten wholesale on every Spond Refresh, so the hours
@@ -55,6 +58,14 @@ SIGNUPS_FIELDS = [
 SIX_MONTHS_DAYS = 183
 FOUR_WEEKS_DAYS = 28
 
+# Only count events that are actually badminton sessions/tournaments at the
+# club's two venues, not socials/trips organised through the same Spond group.
+# Weekly sessions run 1hr, tournaments ~2hr, so 3hr comfortably covers both
+# while still catching anything mis-scheduled as multi-day.
+MAX_EVENT_HOURS = 3.0
+EXCLUDE_KEYWORDS = ("holiday", "picnic")
+VENUE_KEYWORDS = ("eastwood", "parklands")
+
 _hours_cache = None
 
 
@@ -65,6 +76,23 @@ def _data_path(filename):
 # --------------------------------------------------------------------------- #
 # 1. Fetch signup history from Spond
 # --------------------------------------------------------------------------- #
+
+def _is_countable_event(ev, heading):
+    """True if this Spond event should count toward Hours Played: a real
+    badminton session/tournament at one of the club's two venues, not a
+    social or trip (e.g. the annual club holiday) organised through the same
+    Spond group."""
+    heading_lower = heading.lower()
+    if any(kw in heading_lower for kw in EXCLUDE_KEYWORDS):
+        return False
+
+    location = ev.get("location") or {}
+    location_text = " ".join(
+        str(location.get(key) or "") for key in ("feature", "address")
+    ).lower()
+    haystack = f"{heading_lower} {location_text}"
+    return any(kw in haystack for kw in VENUE_KEYWORDS)
+
 
 async def _fetch_signups_async():
     """Fetch the last ~6 months of Spond events and return one row per accepted
@@ -97,6 +125,10 @@ async def _fetch_signups_async():
 
     rows = []
     for ev in events or []:
+        heading = ev.get("heading", "") or ""
+        if not _is_countable_event(ev, heading):
+            continue
+
         start = _parse_timestamp(ev.get("startTimestamp"))
         end = _parse_timestamp(ev.get("endTimestamp"))
         if start is None:
@@ -105,6 +137,7 @@ async def _fetch_signups_async():
             duration = round((end - start).total_seconds() / 3600.0, 2)
         else:
             duration = 1.0  # club sessions are 1 hour; default when no end time
+        duration = min(duration, MAX_EVENT_HOURS)
 
         responses = ev.get("responses") or {}
         accepted = responses.get("acceptedIds") or []
