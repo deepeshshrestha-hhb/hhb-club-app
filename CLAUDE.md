@@ -182,9 +182,24 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   **Refresh Signup Analytics** (RSVPs → hours → R2), **Refresh Data from R2**,
   plus club + podium photo management. Members are no longer fetched on every
   startup.
-- **Cloudflare** now only provides DNS for the domain (A `@`→`216.24.57.1`,
-  CNAME `www`→`hhb-club.onrender.com`, both DNS-only/grey-cloud). The old
-  `cloudflared` tunnel has been deleted.
+- **Cloudflare fronts the domain via a Worker reverse proxy**, not plain DNS.
+  As of 2026-08-01, Render's custom-domain edge IP (`216.24.57.1`) sits inside
+  Cloudflare's own network, so a direct DNS-only *or* proxied record at the
+  apex/`www` hits Cloudflare error 1000 ("DNS points to prohibited IP") —
+  free-tier Cloudflare refuses to route to an origin that's itself inside
+  Cloudflare's network ("orange-to-orange" is Enterprise-only). The fix:
+  a small Worker, **`hhb-club-proxy`** (Cloudflare dashboard → Workers &
+  Pages → hhb-club-proxy), does a plain `fetch()` reverse-proxy to
+  `https://hhb-club.onrender.com` — a Worker's outbound fetch isn't subject to
+  the DNS-level block. `hhbclub.co.uk` and `www.hhbclub.co.uk` are bound to it
+  as Worker **Custom Domains** (dashboard-managed; no manual DNS A/CNAME
+  records for those two hosts anymore — Cloudflare auto-manages them via the
+  Worker binding). Free Workers plan (100k req/day) is far more than this
+  site needs. The three unrelated Cloudflare Tunnel subdomains on this same
+  zone (`family-tree`, `snapped`, `travel-diaries` — other side projects, not
+  part of this app) are untouched. Render support has not yet been contacted
+  to ask whether they can offer a non-Cloudflare-fronted IP; if they do, the
+  Worker could be removed and DNS-only records restored.
 - **Day-to-day change → deploy workflow:** see
   [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (and the phone cheat-sheet
   `docs/dev-workflow.png`, rendered from `docs/dev-workflow.html` — edit the HTML
@@ -342,6 +357,27 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   prod-data resync is a single `python scripts/pull_r2.py` with nothing to
   clean up afterward. Added `.env.r2.example` as the template (gitignore
   updated to track it, mirroring the existing `.env.example` exception).
+- **2026-08-01 — Restored production after Render's edge moved behind
+  Cloudflare; added `hhb-club-proxy` Worker.** The site had been running
+  locally (with a since-stopped `cloudflared` tunnel for `hhbclub.co.uk`)
+  while Render was temporarily unused. On repointing the domain back to
+  Render, both the pre-existing DNS-only apex `A` record and a Proxied `www`
+  CNAME started failing with Cloudflare error 1000 ("DNS points to prohibited
+  IP") — confirmed via direct IP probe that Render's custom-domain IP
+  (`216.24.57.1`) now resolves inside Cloudflare's own network (`Server:
+  cloudflare`, `CF-RAY` present even unproxied), which Cloudflare disallows
+  routing to from another zone on free/pro plans. Moving the zone off
+  Cloudflare DNS was ruled out (domain registered via Cloudflare, and three
+  other side-project subdomains depend on Cloudflare Tunnels on this same
+  zone). Fix: added a Cloudflare Worker (`hhb-club-proxy`) that reverse-proxies
+  via `fetch()` to `https://hhb-club.onrender.com` — outbound Worker fetches
+  aren't subject to the DNS-level block — and bound it to `hhbclub.co.uk` +
+  `www.hhbclub.co.uk` as Worker Custom Domains, removing the old manual
+  A/CNAME records (Cloudflare now manages those two hosts' DNS itself via the
+  Worker binding). See the Deployment section for details. *Why:* kept
+  everything on Cloudflare (no registrar/nameserver migration, no risk to the
+  other tunnel-based subdomains) while working around a platform-level
+  interaction that didn't exist when the domain was first set up.
 - **2026-07-02 — Claude merges its own PRs via `gh pr merge`, no manual
   checkpoint.** Previously the Git Workflow reserved the actual merge step for
   the user via the GitHub UI. Per explicit user instruction, that checkpoint is
