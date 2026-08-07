@@ -338,11 +338,16 @@ h1, h2, h3 {
     white-space: nowrap;
 }
 
-/* Frozen second column (Day) - sized to just fit the 3-letter day abbreviation */
+/* Frozen second column (Day) - sized to just fit the 3-letter day abbreviation.
+   The left offset is set a few px *under* the Date column's measured width
+   on purpose: rounding up leaves a hairline gap (varies by device pixel
+   ratio) that exposes whatever's scrolling underneath during a horizontal
+   scroll. Rounding down instead means a tiny overlap into the Date column's
+   own padding, which is invisible. */
 .sticky-table-wrapper th:nth-child(2),
 .sticky-table-wrapper td:nth-child(2) {
     position: sticky;
-    left: 69px;
+    left: 64px;
     z-index: 1;
     background-color: #ffffff;
     width: 1%;
@@ -388,11 +393,11 @@ h1, h2, h3 {
         white-space: nowrap;
     }
     /* Date column is narrower at this font-size, so the Day column's sticky
-       offset needs to match it exactly here or the two columns misalign
-       once the table is scrolled horizontally */
+       offset needs its own value here too (see the desktop rule above for
+       why it's intentionally a few px under the measured Date width) */
     .sticky-table-wrapper th:nth-child(2),
     .sticky-table-wrapper td:nth-child(2) {
-        left: 67px;
+        left: 62px;
     }
 }
 
