@@ -96,8 +96,9 @@ def _format_event(ev, member_names):
     names = [n for n in names if n]
 
     return {
-        "date": start.strftime("%Y-%m-%d") if start else "TBC",
-        "day": start.strftime("%A") if start else "",
+        "date": start.strftime("%d-%b") if start else "TBC",
+        "sort_date": start.strftime("%Y-%m-%d") if start else "",
+        "day": start.strftime("%a") if start else "",
         "start_time": start.strftime("%H:%M") if start else "",
         "session": ev.get("heading", "Session"),
         "confirmed": len(accepted),
@@ -169,5 +170,5 @@ def get_weekly_sessions(weeks_ahead=8):
         return []
 
     formatted = [_format_event(ev, member_names) for ev in events]
-    formatted.sort(key=lambda e: (e["date"], e["start_time"]))
+    formatted.sort(key=lambda e: (e["sort_date"], e["start_time"]))
     return formatted
