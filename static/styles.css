@@ -326,7 +326,7 @@ h1, h2, h3 {
     color: #fff;
 }
 
-/* Frozen first column (Date) - sized to just fit "YYYY-MM-DD", not a fixed
+/* Frozen first column (Date) - sized to just fit "DD-Mon", not a fixed
    wide column, so the freed-up width goes to the other columns */
 .sticky-table-wrapper th:nth-child(1),
 .sticky-table-wrapper td:nth-child(1) {
@@ -338,15 +338,23 @@ h1, h2, h3 {
     white-space: nowrap;
 }
 
-/* Frozen second column (Day) - sized to just fit the longest day name */
+/* Frozen second column (Day) - sized to just fit the 3-letter day abbreviation */
 .sticky-table-wrapper th:nth-child(2),
 .sticky-table-wrapper td:nth-child(2) {
     position: sticky;
-    left: 98px;
+    left: 69px;
     z-index: 1;
     background-color: #ffffff;
     width: 1%;
     white-space: nowrap;
+}
+
+/* Confirmed column ("Σ") - data is at most 2 digits, so keep it tight too */
+.sticky-table-wrapper th:nth-child(5),
+.sticky-table-wrapper td:nth-child(5) {
+    width: 1%;
+    white-space: nowrap;
+    text-align: center;
 }
 
 /* Top-left frozen header cells need to sit above both header and column layers */
@@ -384,7 +392,7 @@ h1, h2, h3 {
        once the table is scrolled horizontally */
     .sticky-table-wrapper th:nth-child(2),
     .sticky-table-wrapper td:nth-child(2) {
-        left: 93px;
+        left: 67px;
     }
 }
 
