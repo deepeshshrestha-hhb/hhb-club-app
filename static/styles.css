@@ -308,7 +308,7 @@ h1, h2, h3 {
 
 /* Sticky table: frozen header row + frozen first two columns (Date, Day) */
 .sticky-table-wrapper {
-    max-height: 70vh;
+    max-height: 82vh;
     overflow: auto;
     position: relative;
 }
@@ -326,24 +326,27 @@ h1, h2, h3 {
     color: #fff;
 }
 
-/* Frozen first column (Date) */
+/* Frozen first column (Date) - sized to just fit "YYYY-MM-DD", not a fixed
+   wide column, so the freed-up width goes to the other columns */
 .sticky-table-wrapper th:nth-child(1),
 .sticky-table-wrapper td:nth-child(1) {
     position: sticky;
     left: 0;
     z-index: 1;
     background-color: #ffffff;
-    min-width: 110px;
+    width: 1%;
+    white-space: nowrap;
 }
 
-/* Frozen second column (Day) */
+/* Frozen second column (Day) - sized to just fit the longest day name */
 .sticky-table-wrapper th:nth-child(2),
 .sticky-table-wrapper td:nth-child(2) {
     position: sticky;
-    left: 110px;
+    left: 98px;
     z-index: 1;
     background-color: #ffffff;
-    min-width: 100px;
+    width: 1%;
+    white-space: nowrap;
 }
 
 /* Top-left frozen header cells need to sit above both header and column layers */
@@ -375,6 +378,13 @@ h1, h2, h3 {
     .table th, .table td {
         padding: 0.5rem 0.6rem;
         white-space: nowrap;
+    }
+    /* Date column is narrower at this font-size, so the Day column's sticky
+       offset needs to match it exactly here or the two columns misalign
+       once the table is scrolled horizontally */
+    .sticky-table-wrapper th:nth-child(2),
+    .sticky-table-wrapper td:nth-child(2) {
+        left: 93px;
     }
 }
 
