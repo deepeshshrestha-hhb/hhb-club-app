@@ -19,8 +19,8 @@ from services import r2_service
 CLUB_RULES_CONTENT_PATH = Path(Config.DATA_DIR) / "club_rules_content.json"
 
 SECTION_TITLES = {
-    "rotation": "Doubles Player Rotation Rules",
-    "sitting_out": "Doubles Player Sitting Out & Latecomer Rules",
+    "rotation": "Sunday Doubles Player Rotation Rules",
+    "sitting_out": "Sunday Doubles Player Sitting Out & Latecomer Rules",
 }
 SECTION_ORDER = ["rotation", "sitting_out"]
 
