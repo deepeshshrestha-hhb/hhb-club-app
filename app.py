@@ -10,6 +10,7 @@ from routes.player_routes import player_bp
 from routes.photos_routes import photos_bp
 from routes.feedback_routes import feedback_bp
 from routes.hours_routes import hours_bp
+from routes.rules_routes import rules_bp
 from services import r2_service
 from services import committee_service
 from services import about_content_service
@@ -47,6 +48,7 @@ def create_app():
     app.register_blueprint(photos_bp)
     app.register_blueprint(feedback_bp)
     app.register_blueprint(hours_bp)
+    app.register_blueprint(rules_bp)
 
     @app.context_processor
     def inject_feedback_players():

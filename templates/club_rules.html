@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+
+        <div class="text-center mb-2">
+            <h1 class="page-title mb-1">Club Rules</h1>
+            <h2 class="h4 text-muted fw-normal">Haggis and Haleem Badminton Club</h2>
+            <hr class="my-2">
+        </div>
+
+        <p class="text-muted small text-center mb-4">
+            The rules below apply to our <strong>Sunday sessions</strong>. Wednesday sessions are more
+            self-managed by the players on the day.
+        </p>
+
+        <div class="accordion hhb-about-accordion mb-4" id="rulesAccordion">
+        {% for key in rules_sections %}
+        <div class="accordion-item position-relative">
+            <h2 class="accordion-header">
+                <button class="accordion-button {{ '' if key == 'rotation' else 'collapsed' }}" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#collapseRules-{{ key }}"
+                        aria-expanded="{{ 'true' if key == 'rotation' else 'false' }}"
+                        aria-controls="collapseRules-{{ key }}">
+                    {{ rules_section_titles[key] }}
+                </button>
+                {% if session.get('is_admin') %}
+                <button type="button" class="btn btn-sm btn-light border position-absolute top-0 end-0 m-2"
+                        data-bs-toggle="modal" data-bs-target="#editRulesModal-{{ key }}"
+                        title="Edit section" style="z-index: 5;">
+                    ✏️
+                </button>
+                {% endif %}
+            </h2>
+            <div id="collapseRules-{{ key }}" class="accordion-collapse collapse {{ 'show' if key == 'rotation' }}"
+                 data-bs-parent="#rulesAccordion">
+                <div class="accordion-body">
+
+                {% if key == 'rotation' %}
+                <button type="button" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 mb-3"
+                        data-bs-toggle="modal" data-bs-target="#rotationDiagramModal">
+                    <span>📊</span> Tap to view rotation diagram
+                </button>
+                {% endif %}
+
+                {{ rules_content[key] | safe }}
+
+                </div>
+            </div>
+        </div>
+
+        {% if session.get('is_admin') %}
+        <div class="modal fade" id="editRulesModal-{{ key }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <form action="{{ url_for('rules.update_rules_section', key=key) }}" method="post">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit "{{ rules_section_titles[key] }}"</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <textarea class="form-control" name="content" rows="14" style="font-family: monospace; font-size: 0.85rem;">{{ rules_content[key] }}</textarea>
+                            <div class="form-text mt-1">
+                                Basic HTML is supported (e.g. &lt;p&gt;, &lt;strong&gt;, &lt;ol&gt;/&lt;li&gt;, &lt;table&gt;) so
+                                formatting like bold text and the table survives. Leave as plain text for simple copy.
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-hhb-primary text-white">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+        </div>
+
+        <div class="text-center mb-4">
+            <a href="/" class="btn btn-hhb-primary text-white px-4">Back to Dashboard</a>
+        </div>
+
+    </div>
+</div>
+
+<!-- Rotation diagram — full-screen lightbox -->
+<div class="modal fade" id="rotationDiagramModal" tabindex="-1" aria-label="Court rotation diagram" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content bg-dark border-0">
+            <div class="modal-header border-0 pb-0">
+                <span class="text-white fw-semibold">Court Rotation — HHB Sunday Doubles</span>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3 d-flex flex-column align-items-center justify-content-center">
+                <div style="width:100%; max-width: 360px;">
+                    <svg viewBox="0 0 320 500" xmlns="http://www.w3.org/2000/svg" role="img"
+                         aria-label="Diagram of players rotating up or down between Court 1 and Court 4"
+                         style="width:100%; height:auto;">
+                        <style>
+                            .rd-num  { font: 700 13px -apple-system, Segoe UI, Roboto, Arial, sans-serif; fill: rgba(255,255,255,0.85); }
+                            .rd-name { font: 700 19px -apple-system, Segoe UI, Roboto, Arial, sans-serif; fill: #fff; }
+                            .rd-up   { font: 600 12px -apple-system, Segoe UI, Roboto, Arial, sans-serif; fill: #3ddc84; }
+                            .rd-down { font: 600 12px -apple-system, Segoe UI, Roboto, Arial, sans-serif; fill: #ff8a65; }
+                        </style>
+
+                        <rect x="20" y="16" width="280" height="64" rx="12" fill="#1b6e3c"/>
+                        <text x="160" y="40" text-anchor="middle" class="rd-num">COURT 1</text>
+                        <text x="160" y="62" text-anchor="middle" class="rd-name">Top Court</text>
+
+                        <text x="160" y="108" text-anchor="middle" class="rd-up">▲ Winning Pair moves up</text>
+                        <text x="160" y="128" text-anchor="middle" class="rd-down">▼ Non-Winning Pair moves down</text>
+
+                        <rect x="20" y="150" width="280" height="64" rx="12" fill="#3f8f5a"/>
+                        <text x="160" y="188" text-anchor="middle" class="rd-num">COURT 2</text>
+
+                        <text x="160" y="242" text-anchor="middle" class="rd-up">▲ Winning Pair moves up</text>
+                        <text x="160" y="262" text-anchor="middle" class="rd-down">▼ Non-Winning Pair moves down</text>
+
+                        <rect x="20" y="284" width="280" height="64" rx="12" fill="#c98a2c"/>
+                        <text x="160" y="322" text-anchor="middle" class="rd-num">COURT 3</text>
+
+                        <text x="160" y="376" text-anchor="middle" class="rd-up">▲ Winning Pair moves up</text>
+                        <text x="160" y="396" text-anchor="middle" class="rd-down">▼ Non-Winning Pair moves down</text>
+
+                        <rect x="20" y="418" width="280" height="64" rx="12" fill="#b5482f"/>
+                        <text x="160" y="442" text-anchor="middle" class="rd-num">COURT 4</text>
+                        <text x="160" y="464" text-anchor="middle" class="rd-name">Improvers Court</text>
+                    </svg>
+                    <p class="text-white-50 small text-center mt-3 mb-0">
+                        Court 1's Winning Pair and Court 4's Non-Winning Pair stay put — there's no court to move to.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var open = new URLSearchParams(window.location.search).get('open');
+    if (open && open !== 'rotation') {
+        var target = document.getElementById('collapseRules-' + open);
+        if (target) new bootstrap.Collapse(target, { show: true });
+    }
+});
+</script>
+
+{% endblock %}
