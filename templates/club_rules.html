@@ -10,9 +10,14 @@
             <hr class="my-2">
         </div>
 
-        <p class="text-muted small text-center mb-4">
+        <p class="text-muted small text-center mb-2">
             The rules below apply to our <strong>Sunday sessions</strong>. Wednesday sessions are more
             self-managed by the players on the day.
+        </p>
+
+        <p class="text-muted small text-center mb-4">
+            🙋 Stuck, or need a fair split? Ask a <strong>Court Warden</strong>: Rukhsar, Jalal, Thomas,
+            Deepesh, Sandip, or Altamash.
         </p>
 
         <div class="accordion hhb-about-accordion mb-4" id="rulesAccordion">
@@ -41,6 +46,11 @@
                 <button type="button" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 mb-3"
                         data-bs-toggle="modal" data-bs-target="#rotationDiagramModal">
                     <span>📊</span> Tap to view rotation diagram
+                </button>
+                {% elif key == 'sitting_out' %}
+                <button type="button" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 mb-3"
+                        data-bs-toggle="modal" data-bs-target="#sittingOutTldrModal">
+                    <span>📋</span> Tap for quick reference
                 </button>
                 {% endif %}
 
@@ -137,12 +147,168 @@
     </div>
 </div>
 
+<!-- Sitting Out & Latecomer TL;DR — full-screen lightbox -->
+<div class="modal fade" id="sittingOutTldrModal" tabindex="-1" aria-label="Sitting out and latecomer quick reference" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content border-0">
+            <div class="modal-header border-0 pb-0" style="background: #f4f6f8;">
+                <span class="fw-semibold" style="color:#14324a;">Sitting Out &amp; Latecomer — Quick Reference</span>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-3 d-flex justify-content-center" style="background: #f4f6f8;">
+                <div class="hhb-tldr-card">
+                    <div class="hhb-tldr-header">
+                        <h3>Sitting Out &amp; Latecomer Rules</h3>
+                        <p>TL;DR — quick reference</p>
+                    </div>
+
+                    <div class="hhb-tldr-section">
+                        <h4>⏱ The Basics</h4>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-icon">🏸</span><span>Games are played to 21 points; 11 min is roughly how long that takes, then a 2 min break — about 4–5 games/hour.</span></div>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-icon">🔔</span><span>Buzzer goes → leader wins on the spot. Tied? One tie-break point.</span></div>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-icon">👥</span><span>~20 players, 4 courts → 4 people sit out each game.</span></div>
+                    </div>
+
+                    <div class="hhb-tldr-section">
+                        <h4>🔁 Sitting Out</h4>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-icon">✍️</span><span>Sign the board on arrival — order = your queue position.</span></div>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-icon">⬇️</span><span>Most recent arrivals sit out first; once everyone's had a turn, it starts again from the bottom.</span></div>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-icon">🔂</span><span>Sat out? You're straight back in next game.</span></div>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-icon">🔄</span><span>Want out early? Swap directly with someone in the queue &amp; tell the board-keeper.</span></div>
+                    </div>
+
+                    <div class="hhb-tldr-section">
+                        <h4>Board Key</h4>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-badge hhb-tldr-num">1,2,3…</span><span>Games played (running count)</span></div>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-badge hhb-tldr-x">X</span><span>Sat out this game</span></div>
+                    </div>
+
+                    <div class="hhb-tldr-section">
+                        <h4>🐢 Late &amp; Waiting for a Court?</h4>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-icon">👀</span><span>Check the score on whichever court nearest the board is actively playing (usually Court 3 or 4 — not always both running).</span></div>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-badge hhb-tldr-neutral">≥10</span><span>Either pair at 10+ (past halfway of 21) — genuinely late, <strong>no X</strong> (but bottom of the queue, so you'll sit out next anyway).</span></div>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-badge hhb-tldr-x">&lt;10</span><span>Both pairs under 10 — you missed most of it — counts as <strong>sat out (X)</strong>.</span></div>
+                    </div>
+
+                    <div class="hhb-tldr-section">
+                        <h4>🐢 Late but Got 4 to Start a Court?</h4>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-badge hhb-tldr-num">≥5</span><span>Either pair reaches 5+ at buzzer → finish your game to 11, counts as <strong>played</strong>. Everyone else waits (~2–3 min) for you before the next rotation starts for everyone.</span></div>
+                        <div class="hhb-tldr-item"><span class="hhb-tldr-badge hhb-tldr-neutral">&lt;5</span><span>Both pairs under 5 at buzzer → stop there. No X, no number — neutral.</span></div>
+                    </div>
+
+                    <div class="hhb-tldr-section">
+                        <h4>📋 Example Ideal Rotation</h4>
+                        <table class="hhb-tldr-mini">
+                            <tr><th>Group</th><th>G1</th><th>G2</th><th>G3</th><th>G4</th><th>G5</th></tr>
+                            <tr><td>A (1–4)</td><td>1</td><td>2</td><td>3</td><td>4</td><td class="x">X</td></tr>
+                            <tr><td>B (5–8)</td><td>1</td><td>2</td><td>3</td><td class="x">X</td><td>4</td></tr>
+                            <tr><td>C (9–12)</td><td>1</td><td>2</td><td class="x">X</td><td>3</td><td>4</td></tr>
+                            <tr><td>D (13–16)</td><td>1</td><td class="x">X</td><td>2</td><td>3</td><td>4</td></tr>
+                            <tr><td>E (17–20)</td><td class="x">X</td><td>1</td><td>2</td><td>3</td><td>4</td></tr>
+                        </table>
+                        <p class="hhb-tldr-footnote">Coming late never works in your favour — but you won't be double-penalised if the timing wasn't your fault.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hhb-tldr-card {
+    width: 100%;
+    max-width: 480px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    overflow: hidden;
+    height: fit-content;
+}
+.hhb-tldr-header {
+    background: #14324a;
+    color: #fff;
+    padding: 18px 20px;
+    text-align: center;
+}
+.hhb-tldr-header h3 { font-size: 18px; margin: 0 0 2px; }
+.hhb-tldr-header p { font-size: 12px; margin: 0; opacity: 0.85; }
+.hhb-tldr-section {
+    padding: 14px 18px;
+    border-bottom: 1px solid #eef0f2;
+}
+.hhb-tldr-section:last-child { border-bottom: none; }
+.hhb-tldr-section h4 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #14324a;
+    margin: 0 0 8px;
+}
+.hhb-tldr-item {
+    display: flex;
+    gap: 10px;
+    font-size: 14px;
+    color: #333;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+.hhb-tldr-item:last-child { margin-bottom: 0; }
+.hhb-tldr-icon { font-size: 16px; flex: 0 0 22px; }
+.hhb-tldr-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 20px;
+    color: #fff;
+    flex: 0 0 auto;
+    height: fit-content;
+}
+.hhb-tldr-x { background: #b5482f; }
+.hhb-tldr-num { background: #1b6e3c; }
+.hhb-tldr-neutral { background: #8a8f96; }
+.hhb-tldr-mini {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 4px;
+}
+.hhb-tldr-mini th, .hhb-tldr-mini td {
+    text-align: center;
+    padding: 5px 3px;
+    border: 1px solid #e5e8eb;
+}
+.hhb-tldr-mini th { background: #eef2f5; color: #14324a; }
+.hhb-tldr-mini td.x { color: #b5482f; font-weight: 700; }
+.hhb-tldr-footnote {
+    text-align: center;
+    font-size: 12px;
+    color: #5a6b78;
+    margin: 10px 0 0;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var open = new URLSearchParams(window.location.search).get('open');
-    if (open && open !== 'rotation') {
-        var target = document.getElementById('collapseRules-' + open);
-        if (target) new bootstrap.Collapse(target, { show: true });
+    if (!open) return;
+    var target = document.getElementById('collapseRules-' + open);
+    var item = target ? target.closest('.accordion-item') : null;
+    if (!target || !item) return;
+
+    function scrollToItem() {
+        item.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    if (target.classList.contains('show')) {
+        // Already open by default (rotation) — just scroll to it.
+        scrollToItem();
+    } else {
+        // Opening this section auto-collapses its sibling (same accordion
+        // parent) — wait for the transition to finish before scrolling so
+        // the layout has settled.
+        target.addEventListener('shown.bs.collapse', scrollToItem, { once: true });
+        new bootstrap.Collapse(target, { show: true });
     }
 });
 </script>
