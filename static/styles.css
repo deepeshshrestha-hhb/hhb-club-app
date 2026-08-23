@@ -142,6 +142,28 @@ h1, h2, h3 {
 .hhb-welcome .page-title {
     margin-bottom: 0.25rem;
 }
+.hhb-rules-cta {
+    overflow: visible;
+}
+.hhb-new-badge {
+    position: absolute;
+    top: -0.55rem;
+    right: -0.55rem;
+    font-size: 0.65rem;
+    padding: 0.3em 0.55em;
+    box-shadow: 0 0 0 rgba(204, 0, 51, 0.6);
+    animation: hhb-new-badge-pulse 2s infinite;
+}
+@keyframes hhb-new-badge-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(204, 0, 51, 0.55); }
+    70%  { box-shadow: 0 0 0 8px rgba(204, 0, 51, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(204, 0, 51, 0); }
+}
+@media (max-width: 767.98px) {
+    .hhb-welcome {
+        justify-content: flex-start !important;
+    }
+}
 
 /* --- About Us club photo --- */
 .hhb-about-photo {
@@ -176,6 +198,32 @@ h1, h2, h3 {
 }
 .hhb-about-accordion .accordion-button:focus {
     box-shadow: 0 0 0 0.2rem rgba(0, 179, 134, 0.35);
+}
+
+/* --- Club Rules quick-reference table (fits mobile width, no horizontal scroll) --- */
+.hhb-rules-table {
+    table-layout: fixed;
+    width: 100%;
+}
+.table.hhb-rules-table th,
+.table.hhb-rules-table td {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    text-align: center;
+}
+.hhb-rules-table th:first-child,
+.hhb-rules-table td:first-child {
+    text-align: left;
+}
+@media (max-width: 575.98px) {
+    .hhb-rules-table {
+        font-size: 0.78rem;
+    }
+    .table.hhb-rules-table th,
+    .table.hhb-rules-table td {
+        padding: 0.35rem 0.25rem;
+    }
 }
 
 /* --- Feedback --- */
