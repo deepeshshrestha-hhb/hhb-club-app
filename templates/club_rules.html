@@ -101,13 +101,18 @@
         <div class="modal-content bg-dark border-0">
             <div class="modal-header border-0 pb-0">
                 <span class="text-white fw-semibold">Court Rotation — HHB Sunday Doubles</span>
-                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="d-flex align-items-center gap-2 ms-auto">
+                    <button type="button" class="btn btn-sm btn-outline-light hhb-download-btn" id="downloadRotationDiagram" title="Download as image">
+                        ⬇️ <span class="d-none d-sm-inline">Save Image</span>
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
             </div>
             <div class="modal-body p-3 d-flex flex-column align-items-center justify-content-center">
                 <div style="width:100%; max-width: 360px;">
-                    <svg viewBox="0 0 320 500" xmlns="http://www.w3.org/2000/svg" role="img"
+                    <svg id="rotationDiagramSvg" viewBox="0 0 320 500" width="320" height="500" xmlns="http://www.w3.org/2000/svg" role="img"
                          aria-label="Diagram of players rotating up or down between Court 1 and Court 4"
-                         style="width:100%; height:auto;">
+                         style="width:100%; height:auto; background:#14324a; border-radius:12px;">
                         <style>
                             .rd-num  { font: 700 17px -apple-system, Segoe UI, Roboto, Arial, sans-serif; fill: #fff; }
                             .rd-up   { font: 600 10.5px -apple-system, Segoe UI, Roboto, Arial, sans-serif; fill: #3ddc84; }
@@ -157,10 +162,15 @@
         <div class="modal-content border-0">
             <div class="modal-header border-0 pb-0" style="background: #f4f6f8;">
                 <span class="fw-semibold" style="color:#14324a;">Sitting Out &amp; Latecomer — Quick Reference</span>
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="d-flex align-items-center gap-2 ms-auto">
+                    <button type="button" class="btn btn-sm btn-outline-secondary hhb-download-btn" id="downloadSittingOutTldr" title="Download as image">
+                        ⬇️ <span class="d-none d-sm-inline">Save Image</span>
+                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
             </div>
             <div class="modal-body p-3 d-flex justify-content-center" style="background: #f4f6f8;">
-                <div class="hhb-tldr-card">
+                <div class="hhb-tldr-card" id="sittingOutTldrCard">
                     <div class="hhb-tldr-header">
                         <h3>Sitting Out &amp; Latecomer Rules</h3>
                         <p>TL;DR — quick reference</p>
@@ -299,6 +309,90 @@
     margin: 10px 0 0;
 }
 </style>
+
+<!-- html2canvas: rasterizes the TL;DR card (plain HTML/CSS) for the "Save Image" button -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+<script>
+(function () {
+    function triggerDownload(blob, filename) {
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function () { URL.revokeObjectURL(link.href); }, 1000);
+    }
+
+    function withBusyState(btn, busyText, run) {
+        if (btn.disabled) return;
+        var original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = busyText;
+        Promise.resolve(run()).catch(function (err) {
+            console.error('Download failed:', err);
+            alert('Sorry, the image download failed. Please try again.');
+        }).then(function () {
+            btn.disabled = false;
+            btn.innerHTML = original;
+        });
+    }
+
+    // Rotation diagram: serialize the inline SVG straight to a PNG via canvas —
+    // no external library needed since it's already vector markup.
+    var downloadRotationBtn = document.getElementById('downloadRotationDiagram');
+    if (downloadRotationBtn) {
+        downloadRotationBtn.addEventListener('click', function () {
+            withBusyState(downloadRotationBtn, '⏳', function () {
+                return new Promise(function (resolve, reject) {
+                    var svg = document.getElementById('rotationDiagramSvg');
+                    var svgString = new XMLSerializer().serializeToString(svg);
+                    var svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                    var url = URL.createObjectURL(svgBlob);
+                    var img = new Image();
+                    img.onload = function () {
+                        var scale = 3; // higher-res export than the on-screen size
+                        var canvas = document.createElement('canvas');
+                        canvas.width = 320 * scale;
+                        canvas.height = 500 * scale;
+                        var ctx = canvas.getContext('2d');
+                        ctx.scale(scale, scale);
+                        ctx.drawImage(img, 0, 0, 320, 500);
+                        URL.revokeObjectURL(url);
+                        canvas.toBlob(function (blob) {
+                            if (!blob) { reject(new Error('canvas toBlob failed')); return; }
+                            triggerDownload(blob, 'HHB-Court-Rotation-Diagram.png');
+                            resolve();
+                        }, 'image/png');
+                    };
+                    img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('SVG image load failed')); };
+                    img.src = url;
+                });
+            });
+        });
+    }
+
+    // Sitting Out TL;DR card: plain HTML/CSS, so rasterize it with html2canvas.
+    var downloadTldrBtn = document.getElementById('downloadSittingOutTldr');
+    if (downloadTldrBtn) {
+        downloadTldrBtn.addEventListener('click', function () {
+            withBusyState(downloadTldrBtn, '⏳', function () {
+                var card = document.getElementById('sittingOutTldrCard');
+                return html2canvas(card, { scale: 3, backgroundColor: '#f4f6f8' }).then(function (canvas) {
+                    return new Promise(function (resolve, reject) {
+                        canvas.toBlob(function (blob) {
+                            if (!blob) { reject(new Error('canvas toBlob failed')); return; }
+                            triggerDownload(blob, 'HHB-Sitting-Out-Latecomer-Quick-Reference.png');
+                            resolve();
+                        }, 'image/png');
+                    });
+                });
+            });
+        });
+    }
+})();
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
