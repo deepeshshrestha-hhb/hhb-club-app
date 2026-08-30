@@ -6,7 +6,7 @@
 {% set pct_clamped = pct if pct <= 100 else 100 %}
 
 <div class="d-flex justify-content-between align-items-center flex-wrap mb-4 gap-2">
-    <h1 class="page-title mb-0">🇳🇵 Nepal Flood Relief</h1>
+    <h1 class="page-title mb-0">Nepal Flood Relief 2026</h1>
     {% if session.get('is_admin') %}
     <form action="{{ url_for('charity.charity_toggle') }}" method="post" class="d-flex align-items-center gap-2">
         <input type="hidden" name="is_open" value="{{ '0' if settings.is_open else '1' }}">
@@ -19,47 +19,56 @@
     {% endif %}
 </div>
 
-<div class="card hhb-card mb-4">
+<div class="card hhb-card mb-4 position-relative">
     <div class="card-body">
-        <p>
-            Nepal has been hit by severe flash floods, with communities in areas
-            like <strong>Trishuli</strong> among the hardest affected. One of our
-            own HHB Committee members is from Nepal, and as a club we want to
-            help in every way we can.
-        </p>
-        <p class="fw-semibold">No amount is too small — every pound helps.</p>
-        <p>
-            We're raising money for
-            <a href="https://www.facebook.com/hexnepal" target="_blank" rel="noopener">HExN</a>,
-            a charity that has been working for Nepal since 2008 and has relief
-            efforts ongoing right now for people affected in areas like Trishuli.
-            The full amount raised through this page will be donated in one
-            combined contribution via HHB Club's
-            <a href="https://www.justgiving.com/campaign/nepal2026?utm_medium=CA&utm_source=CL" target="_blank" rel="noopener">JustGiving campaign page</a>.
-        </p>
-        <p class="mb-0">
-            Rather than everyone donating individually, please transfer your
-            contribution to the club and add it below — we'll make one combined
-            donation on JustGiving and share proof with everyone.
-        </p>
+        {% if session.get('is_admin') %}
+        <button type="button" class="btn btn-sm btn-light border position-absolute top-0 end-0 m-2"
+                data-bs-toggle="modal" data-bs-target="#editCharityModal-blurb" title="Edit section">
+            ✏️
+        </button>
+        {% endif %}
+        <p class="mb-0" style="white-space: pre-line;">{{ content.blurb | linkify }}</p>
     </div>
 </div>
 
+{% if session.get('is_admin') %}
+<div class="modal fade" id="editCharityModal-blurb" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form action="{{ url_for('charity.charity_update_content', key='blurb') }}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit write-up</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea class="form-control" name="content" rows="10">{{ content.blurb }}</textarea>
+                    <div class="form-text mt-1">
+                        Leave a blank line between paragraphs. A pasted link becomes clickable
+                        automatically; to use custom link text, write it as <code>[link text](https://example.com)</code>.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-hhb-primary text-white">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row mb-4">
     <div class="col-lg-8 mb-3 mb-lg-0">
-        <div class="card hhb-card h-100">
+        <div class="card hhb-card h-100 position-relative">
             <div class="card-body">
+                {% if session.get('is_admin') %}
+                <button type="button" class="btn btn-sm btn-light border position-absolute top-0 end-0 m-2"
+                        data-bs-toggle="modal" data-bs-target="#editCharityModal-how_to_contribute" title="Edit section">
+                    ✏️
+                </button>
+                {% endif %}
                 <h5 class="card-title">How to contribute</h5>
-                <p class="text-muted small mb-2">Transfer your contribution to:</p>
-                <ul class="list-unstyled mb-3">
-                    <li><strong>Name:</strong> Deepesh Shrestha</li>
-                    <li><strong>Account No.:</strong> 30550270</li>
-                    <li><strong>Sort Code:</strong> 60-30-30</li>
-                </ul>
-                <p class="text-muted small mb-0">
-                    Once you've transferred, add your name and amount below so it
-                    shows on the running total.
-                </p>
+                <p class="mb-0" style="white-space: pre-line;">{{ content.how_to_contribute | linkify }}</p>
             </div>
         </div>
     </div>
@@ -87,6 +96,29 @@
         </div>
     </div>
 </div>
+
+{% if session.get('is_admin') %}
+<div class="modal fade" id="editCharityModal-how_to_contribute" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form action="{{ url_for('charity.charity_update_content', key='how_to_contribute') }}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit "How to contribute"</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea class="form-control" name="content" rows="8">{{ content.how_to_contribute }}</textarea>
+                    <div class="form-text mt-1">Bank details live here — edit if the account changes.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-hhb-primary text-white">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <div class="card hhb-card mb-4">
     <div class="card-body">
@@ -137,15 +169,19 @@
 <div class="card hhb-card">
     <div class="card-body">
         <h5 class="card-title mb-3">➕ Add Contribution</h5>
-        <form action="{{ url_for('charity.charity_contribute') }}" method="post" class="row g-2 align-items-end">
+        <form action="{{ url_for('charity.charity_contribute') }}" method="post" class="row g-2 align-items-end" id="charityContributeForm">
             <div class="col-sm-6">
                 <label class="form-label fw-semibold small">Your name</label>
-                <select name="member_name" class="form-select" required>
+                <select name="member_name" id="charityMemberSelect" class="form-select" required>
                     <option value="" selected disabled>Select your name…</option>
                     {% for name in player_names %}
                     <option value="{{ name }}">{{ name }}</option>
                     {% endfor %}
+                    <option value="{{ other_option }}">Other (type your name)</option>
                 </select>
+                <input type="text" name="other_name" id="charityOtherName" class="form-control mt-2 d-none"
+                       placeholder="Type your name" maxlength="120">
+                <div class="form-text">Not on the list, or a non-member? Choose "Other".</div>
             </div>
             <div class="col-sm-3">
                 <label class="form-label fw-semibold small">Amount (£)</label>
@@ -155,6 +191,21 @@
                 <button type="submit" class="btn btn-hhb-accent text-white w-100">Add Contribution</button>
             </div>
         </form>
+        <script>
+        (function() {
+            var sel = document.getElementById('charityMemberSelect');
+            var other = document.getElementById('charityOtherName');
+            if (!sel || !other) return;
+            function toggleOther() {
+                var isOther = sel.value === '{{ other_option }}';
+                other.classList.toggle('d-none', !isOther);
+                other.required = isOther;
+                if (!isOther) other.value = '';
+            }
+            sel.addEventListener('change', toggleOther);
+            toggleOther();
+        })();
+        </script>
     </div>
 </div>
 {% else %}

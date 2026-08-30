@@ -16,6 +16,7 @@ from services import r2_service
 from services import committee_service
 from services import about_content_service
 from services.profile_service import name_to_slug, get_profile
+from services.charity_service import linkify
 
 # Log to stdout so messages (incl. R2 sync) surface in the Render logs.
 # force=True is required because under gunicorn the root logger already has
@@ -40,6 +41,7 @@ def create_app():
     r2_service.download_all()
 
     app.jinja_env.filters["slugify"] = name_to_slug
+    app.jinja_env.filters["linkify"] = linkify
 
     # Blueprints
     app.register_blueprint(calendar_bp)
