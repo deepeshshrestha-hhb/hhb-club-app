@@ -34,7 +34,7 @@
     <span class="badge bg-secondary">Season Start: {{ league.season_start }}</span>
     <span class="badge bg-secondary">Season End: {{ league.season_end }}</span>
     {% if league.status == 'not_started' %}
-    <span class="badge bg-info text-dark">Not Yet Started</span>
+    <span class="badge bg-info text-dark">Starting on Sunday</span>
     {% elif league.status == 'in_progress' %}
     <span class="badge bg-warning text-dark">In Progress</span>
     {% else %}
@@ -76,17 +76,36 @@
 </div>
 {% endif %}
 
+{% set season_not_started = league.status == 'not_started' %}
 <ul class="nav nav-tabs mb-4" id="leagueTabs" role="tablist">
-    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#standings-pane" type="button">Final Standings</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#matches-pane" type="button">Matches</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analytics-pane" type="button">Analytics</button></li>
-    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#rules-pane" type="button">Rules</button></li>
+    <li class="nav-item">
+        <button class="nav-link {{ 'disabled' if season_not_started else 'active' }}" data-bs-toggle="tab"
+                data-bs-target="#standings-pane" type="button" {{ 'disabled' if season_not_started }}>Final Standings</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link {{ 'disabled' if season_not_started }}" data-bs-toggle="tab"
+                data-bs-target="#matches-pane" type="button" {{ 'disabled' if season_not_started }}>Matches</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link {{ 'disabled' if season_not_started }}" data-bs-toggle="tab"
+                data-bs-target="#analytics-pane" type="button" {{ 'disabled' if season_not_started }}>Analytics</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link {{ 'active' if season_not_started }}" data-bs-toggle="tab"
+                data-bs-target="#rules-pane" type="button">Rules</button>
+    </li>
 </ul>
+{% if season_not_started %}
+<p class="text-muted small mb-3">
+    🏸 The {{ league.year }} season starts this Sunday — Standings, Matches, and Analytics will unlock once
+    results start coming in. Have a look at the Rules below in the meantime.
+</p>
+{% endif %}
 
 <div class="tab-content">
 
     <!-- Standings -->
-    <div class="tab-pane fade show active" id="standings-pane">
+    <div class="tab-pane fade {{ '' if season_not_started else 'show active' }}" id="standings-pane">
         <div class="card hhb-card">
             <div class="card-body">
                 <div class="table-responsive">
@@ -339,7 +358,7 @@
     </div>
 
     <!-- Rules -->
-    <div class="tab-pane fade" id="rules-pane">
+    <div class="tab-pane fade {{ 'show active' if season_not_started }}" id="rules-pane">
         <div class="card hhb-card">
             <div class="card-body">
                 <ol class="mb-0">
