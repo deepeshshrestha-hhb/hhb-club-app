@@ -31,6 +31,7 @@ data/club_rules_content.json
 
 # Charity drive settings + pledge ledger - created on first save, stored in R2, not source-controlled
 data/charity_settings.json
+data/charity_content.json
 data/CharityContributions.xlsx
 
 # Signup analytics caches - derived from Spond, stored in R2, not source-controlled

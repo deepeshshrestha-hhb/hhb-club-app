@@ -1,10 +1,13 @@
 """
 Nepal Flood Relief charity drive.
 
-Two small stores, both mirrored to R2 via the existing patterns:
+Three small stores, all mirrored to R2 via the existing patterns:
 
   * data/charity_settings.json  - campaign on/off switch + fundraising target
     (same shape as committee_service's committee.json).
+  * data/charity_content.json   - admin-editable freeform text for the top
+    write-up and the "How to Contribute" (bank details) section, so wording
+    tweaks don't need a redeploy (same pattern as about_content_service.py).
   * data/CharityContributions.xlsx - the pledge ledger (ID, Timestamp, Member
     Name, Amount), loaded/saved via the shared load_excel/save_excel helpers
     used by feedback_service.
@@ -16,20 +19,76 @@ Pledges are logged here; the actual bank transfers happen outside the app
 makes one combined donation via JustGiving.
 """
 import json
+import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
+from markupsafe import Markup, escape
 
 from config import Config
 from services import r2_service
 from services.excel_service import load_excel, save_excel
 
+# Matches either a markdown-style [label](url) link or a bare http(s):// URL,
+# so an admin can either paste a raw link or write `[HExN](https://...)` to
+# keep the link text tidy - no rich text editor needed.
+_LINK_RE = re.compile(r"\[([^\]]+)\]\((https?://[^\s)]+)\)|(https?://[^\s<]+)")
+
+
+def linkify(text: str) -> Markup:
+    """Escape freeform admin-edited text, then turn markdown-style links and
+    bare URLs into clickable <a> tags."""
+    escaped = str(escape(text or ""))
+
+    def repl(m):
+        if m.group(2):
+            label, url = m.group(1), m.group(2)
+        else:
+            url = label = m.group(3)
+        return f'<a href="{url}" target="_blank" rel="noopener">{label}</a>'
+
+    return Markup(_LINK_RE.sub(repl, escaped))
+
 SETTINGS_PATH = Path(Config.DATA_DIR) / "charity_settings.json"
+CONTENT_PATH = Path(Config.DATA_DIR) / "charity_content.json"
 CONTRIBUTIONS_FILE = "CharityContributions.xlsx"
 
+CONTENT_KEYS = ("blurb", "how_to_contribute")
+
+DEFAULT_CONTENT = {
+    "blurb": (
+        "Nepal has been hit by severe flash floods, with communities in areas "
+        "like Trishuli among the hardest affected. One of our own HHB "
+        "Committee members is from Nepal, and as a club we want to help in "
+        "every way we can.\n\n"
+        "No amount is too small — every pound helps.\n\n"
+        "We're raising money for [HExN](https://www.facebook.com/hexnepal), a "
+        "charity that has been working for Nepal since 2008 and has relief "
+        "efforts ongoing right now for people affected in areas like "
+        "Trishuli. The full amount raised through this page will be donated "
+        "in one combined contribution via HHB Club's "
+        "[JustGiving campaign page](https://www.justgiving.com/campaign/nepal2026?utm_medium=CA&utm_source=CL).\n\n"
+        "Rather than everyone donating individually, please transfer your "
+        "contribution to the club and add it below — we'll make one "
+        "combined donation on JustGiving and share proof with everyone."
+    ),
+    "how_to_contribute": (
+        "Transfer your contribution to:\n\n"
+        "Name: Deepesh Shrestha\n"
+        "Account No.: 30550270\n"
+        "Sort Code: 60-30-30\n\n"
+        "Once you've transferred, add your name and amount below so it "
+        "shows on the running total."
+    ),
+}
+
 _COLUMNS = ["ID", "Timestamp", "Member Name", "Amount"]
+
+# Dropdown sentinel for "Other" - lets non-members and members no longer
+# active in Spond (so absent from the player list) type their own name.
+OTHER_OPTION = "__other__"
 
 _MAX_NAME_LEN = 120
 _MAX_AMOUNT = 10000  # sanity cap on a single pledge, not a hard business rule
@@ -79,6 +138,41 @@ def set_target(amount) -> bool:
     data = _load_settings()
     data["target_amount"] = amount
     _save_settings(data)
+    return True
+
+
+def _load_content() -> dict:
+    if not CONTENT_PATH.exists():
+        return dict(DEFAULT_CONTENT)
+    try:
+        with open(CONTENT_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return dict(DEFAULT_CONTENT)
+    for key, default_val in DEFAULT_CONTENT.items():
+        data.setdefault(key, default_val)
+    return data
+
+
+def _save_content(data: dict):
+    CONTENT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(CONTENT_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    r2_service.upload_file(CONTENT_PATH)
+
+
+def get_content() -> dict:
+    """Returns {"blurb": str, "how_to_contribute": str}."""
+    return _load_content()
+
+
+def update_content_section(key: str, text: str) -> bool:
+    """Update one freeform content section. Returns False for an unknown key."""
+    if key not in CONTENT_KEYS:
+        return False
+    data = _load_content()
+    data[key] = (text or "").strip()
+    _save_content(data)
     return True
 
 
