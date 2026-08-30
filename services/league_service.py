@@ -35,6 +35,14 @@ def get_league(year):
 
     match_ws = wb[str(year)]
 
+    # From the 2026 season, a "Court No." column was inserted at K, pushing the
+    # "Difference" and standings columns one to the right. Detect it per-file
+    # (rather than hardcoding a year) so older seasons' original layout still
+    # parses correctly.
+    has_court_col = "court no" in str(match_ws.cell(4, 11).value or "").lower()
+    diff_col = 12 if has_court_col else 11
+    rank_col = 20 if has_court_col else 19
+
     # Scheduled start/end from header row (R1C3, R1C7)
     scheduled_start_raw = match_ws.cell(1, 3).value
     scheduled_end_raw = match_ws.cell(1, 7).value
@@ -70,7 +78,8 @@ def get_league(year):
         s2 = match_ws.cell(row, 8).value  # team 2 score
         w1 = _clean(match_ws.cell(row, 9).value)
         w2 = _clean(match_ws.cell(row, 10).value)
-        diff = match_ws.cell(row, 11).value
+        court_no_raw = match_ws.cell(row, 11).value if has_court_col else None
+        diff = match_ws.cell(row, diff_col).value
 
         if s1 is None or s2 is None:
             continue
@@ -82,6 +91,11 @@ def get_league(year):
 
         is_deuce = int(s1) == 21 and int(s2) == 20 or int(s1) == 20 and int(s2) == 21
 
+        if isinstance(court_no_raw, float) and court_no_raw.is_integer():
+            court_no = str(int(court_no_raw))
+        else:
+            court_no = _clean(court_no_raw)
+
         matches.append({
             "no": no,
             "date": _fmt_date(date_val),
@@ -91,6 +105,7 @@ def get_league(year):
             "p3": p3, "p4": p4,
             "score2": int(s2),
             "winner": f"{w1} & {w2}" if w1 and w2 else w1 or w2,
+            "court_no": court_no,
             "diff": abs(int(diff)) if diff is not None else abs(int(s1) - int(s2)),
             "is_deuce": is_deuce,
             "players": f"{p1}|{p2}|{p3}|{p4}",
@@ -99,15 +114,15 @@ def get_league(year):
     # --- Standings ---
     standings = []
     for row in range(3, 100):
-        rank = match_ws.cell(row, 19).value
-        player = match_ws.cell(row, 20).value
+        rank = match_ws.cell(row, rank_col).value
+        player = match_ws.cell(row, rank_col + 1).value
         if rank is None or player is None or not isinstance(rank, (int, float)):
             break
         p = _clean(player)
-        pl = match_ws.cell(row, 21).value or 0
-        w = match_ws.cell(row, 22).value or 0
-        lo = match_ws.cell(row, 23).value or 0
-        pts = match_ws.cell(row, 24).value or 0
+        pl = match_ws.cell(row, rank_col + 2).value or 0
+        w = match_ws.cell(row, rank_col + 3).value or 0
+        lo = match_ws.cell(row, rank_col + 4).value or 0
+        pts = match_ws.cell(row, rank_col + 5).value or 0
         standings.append({
             "rank": int(rank),
             "player": p,
