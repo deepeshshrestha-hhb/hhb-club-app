@@ -152,7 +152,6 @@
             </select>
             <span id="matchCount" class="text-muted small"></span>
         </div>
-        {% set has_court_data = league.matches | selectattr('court_no') | list | length > 0 %}
         <div class="card hhb-card">
             <div class="card-body p-0">
                 <div class="sticky-table-wrapper" style="max-height:65vh;">
@@ -166,7 +165,7 @@
                                 <th>Team 2</th>
                                 <th>Score</th>
                                 <th>Margin</th>
-                                {% if has_court_data %}<th>Court</th>{% endif %}
+                                {% if league.analytics.has_court_data %}<th>Court</th>{% endif %}
                             </tr>
                         </thead>
                         <tbody>
@@ -179,7 +178,7 @@
                                 <td class="{{ 'fw-bold' if m.winner == (m.p3 ~ ' & ' ~ m.p4) }}">{{ m.p3 }} &amp; {{ m.p4 }}</td>
                                 <td class="text-center fw-semibold">{{ m.score2 }}</td>
                                 <td class="text-muted small text-center">{{ m.diff }}{% if m.is_deuce %} <span class="badge bg-warning text-dark" style="font-size:0.65rem">D</span>{% endif %}</td>
-                                {% if has_court_data %}<td class="text-muted small text-center">{{ m.court_no }}</td>{% endif %}
+                                {% if league.analytics.has_court_data %}<td class="text-muted small text-center">{{ m.court_no }}</td>{% endif %}
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -254,6 +253,47 @@
             </div>
             {% endif %}
         </div>
+
+        <!-- Top 5 players' court usage — do stronger players spend more time on Courts 1-2? -->
+        {% if a.has_court_data %}
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="card hhb-card">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-1">🎯 Top 5 Players — Matches per Court</h6>
+                        <p class="text-muted small mb-3">
+                            Court 1 is the top court; under the rotation rules, stronger players should spend
+                            more of their matches there and less on Court {{ a.court_columns | last }}.
+                        </p>
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Player</th>
+                                        {% for c in a.court_columns %}<th class="text-center">Court {{ c }}</th>{% endfor %}
+                                        <th class="text-center">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in a.top_players_courts %}
+                                    <tr>
+                                        <td><strong>{{ row.player }}</strong></td>
+                                        {% for c in a.court_columns %}
+                                        <td class="text-center {{ 'table-success' if c in ['1', '2'] and row.counts[c] }}">
+                                            {{ row.counts[c] }}
+                                        </td>
+                                        {% endfor %}
+                                        <td class="text-center text-muted">{{ row.total }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Individual day wins + Pair records -->
         <div class="row g-3 mb-4">

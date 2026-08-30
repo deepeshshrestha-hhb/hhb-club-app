@@ -229,6 +229,32 @@ def get_league(year):
                 player_set.add(p)
     all_players = sorted(player_set)
 
+    # Court usage for the top 5 standings players (added 2026 season) — lets us
+    # see whether stronger players are actually spending more time on the top
+    # courts, per the rotation rules.
+    has_court_data = any(m["court_no"] for m in matches)
+    court_columns = sorted(
+        {m["court_no"] for m in matches if m["court_no"]},
+        key=lambda c: (0, int(c)) if c.isdigit() else (1, c),
+    )
+    top_players_courts = []
+    if has_court_data:
+        top_names = [s["player"] for s in standings[:5]]
+        court_counts = {name: Counter() for name in top_names}
+        for m in matches:
+            if not m["court_no"]:
+                continue
+            for p in (m["p1"], m["p2"], m["p3"], m["p4"]):
+                if p in court_counts:
+                    court_counts[p][m["court_no"]] += 1
+        for name in top_names:
+            counts = court_counts[name]
+            top_players_courts.append({
+                "player": name,
+                "counts": {c: counts.get(c, 0) for c in court_columns},
+                "total": sum(counts.values()),
+            })
+
     analytics = {
         "total_matches": total,
         "total_sundays": sundays,
@@ -243,6 +269,9 @@ def get_league(year):
         "top_individual_day": top_individual_day,
         "top_pairs": top_pairs,
         "undefeated_pairs": undefeated_pairs,
+        "has_court_data": has_court_data,
+        "court_columns": court_columns,
+        "top_players_courts": top_players_courts,
     }
 
     return {
