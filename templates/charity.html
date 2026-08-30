@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% set target = settings.target_amount|float %}
+{% set pct = ((total / target * 100) if target > 0 else 0) %}
+{% set pct_clamped = pct if pct <= 100 else 100 %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap mb-4 gap-2">
+    <h1 class="page-title mb-0">🇳🇵 Nepal Flood Relief</h1>
+    {% if session.get('is_admin') %}
+    <form action="{{ url_for('charity.charity_toggle') }}" method="post" class="d-flex align-items-center gap-2">
+        <input type="hidden" name="is_open" value="{{ '0' if settings.is_open else '1' }}">
+        <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" role="switch" onchange="this.form.submit()"
+                   {{ 'checked' if settings.is_open }} style="cursor:pointer;">
+        </div>
+        <span class="small text-muted">{{ 'Contributions open' if settings.is_open else 'Contributions closed' }}</span>
+    </form>
+    {% endif %}
+</div>
+
+<div class="card hhb-card mb-4">
+    <div class="card-body">
+        <p>
+            Nepal has been hit by severe flash floods, with communities in areas
+            like <strong>Trishuli</strong> among the hardest affected. One of our
+            own HHB Committee members is from Nepal, and as a club we want to
+            help in every way we can.
+        </p>
+        <p class="fw-semibold">No amount is too small — every pound helps.</p>
+        <p>
+            We're raising money for
+            <a href="https://www.facebook.com/hexnepal" target="_blank" rel="noopener">HExN</a>,
+            a charity that has been working for Nepal since 2008 and has relief
+            efforts ongoing right now for people affected in areas like Trishuli.
+            The full amount raised through this page will be donated in one
+            combined contribution via HHB Club's
+            <a href="https://www.justgiving.com/campaign/nepal2026?utm_medium=CA&utm_source=CL" target="_blank" rel="noopener">JustGiving campaign page</a>.
+        </p>
+        <p class="mb-0">
+            Rather than everyone donating individually, please transfer your
+            contribution to the club and add it below — we'll make one combined
+            donation on JustGiving and share proof with everyone.
+        </p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-lg-8 mb-3 mb-lg-0">
+        <div class="card hhb-card h-100">
+            <div class="card-body">
+                <h5 class="card-title">How to contribute</h5>
+                <p class="text-muted small mb-2">Transfer your contribution to:</p>
+                <ul class="list-unstyled mb-3">
+                    <li><strong>Name:</strong> Deepesh Shrestha</li>
+                    <li><strong>Account No.:</strong> 30550270</li>
+                    <li><strong>Sort Code:</strong> 60-30-30</li>
+                </ul>
+                <p class="text-muted small mb-0">
+                    Once you've transferred, add your name and amount below so it
+                    shows on the running total.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card hhb-card h-100">
+            <div class="card-body text-center d-flex flex-column justify-content-center">
+                <p class="text-muted small mb-1">Raised so far</p>
+                <h2 class="mb-1">£{{ "%.2f"|format(total) }}</h2>
+                <p class="text-muted small mb-2">of £{{ "%.2f"|format(target) }} target</p>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-success" role="progressbar"
+                         style="width: {{ pct_clamped }}%;"
+                         aria-valuenow="{{ pct_clamped }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                {% if session.get('is_admin') %}
+                <form action="{{ url_for('charity.charity_set_target') }}" method="post"
+                      class="d-flex align-items-center gap-2 justify-content-center mt-3">
+                    <label class="form-label small mb-0 text-muted">Target £</label>
+                    <input type="number" name="target_amount" step="0.01" min="1"
+                           value="{{ '%.2f'|format(target) }}" class="form-control form-control-sm" style="max-width: 110px;">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">Save</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card hhb-card mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Contributions</h5>
+        {% if contributions %}
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Member Name</th>
+                        <th class="text-end">Amount</th>
+                        {% if session.get('is_admin') %}<th></th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in contributions %}
+                    <tr>
+                        <td>{{ c["Member Name"] }}</td>
+                        <td class="text-end">£{{ "%.2f"|format(c["Amount"]) }}</td>
+                        {% if session.get('is_admin') %}
+                        <td class="text-end">
+                            <form action="{{ url_for('charity.charity_delete') }}" method="post" class="d-inline"
+                                  onsubmit="return confirm('Remove this contribution? This cannot be undone.');">
+                                <input type="hidden" name="id" value="{{ c['ID'] }}">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">🗑</button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="fw-semibold">
+                        <td>Total</td>
+                        <td class="text-end">£{{ "%.2f"|format(total) }}</td>
+                        {% if session.get('is_admin') %}<td></td>{% endif %}
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted fst-italic mb-0">No contributions logged yet — be the first!</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if settings.is_open %}
+<div class="card hhb-card">
+    <div class="card-body">
+        <h5 class="card-title mb-3">➕ Add Contribution</h5>
+        <form action="{{ url_for('charity.charity_contribute') }}" method="post" class="row g-2 align-items-end">
+            <div class="col-sm-6">
+                <label class="form-label fw-semibold small">Your name</label>
+                <select name="member_name" class="form-select" required>
+                    <option value="" selected disabled>Select your name…</option>
+                    {% for name in player_names %}
+                    <option value="{{ name }}">{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label fw-semibold small">Amount (£)</label>
+                <input type="number" name="amount" step="0.01" min="0.01" class="form-control" required>
+            </div>
+            <div class="col-sm-3">
+                <button type="submit" class="btn btn-hhb-accent text-white w-100">Add Contribution</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-secondary mb-0">
+    Contributions are currently closed. Thank you to everyone who has given!
+</div>
+{% endif %}
+
+{% endblock %}

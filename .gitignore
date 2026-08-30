@@ -29,6 +29,10 @@ data/about_content.json
 # Club Rules page copy - admin-editable, created on first save, stored in R2, not source-controlled
 data/club_rules_content.json
 
+# Charity drive settings + pledge ledger - created on first save, stored in R2, not source-controlled
+data/charity_settings.json
+data/CharityContributions.xlsx
+
 # Signup analytics caches - derived from Spond, stored in R2, not source-controlled
 data/signups_history.csv
 data/player_hours.csv
