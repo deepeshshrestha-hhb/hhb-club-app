@@ -189,9 +189,10 @@ def _load_contributions() -> pd.DataFrame:
 
 
 def get_contributions() -> list[dict]:
-    """All pledges, newest first."""
+    """All pledges, oldest first (so the numbered list on the page starts with
+    the first person to contribute)."""
     df = _load_contributions()
-    df = df.sort_values("Timestamp", ascending=False)
+    df = df.sort_values("Timestamp", ascending=True)
     return df.to_dict("records")
 
 
