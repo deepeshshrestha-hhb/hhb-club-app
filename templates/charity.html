@@ -126,12 +126,13 @@
 
 <div class="card hhb-card mb-4">
     <div class="card-body">
-        <h5 class="card-title mb-3">Contributions</h5>
+        <h5 class="card-title mb-3">Contributions ({{ contributions|length }})</h5>
         {% if contributions %}
         <div class="table-responsive">
             <table class="table table-sm align-middle mb-0">
                 <thead>
                     <tr>
+                        <th>#</th>
                         <th>Member Name</th>
                         <th class="text-end">Amount</th>
                         {% if session.get('is_admin') %}<th></th>{% endif %}
@@ -140,6 +141,7 @@
                 <tbody>
                     {% for c in contributions %}
                     <tr>
+                        <td>{{ loop.index }}</td>
                         <td>{{ c["Member Name"] }}</td>
                         <td class="text-end">£{{ "%.2f"|format(c["Amount"]) }}</td>
                         {% if session.get('is_admin') %}
@@ -156,6 +158,7 @@
                 </tbody>
                 <tfoot>
                     <tr class="fw-semibold">
+                        <td></td>
                         <td>Total</td>
                         <td class="text-end">£{{ "%.2f"|format(total) }}</td>
                         {% if session.get('is_admin') %}<td></td>{% endif %}
