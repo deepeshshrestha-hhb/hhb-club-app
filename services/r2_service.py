@@ -236,6 +236,38 @@ def _backup_existing(client, bucket, key):
         logger.warning("R2 backup of %s failed (continuing with upload): %s", key, exc)
 
 
+def refresh_file(local_path):
+    """Pull one file fresh from R2 into its local path, overwriting whatever is
+    there. Use this immediately before a read-modify-write on a file that gets
+    frequent concurrent writes (e.g. from multiple requests or app instances),
+    so the modification is based on the true current state rather than a local
+    disk cache that may be stale - a stale local base overwrites newer writes
+    with no error or warning, silently losing data. No-op (returns False) when
+    R2 is not configured or the object doesn't exist yet (a not-yet-created
+    file is not "stale"). Returns True on a successful refresh.
+    """
+    if not is_enabled():
+        return False
+
+    local_path = Path(local_path)
+    key = _local_to_key(local_path)
+    if key is None:
+        return False
+
+    client = get_client()
+    bucket = _env("R2_BUCKET")
+    try:
+        local_path.parent.mkdir(parents=True, exist_ok=True)
+        client.download_file(bucket, key, str(local_path))
+        return True
+    except Exception as exc:  # noqa: BLE001
+        code = getattr(exc, "response", {}).get("Error", {}).get("Code", "")
+        if code in ("404", "NoSuchKey"):
+            return False  # nothing uploaded yet - not a failure
+        logger.warning("R2 refresh_file failed for %s (keeping local copy): %s", key, exc)
+        return False
+
+
 def upload_file(local_path):
     """Push one local file back to R2 under its mirrored key, with retries.
 
