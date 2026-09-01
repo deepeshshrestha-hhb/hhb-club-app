@@ -20,6 +20,7 @@ makes one combined donation via JustGiving.
 """
 import json
 import re
+import threading
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -30,6 +31,14 @@ from markupsafe import Markup, escape
 from config import Config
 from services import r2_service
 from services.excel_service import load_excel, save_excel
+
+# Serializes add/delete on the pledge ledger within this process, so two
+# requests handled by different threads (gunicorn runs --threads 4) can't
+# both read-modify-write the same file at once and silently drop one
+# other's row. Combined with the fresh=True reload in _load_contributions,
+# this closes both the cross-instance staleness window and the in-process
+# race window.
+_contributions_lock = threading.Lock()
 
 # Matches either a markdown-style [label](url) link or a bare http(s):// URL,
 # so an admin can either paste a raw link or write `[HExN](https://...)` to
@@ -176,7 +185,18 @@ def update_content_section(key: str, text: str) -> bool:
     return True
 
 
-def _load_contributions() -> pd.DataFrame:
+def _load_contributions(fresh: bool = False) -> pd.DataFrame:
+    """Load the pledge ledger. Pass fresh=True before a write (add/delete) to
+    pull the current object from R2 first, rather than trusting local disk.
+
+    Render's free tier can leave an old app instance's local cache behind a
+    long idle gap (or briefly run two instances during a wake/deploy), and
+    this file gets frequent concurrent writes from different members - a
+    write based on a stale local copy silently overwrites newer contributions
+    with no error. Read-only display doesn't need this (a page load being a
+    few seconds behind is harmless), but every write does."""
+    if fresh:
+        r2_service.refresh_file(Path(Config.DATA_DIR) / CONTRIBUTIONS_FILE)
     df = load_excel(CONTRIBUTIONS_FILE)
     if df.empty:
         return pd.DataFrame(columns=_COLUMNS)
@@ -222,9 +242,10 @@ def add_contribution(member_name: str, amount) -> dict | None:
         "Amount": amount,
     }
 
-    df = _load_contributions()
-    df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
-    save_excel(df, CONTRIBUTIONS_FILE)
+    with _contributions_lock:
+        df = _load_contributions(fresh=True)
+        df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
+        save_excel(df, CONTRIBUTIONS_FILE)
     return row
 
 
@@ -233,10 +254,11 @@ def delete_contribution(contribution_id: str) -> bool:
     contribution_id = (contribution_id or "").strip()
     if not contribution_id:
         return False
-    df = _load_contributions()
-    mask = df["ID"] == contribution_id
-    if not mask.any():
-        return False
-    df = df[~mask].reset_index(drop=True)
-    save_excel(df, CONTRIBUTIONS_FILE)
+    with _contributions_lock:
+        df = _load_contributions(fresh=True)
+        mask = df["ID"] == contribution_id
+        if not mask.any():
+            return False
+        df = df[~mask].reset_index(drop=True)
+        save_excel(df, CONTRIBUTIONS_FILE)
     return True
