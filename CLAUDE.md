@@ -247,10 +247,14 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   `load_workbook_normalized()` in [excel_service.py](services/excel_service.py),
   which rebuilds the package with forward slashes on failure. New scoresheets
   with this quirk are auto-handled — no manual fix needed.
-- **R2 seeding & OneDrive:** the repo lives under OneDrive. Uploading files while
-  they are un-hydrated "Files On-Demand" placeholders produced size-correct but
-  byte-corrupt R2 objects. [scripts/seed_r2.py](scripts/seed_r2.py) reads each
-  file (forcing hydration) and verifies the round trip; always seed via it.
+- **R2 seeding — always use the script:** [scripts/seed_r2.py](scripts/seed_r2.py)
+  reads each file and verifies the round trip (re-uploads on a mismatch) before
+  declaring it seeded; always seed via it rather than uploading ad hoc. (As of
+  2026-09, the repo lives on a local external drive, `I:\All Repositories\
+  hhb_club_app` — not OneDrive. The verify-and-retry logic stays as a general
+  safety net, but the OneDrive "Files On-Demand" un-hydrated-placeholder failure
+  mode this was originally written for no longer applies; don't diagnose a
+  seeding issue as OneDrive-related.)
 - **Free-tier cold start:** the Render free instance spins down after ~15 min
   idle; the next request takes ~50s to wake (re-runs the R2 pull + first HHB
   Score computation, then caches). Expected, not a bug.
