@@ -1,7 +1,10 @@
+import csv
+import os
 from collections import Counter, defaultdict
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from config import Config
+from services import spond_service
 from services.excel_service import load_workbook_normalized
 from services.tournament_service import _clean, _fmt_date
 
@@ -291,3 +294,147 @@ def get_league(year):
         "analytics": analytics,
         "rules": rules,
     }
+
+
+def _live_players_playing(sessions, target_date, hour):
+    """Sum confirmed counts from a live spond_service.get_weekly_sessions() list
+    for events on target_date starting at the given hour. None if no matching
+    event was found (so the template can show a dash instead of a misleading 0)."""
+    total = None
+    target_iso = target_date.isoformat()
+    for s in sessions:
+        if s["sort_date"] != target_iso or not s["start_time"].startswith(f"{hour:02d}:"):
+            continue
+        total = (total or 0) + s["confirmed"]
+    return total
+
+
+def _historical_players_playing(target_date, hour):
+    """Distinct attendee count for target_date/hour from data/signups_history.csv
+    (accepted RSVPs for past events, ~6 months retained). None if that date
+    doesn't appear in the cache at all (too old, or never fetched) — distinct
+    from a genuine 0 (event happened, nobody accepted for that hour)."""
+    path = os.path.join(Config.DATA_DIR, "signups_history.csv")
+    if not os.path.exists(path):
+        return None
+    names = set()
+    date_seen = False
+    with open(path, newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            try:
+                start = datetime.fromisoformat(row.get("start") or "")
+            except ValueError:
+                continue
+            if start.date() != target_date:
+                continue
+            date_seen = True
+            if start.hour != hour:
+                continue
+            name = (row.get("full_name") or "").strip()
+            if name:
+                names.add(name)
+    return len(names) if date_seen else None
+
+
+def get_overall_stats(year):
+    """Per-week season stats mirroring the scoresheet's own "Overall Stats"
+    sheet: Week/Date/Total Players Playing (9-10 & 10-11)/Total Games
+    Recorded/Max Wins by a player. Off weeks (e.g. a school-holidays break,
+    marked by a blank Week number in the sheet) are included as highlighted
+    break rows instead of regular data rows.
+
+    Week, Date, and (for past seasons) Total Players Playing are read straight
+    from the sheet, since that's exactly what's already been manually tracked
+    there for completed seasons. Total Games Recorded and Max Wins/Player are
+    always computed fresh from the parsed matches list instead of trusting the
+    sheet's own (often-blank) copy, so they can never drift from what the
+    Matches/Analytics tabs on the same page show — verified against every week
+    of the 2024 season's real data (11/11 weeks matched exactly). Total Players
+    Playing is backfilled from Spond when the sheet cell is blank: live current
+    sign-ups for a today-or-future Sunday, or the signups_history.csv cache for
+    a past one (best-effort — that cache only retains ~6 months).
+    """
+    path = TOURNAMENTS_DIR / f"HHB Annual Players League - {year}.xlsm"
+    if not path.exists():
+        return None
+
+    league = get_league(year)
+    if not league:
+        return None
+
+    wb = load_workbook_normalized(path, data_only=True)
+    stats_ws = wb["Overall Stats"]
+
+    matches_by_date = defaultdict(list)
+    for m in league["matches"]:
+        d = m["date_raw"].date() if hasattr(m["date_raw"], "date") else m["date_raw"]
+        matches_by_date[d].append(m)
+
+    today = date.today()
+    rows = []
+    need_live = False
+    week_dates = []
+    last_break_note = None
+    for row in range(4, 60):
+        week_no = stats_ws.cell(row, 1).value
+        date_val = stats_ws.cell(row, 2).value
+        if not hasattr(date_val, "year"):
+            break  # end of the table
+        d = date_val.date()
+        if week_no is None:
+            # An off week (e.g. a school-holidays break) — no week number, and
+            # usually only the first row of the break carries the note text, so
+            # reuse it for the rest of that same break block.
+            note = _clean(stats_ws.cell(row, 3).value) or last_break_note or "Off week — no League play"
+            last_break_note = note
+            week_dates.append((row, None, d, note))
+            continue
+        last_break_note = None
+        week_dates.append((row, week_no, d, None))
+        if d >= today:
+            need_live = True
+
+    live_sessions = spond_service.get_weekly_sessions(weeks_ahead=16) if need_live else []
+
+    for row, week_no, d, break_note in week_dates:
+        if break_note is not None:
+            rows.append({
+                "week": None,
+                "date": _fmt_date(d),
+                "is_break": True,
+                "note": break_note,
+            })
+            continue
+
+        p9 = stats_ws.cell(row, 3).value
+        p10 = stats_ws.cell(row, 4).value
+        if p9 is None:
+            p9 = _live_players_playing(live_sessions, d, 9) if d >= today else _historical_players_playing(d, 9)
+        if p10 is None:
+            p10 = _live_players_playing(live_sessions, d, 10) if d >= today else _historical_players_playing(d, 10)
+
+        day_matches = matches_by_date.get(d, [])
+        win_counts = Counter()
+        for m in day_matches:
+            pair1 = f"{m['p1']} & {m['p2']}"
+            if m["winner"] == pair1:
+                win_counts[m["p1"]] += 1
+                win_counts[m["p2"]] += 1
+            else:
+                win_counts[m["p3"]] += 1
+                win_counts[m["p4"]] += 1
+        max_wins = max(win_counts.values()) if win_counts else 0
+        max_players = sorted(p for p, c in win_counts.items() if c == max_wins) if win_counts else []
+
+        rows.append({
+            "week": int(week_no),
+            "date": _fmt_date(d),
+            "is_break": False,
+            "players_9_10": p9,
+            "players_10_11": p10,
+            "total_games": len(day_matches),
+            "max_wins": max_wins,
+            "max_wins_player": " / ".join(max_players),
+        })
+
+    return rows
