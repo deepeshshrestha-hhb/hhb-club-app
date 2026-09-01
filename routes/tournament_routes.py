@@ -7,7 +7,7 @@ from services.tournament_service import (
     get_doubles_tournament,
 )
 from services.championship_service import list_championship_years, get_championship
-from services.league_service import list_league_years, get_league
+from services.league_service import list_league_years, get_league, get_overall_stats
 from services.podium_service import get_podium_photos, get_podium_photo_pipe
 from services.photos_service import has_event_photos
 
@@ -150,6 +150,7 @@ def league_detail(year):
     next_year = years[idx + 1] if idx >= 0 and idx < len(years) - 1 else None
     event_id = f"league_{year}"
     return render_template("league_detail.html", league=league,
+                           overall_stats=get_overall_stats(year),
                            prev_year=prev_year, next_year=next_year,
                            podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe,
                            event_id=event_id, has_event_photos=has_event_photos(event_id))
