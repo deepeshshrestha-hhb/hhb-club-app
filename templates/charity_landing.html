@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+
+        <div class="text-center mb-4">
+            <h1 class="page-title mb-1">Charity</h1>
+            <h2 class="h5 text-muted fw-normal">Giving back to the community</h2>
+            <hr class="my-2">
+        </div>
+
+        <div class="card hhb-card mb-4">
+            <div class="card-body">
+                <p class="mb-0">
+                    At HHB Club, we want to give back to the community whenever we can. Many of us are
+                    migrants ourselves, and we understand first-hand the value of a community that looks
+                    out for one another — so when disaster strikes somewhere close to our members' hearts,
+                    we come together as a club to help.
+                </p>
+            </div>
+        </div>
+
+        <div class="card hhb-card">
+            <div class="card-body text-center py-5">
+                <img src="{{ url_for('static', filename='images/charity/nepal-flag.svg') }}" alt="Flag of Nepal"
+                     style="height: 2.5rem; width: auto;" class="mb-3">
+                <h5 class="card-title mb-2">Nepal Flood Relief 2026</h5>
+                <p class="text-muted mb-4">Our current campaign — read the full story and add your contribution.</p>
+                <a href="{{ url_for('charity.nepal_flood_relief_page') }}" class="btn btn-hhb-accent text-white px-4">
+                    View Nepal Flood Relief Page
+                </a>
+            </div>
+        </div>
+
+        <div class="text-center mt-4 mb-4">
+            <a href="/" class="btn btn-hhb-primary text-white px-4">Back to Dashboard</a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

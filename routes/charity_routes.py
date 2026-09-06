@@ -19,6 +19,13 @@ charity_bp = Blueprint("charity", __name__)
 
 @charity_bp.route("/charity")
 def charity_page():
+    """Charity landing page: a short note on why HHB Club gives back, with a
+    link through to the current campaign (Nepal Flood Relief)."""
+    return render_template("charity_landing.html")
+
+
+@charity_bp.route("/charity/nepal-flood-relief")
+def nepal_flood_relief_page():
     """Nepal Flood Relief campaign page: write-up, pledge ledger + running
     total, and (while open) a form for members to log a pledge."""
     from services.player_service import get_player_names
@@ -33,7 +40,7 @@ def charity_page():
         player_names = []
 
     return render_template(
-        "charity.html",
+        "charity_nepal_flood_relief.html",
         settings=settings,
         content=content,
         contributions=contributions,
@@ -51,7 +58,7 @@ def charity_contribute():
     settings = get_settings()
     if not settings.get("is_open"):
         flash("Contributions are currently closed.", "warning")
-        return redirect(url_for("charity.charity_page"))
+        return redirect(url_for("charity.nepal_flood_relief_page"))
 
     member_name = request.form.get("member_name", "")
     if member_name == OTHER_OPTION:
@@ -65,7 +72,7 @@ def charity_contribute():
         flash("Please select your name and enter a valid contribution amount.", "warning")
     else:
         flash(f"Thank you! £{row['Amount']:.2f} logged for {row['Member Name']}.", "success")
-    return redirect(url_for("charity.charity_page"))
+    return redirect(url_for("charity.nepal_flood_relief_page"))
 
 
 @charity_bp.route("/charity/delete", methods=["POST"])
@@ -77,7 +84,7 @@ def charity_delete():
         flash("Contribution removed.", "success")
     else:
         flash("Could not remove contribution.", "danger")
-    return redirect(url_for("charity.charity_page"))
+    return redirect(url_for("charity.nepal_flood_relief_page"))
 
 
 @charity_bp.route("/charity/toggle", methods=["POST"])
@@ -87,7 +94,7 @@ def charity_toggle():
     set_open(request.form.get("is_open") == "1")
     settings = get_settings()
     flash("Contributions are now open." if settings["is_open"] else "Contributions are now closed.", "success")
-    return redirect(url_for("charity.charity_page"))
+    return redirect(url_for("charity.nepal_flood_relief_page"))
 
 
 @charity_bp.route("/charity/target", methods=["POST"])
@@ -98,7 +105,7 @@ def charity_set_target():
         flash("Target updated.", "success")
     else:
         flash("Please enter a valid target amount.", "danger")
-    return redirect(url_for("charity.charity_page"))
+    return redirect(url_for("charity.nepal_flood_relief_page"))
 
 
 @charity_bp.route("/charity/content/<key>", methods=["POST"])
@@ -107,4 +114,4 @@ def charity_update_content(key):
     """Admin-only: edit the top write-up or the How to Contribute section."""
     ok = update_content_section(key, request.form.get("content", ""))
     flash("Section updated." if ok else "Unknown section.", "success" if ok else "danger")
-    return redirect(url_for("charity.charity_page"))
+    return redirect(url_for("charity.nepal_flood_relief_page"))
