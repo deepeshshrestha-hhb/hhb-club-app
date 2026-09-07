@@ -177,5 +177,5 @@
 </script>
 {% endblock %}
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/weekly_scores.js') }}"></script>
+<script src="{{ url_for('static', filename='js/weekly_scores.js') }}?v={{ asset_version('js/weekly_scores.js') }}"></script>
 {% endblock %}

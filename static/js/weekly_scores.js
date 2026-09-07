@@ -118,6 +118,11 @@
         applyStatusVisibility();
         refreshFormOptions();
         renderTable();
+        // Rebuilding the player <select> options above can change whether the
+        // form still counts as fully filled in (e.g. a poll refresh dropped
+        // someone from the attendance list) - re-check the submit gate.
+        if (updateScoreGate) updateScoreGate();
+        if (updateAmendGate) updateAmendGate();
     }
 
     function fetchState() {
@@ -148,11 +153,28 @@
         form.querySelectorAll('select').forEach(function (sel) { sel.value = ''; });
     }
 
+    // Court No. + all four players + both scores are all `required` selects,
+    // so the browser's own validity check already tells us whether every
+    // field has a real (non-placeholder) value picked - no need to duplicate
+    // that field-by-field. Keeps the submit/save button disabled until then,
+    // so a match can't go out (or a server round-trip happen) half-filled.
+    function wireSubmitGate(form, button) {
+        if (!form || !button) return;
+        function update() { button.disabled = !form.checkValidity(); }
+        form.addEventListener('change', update);
+        form.addEventListener('input', update);
+        update();
+        return update;
+    }
+
     // --- Add score ---
     var scoreForm = document.getElementById('scoreForm');
+    var scoreSubmitBtn = scoreForm ? scoreForm.querySelector('button[type="submit"]') : null;
+    var updateScoreGate = wireSubmitGate(scoreForm, scoreSubmitBtn);
     if (scoreForm) {
         scoreForm.addEventListener('submit', function (e) {
             e.preventDefault();
+            if (!scoreForm.checkValidity()) return; // belt-and-braces; button should already be disabled
             var errEl = document.getElementById('formError');
             showError(errEl, '');
             fetch('/weekly-scores/api/matches', {
@@ -169,6 +191,7 @@
                     state = res.body;
                     render();
                     clearForm(scoreForm);
+                    updateScoreGate();
                 })
                 .catch(function () { showError(errEl, 'Network error - please try again.'); });
         });
@@ -177,6 +200,8 @@
     // --- Amend / Delete (event delegation on the table) ---
     var amendModalEl = document.getElementById('amendModal');
     var amendForm = document.getElementById('amendForm');
+    var amendSaveBtn = document.getElementById('amendSaveBtn');
+    var updateAmendGate = wireSubmitGate(amendForm, amendSaveBtn);
 
     function getAmendModal() {
         // Created lazily (not at load time) so a slow/blocked Bootstrap JS
@@ -208,6 +233,7 @@
             amendForm.querySelector('[name="p3"]').value = match.p3;
             amendForm.querySelector('[name="p4"]').value = match.p4;
             amendForm.querySelector('[name="score2"]').value = match.score2;
+            updateAmendGate(); // setting .value directly doesn't fire 'change'
             showError(document.getElementById('amendError'), '');
             var modal = getAmendModal();
             if (modal) modal.show();
@@ -224,7 +250,6 @@
         }
     });
 
-    var amendSaveBtn = document.getElementById('amendSaveBtn');
     if (amendSaveBtn) {
         amendSaveBtn.addEventListener('click', function () {
             var errEl = document.getElementById('amendError');
