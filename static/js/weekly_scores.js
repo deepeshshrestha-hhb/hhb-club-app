@@ -287,7 +287,7 @@
             fetch('/weekly-scores/api/matches/' + deleteBtn.dataset.delete + '/delete', { method: 'POST' })
                 .then(function (r) { return r.json(); })
                 .then(function (d) {
-                    if (d.ok) { state = d; render(); }
+                    if (d.ok) { state = d; render(); showToast('🗑️ Score deleted.'); }
                     else { alert(d.error || 'Could not delete that row.'); }
                 });
         }
