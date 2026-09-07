@@ -1,3 +1,4 @@
+import os
 import sys
 import logging
 
@@ -43,6 +44,21 @@ def create_app():
 
     app.jinja_env.filters["slugify"] = name_to_slug
     app.jinja_env.filters["linkify"] = linkify
+
+    @app.template_global()
+    def asset_version(filename):
+        """mtime-based cache-busting token for a static asset (append as
+        ?v=... on its URL). The site is fronted by a Cloudflare Worker reverse
+        proxy (see CLAUDE.md Deployment), which can cache a static JS/CSS file
+        at the edge independently of the origin's own headers, so a fixed
+        /static/... URL can keep serving pre-deploy bytes until something
+        changes the URL itself. Returns 0 (a harmless constant) if the file
+        can't be stat'd, rather than raising and breaking the page."""
+        path = os.path.join(app.static_folder, filename)
+        try:
+            return int(os.path.getmtime(path))
+        except OSError:
+            return 0
 
     # Blueprints
     app.register_blueprint(calendar_bp)
