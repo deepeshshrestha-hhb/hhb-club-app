@@ -57,6 +57,10 @@
         <h5 class="card-title">Enter a Score</h5>
         <p id="formError" class="text-danger small mb-2" hidden></p>
         <form id="scoreForm" class="row g-2 align-items-end">
+            <div class="col-6 col-md-1">
+                <label class="form-label small mb-1">Court No.</label>
+                <select name="court_no" class="form-select court-select" required></select>
+            </div>
             <div class="col-12 col-md-2">
                 <label class="form-label small mb-1">Team 1 - Player 1</label>
                 <select name="p1" class="form-select player-select" required></select>
@@ -97,6 +101,7 @@
             <table class="table table-sm table-hover align-middle mb-0">
                 <thead class="table-dark">
                     <tr>
+                        <th class="text-center">Court</th>
                         <th>Player 1</th>
                         <th>Player 2</th>
                         <th class="text-center">Score</th>
@@ -126,6 +131,11 @@
                 <p id="amendError" class="text-danger small mb-2" hidden></p>
                 <form id="amendForm" class="row g-2">
                     <input type="hidden" name="id">
+                    <div class="col-6">
+                        <label class="form-label small mb-1">Court No.</label>
+                        <select name="court_no" class="form-select court-select" required></select>
+                    </div>
+                    <div class="col-6"></div>
                     <div class="col-6">
                         <label class="form-label small mb-1">Team 1 - Player 1</label>
                         <select name="p1" class="form-select player-select" required></select>

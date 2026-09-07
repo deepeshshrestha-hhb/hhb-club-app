@@ -516,10 +516,13 @@ def resolve_attendee_names(year, attendees):
 def write_weekly_scores(target_date, matches):
     """Write finalised Weekly Score Upload matches into target_date's year's
     league workbook, in the same row/column layout get_league() already reads
-    (Date/No./Player 1-4/Score 1-2, plus the per-row Winner/Difference/Points
-    helper columns and each roster player's Played/Won/Lost/Points/PF
-    standings columns). Returns the number of matches written; raises
-    ValueError if that year has no league workbook yet.
+    (Date/No./Player 1-4/Score 1-2/Court No., plus the per-row
+    Winner/Difference/Points helper columns and each roster player's
+    Played/Won/Lost/Points/PF standings columns). Court No. is only written
+    when the sheet has that column (has_court_col - the 2026+ template); it's
+    silently skipped for an older template so this never errors on a year
+    without it. Returns the number of matches written; raises ValueError if
+    that year has no league workbook yet.
 
     Existing blank rows already pre-built for target_date (if the sheet was
     set up ahead of the season) are filled in first; any remaining matches
@@ -599,6 +602,8 @@ def write_weekly_scores(target_date, matches):
         ws.cell(row, 6).value = m["p3"]
         ws.cell(row, 7).value = m["p4"]
         ws.cell(row, 8).value = m["score2"]
+        if has_court_col and m.get("court_no") is not None:
+            ws.cell(row, 11).value = m["court_no"]
 
     # Recompute Winner/Difference/Points for every played row (old and new),
     # and tally each player's Played/Won/Points-For along the way.

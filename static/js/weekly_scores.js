@@ -21,6 +21,22 @@
         }
     }
 
+    function populateCourtSelect(select) {
+        if (select.options.length) return; // already built
+        var placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = '—';
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        select.appendChild(placeholder);
+        for (var i = 1; i <= 4; i++) {
+            var opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = i;
+            select.appendChild(opt);
+        }
+    }
+
     function populatePlayerSelect(select, players) {
         var current = select.value;
         select.innerHTML = '';
@@ -43,6 +59,7 @@
 
     function refreshFormOptions() {
         document.querySelectorAll('.score-select').forEach(populateScoreSelect);
+        document.querySelectorAll('.court-select').forEach(populateCourtSelect);
         document.querySelectorAll('.player-select').forEach(function (sel) {
             populatePlayerSelect(sel, state.players || []);
         });
@@ -78,6 +95,7 @@
                   '</td>'
                 : '';
             return '<tr class="' + rowClass + '" data-match-id="' + m.id + '">' +
+                '<td class="text-center">' + escapeHtml(m.court_no) + '</td>' +
                 '<td>' + escapeHtml(m.p1) + '</td>' +
                 '<td>' + escapeHtml(m.p2) + '</td>' +
                 '<td class="text-center fw-semibold">' + m.score1 + '</td>' +
@@ -117,6 +135,7 @@
     function formToFields(form) {
         var fd = new FormData(form);
         return {
+            court_no: fd.get('court_no'),
             p1: fd.get('p1'), p2: fd.get('p2'), score1: fd.get('score1'),
             p3: fd.get('p3'), p4: fd.get('p4'), score2: fd.get('score2'),
         };
@@ -180,7 +199,9 @@
             populatePlayerSelect(amendForm.querySelector('[name="p4"]'), state.players || []);
             populateScoreSelect(amendForm.querySelector('[name="score1"]'));
             populateScoreSelect(amendForm.querySelector('[name="score2"]'));
+            populateCourtSelect(amendForm.querySelector('[name="court_no"]'));
             amendForm.querySelector('[name="id"]').value = match.id;
+            amendForm.querySelector('[name="court_no"]').value = match.court_no;
             amendForm.querySelector('[name="p1"]').value = match.p1;
             amendForm.querySelector('[name="p2"]').value = match.p2;
             amendForm.querySelector('[name="score1"]').value = match.score1;
