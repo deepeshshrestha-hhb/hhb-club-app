@@ -147,6 +147,8 @@ def _validate_match(fields):
         raise ValueError("Court No. is required.")
     if not all([p1, p2, p3, p4]):
         raise ValueError("All four players are required.")
+    if len({p1, p2, p3, p4}) < 4:
+        raise ValueError("The same player can't be in both teams.")
     if score1 not in VALID_SCORES or score2 not in VALID_SCORES:
         raise ValueError("Scores must be between 1 and 30.")
     if score1 == score2:
