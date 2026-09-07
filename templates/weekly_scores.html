@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block head_extra %}
+<style>
+    .duplicate-row { background-color: #fdecea; }
+    #playersForm select, #playersForm .form-select { min-width: 140px; }
+</style>
+{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Submit Scores</h1>
+<p class="text-muted mb-4">
+    Enter Sunday doubles scores directly - no more parsing them out of WhatsApp.
+    Scores go straight into the Annual Players League once the admin submits them.
+</p>
+
+{% if session.get('is_admin') %}
+<div class="card hhb-card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Admin Controls</h5>
+        {% if state.status == 'none' %}
+        <p class="text-muted small">No session is open. Pick a date to open score entry.</p>
+        <form action="{{ url_for('weekly_scores.admin_open') }}" method="post" class="d-flex gap-2 align-items-end flex-wrap">
+            <div>
+                <label class="form-label small mb-1">Session date</label>
+                <input type="date" name="date" class="form-control" value="{{ default_date }}" required>
+            </div>
+            <button type="submit" class="btn btn-hhb-accent">Open Session</button>
+        </form>
+        {% elif state.status == 'open' %}
+        <p class="mb-2"><span class="badge bg-success">Open</span> for <strong>{{ state.date }}</strong> — players can submit, amend and delete scores.</p>
+        <form action="{{ url_for('weekly_scores.admin_close') }}" method="post" class="d-inline">
+            <button type="submit" class="btn btn-hhb-primary text-white">Close Session</button>
+        </form>
+        {% elif state.status == 'closed' %}
+        <p class="mb-2"><span class="badge bg-warning text-dark">Closed</span> for <strong>{{ state.date }}</strong> — read-only. Review the list below, then submit to the database.</p>
+        <div class="d-flex gap-2 flex-wrap">
+            <form action="{{ url_for('weekly_scores.admin_open') }}" method="post">
+                <input type="hidden" name="date" value="{{ state.date }}">
+                <button type="submit" class="btn btn-outline-secondary btn-sm">Reopen for Edits</button>
+            </form>
+            <form action="{{ url_for('weekly_scores.admin_submit') }}" method="post"
+                  onsubmit="return confirm('Push these scores into the {{ state.date[:4] if state.date else '' }} league database? This clears the session and can\'t be undone.');">
+                <button type="submit" class="btn btn-hhb-accent">Submit to Database</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<div id="noSessionMsg" class="alert alert-info" {% if state.status != 'none' %}hidden{% endif %}>
+    No score session is currently open. Check back after the next Sunday session, or ask an admin to open one.
+</div>
+
+<div id="scoreFormCard" class="card hhb-card mb-4" {% if state.status != 'open' %}hidden{% endif %}>
+    <div class="card-body">
+        <h5 class="card-title">Enter a Score</h5>
+        <p id="formError" class="text-danger small mb-2" hidden></p>
+        <form id="scoreForm" class="row g-2 align-items-end">
+            <div class="col-12 col-md-2">
+                <label class="form-label small mb-1">Team 1 - Player 1</label>
+                <select name="p1" class="form-select player-select" required></select>
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label small mb-1">Team 1 - Player 2</label>
+                <select name="p2" class="form-select player-select" required></select>
+            </div>
+            <div class="col-6 col-md-1">
+                <label class="form-label small mb-1">Score</label>
+                <select name="score1" class="form-select score-select" required></select>
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label small mb-1">Team 2 - Player 1</label>
+                <select name="p3" class="form-select player-select" required></select>
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label small mb-1">Team 2 - Player 2</label>
+                <select name="p4" class="form-select player-select" required></select>
+            </div>
+            <div class="col-6 col-md-1">
+                <label class="form-label small mb-1">Score</label>
+                <select name="score2" class="form-select score-select" required></select>
+            </div>
+            <div class="col-12 col-md-2">
+                <button type="submit" class="btn btn-hhb-accent w-100">Submit Score</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card hhb-card">
+    <div class="card-body">
+        <h5 class="card-title">
+            Scores <span id="sessionDateLabel" class="text-muted small">{% if state.date %}— {{ state.date }}{% endif %}</span>
+        </h5>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Player 1</th>
+                        <th>Player 2</th>
+                        <th class="text-center">Score</th>
+                        <th>Player 3</th>
+                        <th>Player 4</th>
+                        <th class="text-center">Score</th>
+                        <th id="actionsHead" class="text-center" {% if state.status != 'open' %}hidden{% endif %}>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="matchesBody"></tbody>
+            </table>
+            <p id="noMatchesMsg" class="text-muted small fst-italic mt-2" hidden>No scores submitted yet.</p>
+        </div>
+        <p class="text-muted small mt-2"><span class="badge" style="background-color:#fdecea;color:#842029;">&nbsp;&nbsp;</span> = possible duplicate (same four players &amp; scores as another row).</p>
+    </div>
+</div>
+
+<!-- Amend modal -->
+<div class="modal fade" id="amendModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header hhb-modal-header">
+                <h5 class="modal-title text-white mb-0">Amend Score</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="amendError" class="text-danger small mb-2" hidden></p>
+                <form id="amendForm" class="row g-2">
+                    <input type="hidden" name="id">
+                    <div class="col-6">
+                        <label class="form-label small mb-1">Team 1 - Player 1</label>
+                        <select name="p1" class="form-select player-select" required></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small mb-1">Team 1 - Player 2</label>
+                        <select name="p2" class="form-select player-select" required></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small mb-1">Score</label>
+                        <select name="score1" class="form-select score-select" required></select>
+                    </div>
+                    <div class="col-6"></div>
+                    <div class="col-6">
+                        <label class="form-label small mb-1">Team 2 - Player 1</label>
+                        <select name="p3" class="form-select player-select" required></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small mb-1">Team 2 - Player 2</label>
+                        <select name="p4" class="form-select player-select" required></select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small mb-1">Score</label>
+                        <select name="score2" class="form-select score-select" required></select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-hhb-accent text-white btn-sm" id="amendSaveBtn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.WEEKLY_SCORE_STATE = {{ state | tojson }};
+    window.WEEKLY_SCORE_IS_ADMIN = {{ (session.get('is_admin') or false) | tojson }};
+</script>
+{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/weekly_scores.js') }}"></script>
+{% endblock %}

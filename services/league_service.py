@@ -4,6 +4,7 @@ from collections import Counter, defaultdict
 from datetime import date, datetime
 from pathlib import Path
 from config import Config
+from services import r2_service
 from services import spond_service
 from services.excel_service import load_workbook_normalized
 from services.tournament_service import _clean, _fmt_date
@@ -438,3 +439,230 @@ def get_overall_stats(year):
         })
 
     return rows
+
+
+# --- Weekly Score Upload: writing into the live season's workbook ---------
+
+def get_league_roster(year):
+    """Canonical player names for year's league - the 'Name' column of its
+    standings table (same block get_league() reads for the Final Standings).
+    Used to resolve a Spond attendee's first name to the exact spelling the
+    sheet's own formulas already key off (e.g. distinguishing 'Rahul J' from
+    'Rahul B'), so scores written from the web form line up with players the
+    standings columns already recognise."""
+    path = TOURNAMENTS_DIR / f"HHB Annual Players League - {year}.xlsm"
+    if not path.exists():
+        return []
+    wb = load_workbook_normalized(path, data_only=False, keep_vba=True)
+    ws = wb[str(year)]
+    has_court_col = "court no" in str(ws.cell(4, 11).value or "").lower()
+    rank_col = 20 if has_court_col else 19
+
+    roster = []
+    for row in range(3, 100):
+        rank = ws.cell(row, rank_col).value
+        player = ws.cell(row, rank_col + 1).value
+        if rank is None or player is None or not isinstance(rank, (int, float)):
+            break
+        p = _clean(player)
+        if p:
+            roster.append(p)
+    return roster
+
+
+def resolve_attendee_names(year, attendees):
+    """Map Spond attendee {"first_name", "last_name"} dicts to this year's
+    league roster names where possible (applying the same first-name ALIASES
+    the rest of the site uses to join Spond identities to tournament sheets,
+    e.g. Spond 'Yogeshwar' -> roster 'Yogi'), disambiguating shared first
+    names (e.g. 'Rahul J' vs 'Rahul B') by last-name initial. Anyone not yet
+    in the roster (a brand-new player) falls back to their plain Title-cased
+    first name, so they can still be selected - add them to the sheet's
+    roster block separately for their results to count toward standings.
+    Returns a sorted, de-duplicated list of names."""
+    # Local import: player_stats_service imports this module at load time, so
+    # importing it back at module scope here would be circular.
+    from services.player_stats_service import ALIASES
+    reverse_aliases = {v: k for k, v in ALIASES.items() if k != v}
+
+    roster_by_first = defaultdict(list)
+    for name in get_league_roster(year):
+        roster_by_first[name.split()[0].lower()].append(name)
+
+    resolved = set()
+    for a in attendees:
+        first_lower = (a.get("first_name") or "").strip().lower()
+        if not first_lower:
+            continue
+        key = reverse_aliases.get(first_lower, first_lower)
+        candidates = roster_by_first.get(key, [])
+        if len(candidates) == 1:
+            resolved.add(candidates[0])
+            continue
+        if candidates:
+            last_initial = (a.get("last_name") or "").strip()[:1].lower()
+            narrowed = [
+                c for c in candidates
+                if len(c.split()) > 1 and c.split()[1][:1].lower() == last_initial
+            ]
+            for c in (narrowed or candidates):
+                resolved.add(c)
+            continue
+        resolved.add((a.get("first_name") or "").strip().title())
+
+    return sorted(resolved, key=str.casefold)
+
+
+def write_weekly_scores(target_date, matches):
+    """Write finalised Weekly Score Upload matches into target_date's year's
+    league workbook, in the same row/column layout get_league() already reads
+    (Date/No./Player 1-4/Score 1-2, plus the per-row Winner/Difference/Points
+    helper columns and each roster player's Played/Won/Lost/Points/PF
+    standings columns). Returns the number of matches written; raises
+    ValueError if that year has no league workbook yet.
+
+    Existing blank rows already pre-built for target_date (if the sheet was
+    set up ahead of the season) are filled in first; any remaining matches
+    are appended as new rows after the table's current last row.
+
+    Every played row's Winner/Difference/Points and every roster player's
+    standings are then recomputed and written as literal values, not just the
+    rows this call touches - the WHOLE sheet, old rows included. That's
+    because openpyxl never evaluates formulas: loading the workbook and saving
+    it drops the *cached* result of every formula in the file (not only ones
+    we edit), so leaving old rows' formulas alone would make them read back
+    as blank via get_league() until a human next opens and re-saves the file
+    in real Excel. The Rank/Name (T/U) columns are never touched here - the
+    player roster and any end-of-season re-sort of standings by rank stay a
+    separate, manual step, same as before this feature existed.
+
+    Trade-off: every row this function writes keeps its correct numbers but
+    loses its live Excel formula, so hand-editing that row's score in Excel
+    afterwards won't auto-update its Winner/Difference/Points - copy the
+    formula from an untouched row if that's ever needed again.
+    """
+    if not matches:
+        return 0
+
+    year = target_date.year
+    path = TOURNAMENTS_DIR / f"HHB Annual Players League - {year}.xlsm"
+    if not path.exists():
+        raise ValueError(f"No league workbook found for {year} ({path.name}).")
+
+    wb = load_workbook_normalized(path, data_only=False, keep_vba=True)
+    ws = wb[str(year)]
+
+    has_court_col = "court no" in str(ws.cell(4, 11).value or "").lower()
+    diff_col = 12 if has_court_col else 11
+    pts_col = diff_col + 3
+    rank_col = 20 if has_court_col else 19
+
+    # Locate the table's current extent, any blank slots already pre-built
+    # for target_date, and the next match "No." (cumulative across the whole
+    # season, never reset per week - matches the existing sheets' convention).
+    # Assumes a contiguous table with no gaps in Date/No. (true of every
+    # season sheet so far - each week's rows are always added back-to-back).
+    last_row = 4
+    max_no = 0
+    open_slots = []
+    for row in range(5, 691):
+        no = ws.cell(row, 2).value
+        date_val = ws.cell(row, 1).value
+        if no is None or not hasattr(date_val, "year"):
+            break
+        last_row = row
+        if isinstance(no, (int, float)):
+            max_no = max(max_no, int(no))
+        if date_val.date() == target_date and ws.cell(row, 3).value is None:
+            open_slots.append(row)
+
+    target_dt = datetime(target_date.year, target_date.month, target_date.day)
+
+    for m in matches:
+        if open_slots:
+            row = open_slots.pop(0)
+        else:
+            row = last_row + 1
+            if row > 690:
+                raise ValueError(
+                    "This league workbook is full (season row limit reached) - "
+                    "contact the developer to extend it."
+                )
+            last_row = row
+            max_no += 1
+            ws.cell(row, 1).value = target_dt
+            ws.cell(row, 2).value = max_no
+
+        ws.cell(row, 3).value = m["p1"]
+        ws.cell(row, 4).value = m["p2"]
+        ws.cell(row, 5).value = m["score1"]
+        ws.cell(row, 6).value = m["p3"]
+        ws.cell(row, 7).value = m["p4"]
+        ws.cell(row, 8).value = m["score2"]
+
+    # Recompute Winner/Difference/Points for every played row (old and new),
+    # and tally each player's Played/Won/Points-For along the way.
+    played = Counter()
+    won = Counter()
+    pf = Counter()
+    for row in range(5, last_row + 1):
+        c = ws.cell(row, 3).value
+        d = ws.cell(row, 4).value
+        e = ws.cell(row, 5).value
+        f = ws.cell(row, 6).value
+        g = ws.cell(row, 7).value
+        h = ws.cell(row, 8).value
+        if e is None or h is None:
+            continue
+        e_v, h_v = float(e), float(h)
+        winner1, winner2 = (c, d) if e_v > h_v else (f, g)
+
+        ws.cell(row, 9).value = winner1
+        ws.cell(row, 10).value = winner2
+        ws.cell(row, diff_col).value = e_v - h_v
+        ws.cell(row, pts_col).value = 15
+
+        for p in (c, d, f, g):
+            if p:
+                played[p] += 1
+        if c:
+            pf[c] += e_v
+        if d:
+            pf[d] += e_v
+        if f:
+            pf[f] += h_v
+        if g:
+            pf[g] += h_v
+        if winner1:
+            won[winner1] += 1
+        if winner2:
+            won[winner2] += 1
+
+    for row in range(3, 100):
+        rank = ws.cell(row, rank_col).value
+        player = ws.cell(row, rank_col + 1).value
+        if rank is None or player is None or not isinstance(rank, (int, float)):
+            break
+        p = _clean(player)
+        pl = played.get(p, 0)
+        w = won.get(p, 0)
+        ws.cell(row, rank_col + 2).value = pl
+        ws.cell(row, rank_col + 3).value = w
+        ws.cell(row, rank_col + 4).value = pl - w
+        ws.cell(row, rank_col + 5).value = 100 + 15 * w
+        ws.cell(row, rank_col + 6).value = round(pf.get(p, 0), 2)
+
+    # Belt-and-braces for anyone who later opens this file in real Excel: force
+    # a full recalculation on open, so formula cells this function didn't
+    # touch (e.g. on the Individual Stats / Issues - DAQs sheets) pick up
+    # fresh values instead of showing blank from the cache loss described above.
+    wb.calculation.fullCalcOnLoad = True
+
+    wb.save(path)
+    r2_service.upload_file(path)
+
+    # Local import: player_stats_service imports league_service at load time.
+    from services.player_stats_service import invalidate_cache
+    invalidate_cache()
+
+    return len(matches)

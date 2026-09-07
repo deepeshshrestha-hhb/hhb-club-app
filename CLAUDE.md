@@ -33,6 +33,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - **Players** (`/players`) — directory synced from Spond + computed all-time
     stats and HHB Score leaderboard, plus a **Club Analytics** tab (age
     demographics, longest-serving, most-active / inactive by signup hours)
+  - **Weekly Score Upload** (`/weekly-scores`) — self-service Sunday doubles
+    score entry (replacing WhatsApp), with live duplicate-row highlighting;
+    admin opens/closes a transient weekly session and submits it straight into
+    the League workbook
   - **Hours Played** — signup-derived activity (last 4 weeks / 6 months)
     computed from Spond RSVPs; surfaced via `/api/hours-played/*` JSON and on
     profile/analytics views (distinct from the tournament-based HHB Score)
@@ -67,7 +71,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Architecture Notes
 
 Standard Flask blueprint layout. App factory `create_app()` in [app.py](app.py)
-registers seven blueprints and, on startup, pulls the canonical data files from R2
+registers ten blueprints and, on startup, pulls the canonical data files from R2
 into local `data/` + `tournaments/` via `r2_service.download_all()` (a no-op
 locally when `R2_*` is unset). The Spond member CSV is **no longer** refreshed on
 startup — it's fetched on demand via Admin → Spond Refresh. Top-level routes
@@ -86,13 +90,18 @@ routes/                 # Flask blueprints (thin; delegate to services)
   admin_routes.py       # /admin, /admin/login, Spond Refresh, Refresh Signup Analytics,
                         #   Refresh Data from R2, club + podium photo mgmt; admin_required
   feedback_routes.py    # /feedback, /feedback/submit, /feedback/status, /feedback/delete (admin)
+  weekly_score_routes.py # /weekly-scores + api/ (add/amend/delete) + admin/ (open/close/submit)
 services/               # Business logic + data parsing (the heart of the app)
-  spond_service.py      # Live Spond fetch: events (calendar) + members (CSV); _parse_timestamp, LOCAL_TZ
+  spond_service.py      # Live Spond fetch: events (calendar) + members (CSV) + per-date confirmed
+                        #   attendees (get_confirmed_attendees, for Weekly Score Upload); _parse_timestamp, LOCAL_TZ
   calendar_service.py   # Weekly sessions (via Spond) + annual events (Excel)
   excel_service.py      # load_excel/save_excel + load_workbook_normalized() (backslash-zip fix)
   tournament_service.py # Generic tournament CRUD + Doubles .xlsm parser
   championship_service.py
-  league_service.py
+  league_service.py     # Also: get_league_roster/resolve_attendee_names + write_weekly_scores()
+                        #   (writes Weekly Score Upload matches into the live season's .xlsm)
+  weekly_score_service.py # Weekly Score Upload session (data/WeeklyScoreSession.json): open/close/
+                        #   add/amend/delete/submit-to-database, duplicate-row detection
   player_service.py     # Reads hhb_members.csv, merges stats + signup hours, ranks players
   player_stats_service.py # Computes per-player tournament stats + HHB Score (cached)
   analytics_service.py  # Signup-hours pipeline (Spond RSVPs → CSV → per-player hours) +
@@ -108,7 +117,8 @@ models/                 # Lightweight plain classes (Player, Match, etc.) — mi
 templates/              # Jinja2 templates; base.html holds the navbar + feedback modal
 static/                 # styles.css, css/, js/ (calendar.js, tournaments.js), images/ (+ photos/, podium/)
 data/                   # Excel club data + hhb_members.csv, player_hours.csv,
-                        #   signups_history.csv, signups_meta.json (all regenerated from Spond)
+                        #   signups_history.csv, signups_meta.json (all regenerated from Spond),
+                        #   WeeklyScoreSession.json (transient - deleted on submit-to-database)
 tournaments/            # Per-year tournament scoresheets (.xlsm) — source of truth
 scripts/                # seed_r2.py (upload+verify), pull_r2.py (download-only snapshot)
 ```
@@ -143,6 +153,24 @@ scripts/                # seed_r2.py (upload+verify), pull_r2.py (download-only 
 - **Photos** live as files under `static/images/photos/` (club/event, metadata
   in `data/Photos.xlsx`) and `static/images/podium/` (numbered variants, no
   metadata file), each mirrored to R2 and editable via the Admin photo pages.
+- **Weekly Score Upload** ([weekly_score_service.py](services/weekly_score_service.py))
+  replaces WhatsApp score submission for Sunday doubles. A single transient
+  session (`data/WeeklyScoreSession.json`, R2-backed) tracks status
+  (none/open/closed) + in-progress matches; the player dropdown is populated
+  from that Sunday's confirmed Spond attendees
+  (`spond_service.get_confirmed_attendees`), resolved to the league's own
+  player-name spelling (`league_service.resolve_attendee_names`, reusing
+  `player_stats_service.ALIASES`). **Submit to Database**
+  (`league_service.write_weekly_scores`) writes the matches straight into that
+  season's League `.xlsm` (reusing pre-built blank rows for the date if the
+  sheet has them, else appending new ones) and then recomputes and overwrites
+  — as literal values, not formulas — every played row's Winner/Difference/Points
+  and every roster player's Played/Won/Lost/Points/PF, for the **whole** sheet,
+  not just the new rows. That's required because opening a workbook with
+  openpyxl and saving it drops the cached result of *every* formula in the
+  file (openpyxl never evaluates formulas) — see the docstring on
+  `write_weekly_scores` before touching this. Session clears back to "none"
+  once submitted, ready for next Sunday.
 - Secrets live only in `.env` (gitignored). `.env.example` documents required
   vars: `SECRET_KEY`, `SPOND_USERNAME`, `SPOND_PASSWORD`, `SPOND_GROUP_ID`,
   `R2_*` (durable storage), `ADMIN_USERNAME`/`ADMIN_PASSWORD` (admin login).
@@ -223,6 +251,13 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   optional Claude AI "Summarize / Rewrite / change tone" assist (needs
   `ANTHROPIC_API_KEY`; degrades to a plain text field when unset).
 - League "Final Standings" table is sortable by Played / Won / Win %.
+- Weekly Score Upload (`/weekly-scores`): self-service Sunday score entry with
+  a Spond-attendance-driven player dropdown, duplicate-row highlighting, and
+  admin open/close/submit-to-database controls that write straight into the
+  live season's League workbook. Not yet used in production for a real Sunday
+  — worth a close look at the first live submission (see the Suggested Build
+  Approach's step 6 in the original spec: "test the full weekly cycle
+  end-to-end for one Sunday before rolling out to players").
 
 **In progress / partial:**
 - `/api/calendar` still serves `ClubCalendar.xlsx` data, not live Spond — noted
@@ -230,6 +265,22 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
 - `models/` classes are minimal and largely unused; logic lives in services.
 
 **Known issues / gotchas:**
+- **Weekly Score Upload rows lose their live Excel formulas.** Every row
+  `write_weekly_scores()` touches gets correct Winner/Difference/Points/
+  standings numbers, but as literal values, not formulas — hand-editing one of
+  those rows' scores later in Excel won't auto-update its derived columns
+  (copy the formula from an untouched row if that's ever needed). This is a
+  deliberate trade-off: openpyxl can't evaluate formulas and there's no
+  headless Excel/LibreOffice available on Render's Python buildpack, so
+  writing scores from the web form means recomputing those columns in Python
+  instead of leaving Excel to do it. See the docstring on
+  `league_service.write_weekly_scores` for the full reasoning.
+- **A brand-new league player must still be added to the season's roster
+  block in Excel** (the `PLAYERS_IDS`/points-table names, same as before this
+  feature) for their Weekly Score Upload results to count toward standings —
+  `resolve_attendee_names()` falls back to their plain first name so the match
+  itself still gets recorded, but Played/Won/Points won't include them until
+  they're in the roster.
 - `COMPLETED_2026_EVENTS` set in [calendar_service.py](services/calendar_service.py)
   is hand-maintained — update it as 2026 events pass.
 - All three tournament archives (Doubles, Championships, League) auto-discover
@@ -390,6 +441,37 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   to match this repo's history) and sync local master. *Why:* the user wants
   the full branch → PR → merge → sync cycle to run end-to-end without waiting
   for a manual approval step on GitHub.
+- **2026-09-07 — Added Weekly Score Upload** (`weekly_score_service.py`,
+  `weekly_score_routes.py`, `templates/weekly_scores.html`,
+  `static/js/weekly_scores.js`), replacing WhatsApp-based Sunday score
+  submission per the feature spec. Session state is a single transient JSON
+  file (`data/WeeklyScoreSession.json`, R2-backed), not a new Excel sheet —
+  matches the existing lightweight-JSON pattern already used for
+  `committee.json`/`about_content.json` rather than introducing a new service
+  category. The player dropdown resolves that Sunday's live Spond attendance
+  to the league's own player-name spelling (new
+  `spond_service.get_confirmed_attendees` + `league_service.
+  resolve_attendee_names`, reusing `player_stats_service.ALIASES` for
+  nickname mapping) so submitted names line up with the sheet's existing
+  standings formulas, falling back to the full club roster if Spond has
+  nothing for that date. The bigger design problem was **submitting into the
+  live `.xlsm`**: openpyxl can't evaluate formulas, and saving a workbook it
+  opened drops the cached result of every formula in the file, not just ones
+  it edits — confirmed by a round-trip test before writing any real code
+  (`ws['C5']='Alice'; wb.save(...)` blanked every other formula cell in the
+  sheet, old rows included). Since there's no headless Excel/LibreOffice on
+  Render's Python buildpack, `league_service.write_weekly_scores()`
+  recomputes Winner/Difference/Points per match row and Played/Won/Lost/
+  Points/PF per roster player itself (replicating the sheet's own formulas,
+  including its player-ID-as-prime-number trick for the parts that turned out
+  to not actually matter downstream) and writes them as literal values, for
+  the *whole* sheet on every submit — verified end-to-end against a copy of
+  the real 2026 league workbook (`get_league()` reads back correct winners,
+  diffs and standings with no Excel involved). *Why not LibreOffice
+  headless?* `render.yaml` is a plain Python buildpack
+  (`buildCommand: pip install -r requirements.txt`), so a system package
+  isn't available without moving to a Docker-based Render service — too big
+  an infra change for this feature alone.
 
 ---
 
