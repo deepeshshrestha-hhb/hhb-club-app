@@ -225,7 +225,6 @@
                     <tr>
                         <th style="position:sticky;left:0;z-index:3;background:#1a1a1a;">#</th>
                         <th style="position:sticky;left:36px;z-index:3;background:#1a1a1a;">Name</th>
-                        <th>Age</th>
                         <th title="Annual Doubles Classic seasons">DC</th>
                         <th title="Annual Championships seasons">Champ</th>
                         <th title="Annual Players League seasons">League</th>
@@ -253,7 +252,6 @@
                             <span class="ms-1" title="Has a profile" style="font-size:.7rem;color:var(--hhb-accent)">●</span>
                             {% endif %}
                         </td>
-                        <td class="text-muted small">{{ p.age or '—' }}</td>
                         <td class="text-center">
                             {% if p.dt_count %}<span class="badge bg-secondary">{{ p.dt_count }}</span>{% else %}<span class="text-muted">—</span>{% endif %}
                         </td>
@@ -292,7 +290,7 @@
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="12" class="text-muted text-center py-4">No players found. Check that Spond sync ran on startup.</td></tr>
+                    <tr><td colspan="11" class="text-muted text-center py-4">No players found. Check that Spond sync ran on startup.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
