@@ -29,6 +29,7 @@ from services.player_service import get_player_names
 SESSION_PATH = Path(Config.DATA_DIR) / "WeeklyScoreSession.json"
 
 VALID_SCORES = set(range(1, 31))
+VALID_COURTS = set(range(1, 5))
 
 
 def _defaults():
@@ -140,13 +141,23 @@ def _validate_match(fields):
         score2 = int(fields.get("score2"))
     except (TypeError, ValueError):
         raise ValueError("Scores must be numbers.")
+    try:
+        court_no = int(fields.get("court_no"))
+    except (TypeError, ValueError):
+        raise ValueError("Court No. is required.")
     if not all([p1, p2, p3, p4]):
         raise ValueError("All four players are required.")
     if score1 not in VALID_SCORES or score2 not in VALID_SCORES:
         raise ValueError("Scores must be between 1 and 30.")
     if score1 == score2:
         raise ValueError("The two team scores can't be equal (someone has to win the buzzer).")
-    return {"p1": p1, "p2": p2, "score1": score1, "p3": p3, "p4": p4, "score2": score2}
+    if court_no not in VALID_COURTS:
+        raise ValueError("Court No. must be between 1 and 4.")
+    return {
+        "court_no": court_no,
+        "p1": p1, "p2": p2, "score1": score1,
+        "p3": p3, "p4": p4, "score2": score2,
+    }
 
 
 def add_match(fields):

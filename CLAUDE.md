@@ -156,8 +156,10 @@ scripts/                # seed_r2.py (upload+verify), pull_r2.py (download-only 
 - **Weekly Score Upload** ([weekly_score_service.py](services/weekly_score_service.py))
   replaces WhatsApp score submission for Sunday doubles. A single transient
   session (`data/WeeklyScoreSession.json`, R2-backed) tracks status
-  (none/open/closed) + in-progress matches; the player dropdown is populated
-  from that Sunday's confirmed Spond attendees
+  (none/open/closed) + in-progress matches, each with a required **Court No.**
+  (1-4, the club only has 4 courts) added 2026-09-07 for court-usage analytics
+  — see `get_league()`'s existing `top_players_courts`. The player dropdown is
+  populated from that Sunday's confirmed Spond attendees
   (`spond_service.get_confirmed_attendees`), resolved to the league's own
   player-name spelling (`league_service.resolve_attendee_names`, reusing
   `player_stats_service.ALIASES`). **Submit to Database**
@@ -472,6 +474,20 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   (`buildCommand: pip install -r requirements.txt`), so a system package
   isn't available without moving to a Docker-based Render service — too big
   an infra change for this feature alone.
+- **2026-09-07 — Added required Court No. (1-4) to Weekly Score Upload.**
+  Requested for court-usage analytics. A `court-select` dropdown at the top
+  of both the entry form and the amend modal, and a `Court` column at the
+  front of the results table. Validated server-side (`weekly_score_service.
+  VALID_COURTS`, required - not optional, unlike everything else about the
+  session which degrades gracefully) and written into the league sheet's
+  existing `Court No.` column (K, only present on the 2026+ template -
+  `write_weekly_scores` silently skips it for an older template rather than
+  erroring) alongside the rest of the match on submit. *Why:* the club only
+  has 4 physical courts, and Court No. already existed as an optional column
+  in the 2026 sheet (see the 2026-06 court-rotation decision) - this feature
+  is what actually starts populating it every week instead of leaving it
+  blank, so `get_league()`'s existing `top_players_courts` analytics has real
+  data to work with going forward.
 
 ---
 
