@@ -88,20 +88,27 @@
 
         body.innerHTML = matches.map(function (m) {
             var rowClass = m.is_duplicate ? 'duplicate-row' : '';
+            // Always show the winning team first, whichever slot (Team 1/2)
+            // it was actually entered into - scores can never be equal, so
+            // there's always a clear winner to lead with.
+            var team1Won = m.score1 > m.score2;
+            var winTeam = team1Won ? [m.p1, m.p2] : [m.p3, m.p4];
+            var winScore = team1Won ? m.score1 : m.score2;
+            var loseTeam = team1Won ? [m.p3, m.p4] : [m.p1, m.p2];
+            var loseScore = team1Won ? m.score2 : m.score1;
             var actions = canEdit
                 ? '<td class="text-center text-nowrap">' +
-                  '<button class="btn btn-outline-secondary btn-sm me-1" data-amend="' + m.id + '">Amend</button>' +
-                  '<button class="btn btn-outline-danger btn-sm" data-delete="' + m.id + '">Delete</button>' +
-                  '</td>'
+                  '<div class="d-flex flex-column gap-1">' +
+                  '<button class="btn btn-outline-secondary btn-sm scores-btn-compact" data-amend="' + m.id + '">Edit</button>' +
+                  '<button class="btn btn-outline-danger btn-sm scores-btn-compact" data-delete="' + m.id + '">Del</button>' +
+                  '</div></td>'
                 : '';
             return '<tr class="' + rowClass + '" data-match-id="' + m.id + '">' +
                 '<td class="text-center">' + escapeHtml(m.court_no) + '</td>' +
-                '<td>' + escapeHtml(m.p1) + '</td>' +
-                '<td>' + escapeHtml(m.p2) + '</td>' +
-                '<td class="text-center fw-semibold">' + m.score1 + '</td>' +
-                '<td>' + escapeHtml(m.p3) + '</td>' +
-                '<td>' + escapeHtml(m.p4) + '</td>' +
-                '<td class="text-center fw-semibold">' + m.score2 + '</td>' +
+                '<td>' + escapeHtml(winTeam.join(' / ')) + '</td>' +
+                '<td class="text-center fw-bold text-success">' + winScore + '</td>' +
+                '<td>' + escapeHtml(loseTeam.join(' / ')) + '</td>' +
+                '<td class="text-center text-muted">' + loseScore + '</td>' +
                 actions +
                 '</tr>';
         }).join('');
@@ -218,10 +225,20 @@
             var id = amendBtn.dataset.amend;
             var match = (state.matches || []).find(function (m) { return m.id === id; });
             if (!match) return;
-            populatePlayerSelect(amendForm.querySelector('[name="p1"]'), state.players || []);
-            populatePlayerSelect(amendForm.querySelector('[name="p2"]'), state.players || []);
-            populatePlayerSelect(amendForm.querySelector('[name="p3"]'), state.players || []);
-            populatePlayerSelect(amendForm.querySelector('[name="p4"]'), state.players || []);
+            // The live attendance-driven player list can have moved on since
+            // this match was submitted (someone dropped out, list refreshed,
+            // etc.) - make sure this match's own four players are always
+            // selectable options, or setting .value below silently fails to
+            // select anything and the field looks blank.
+            var amendPlayers = (state.players || []).slice();
+            [match.p1, match.p2, match.p3, match.p4].forEach(function (p) {
+                if (p && amendPlayers.indexOf(p) === -1) amendPlayers.push(p);
+            });
+            amendPlayers.sort(function (a, b) { return a.localeCompare(b); });
+            populatePlayerSelect(amendForm.querySelector('[name="p1"]'), amendPlayers);
+            populatePlayerSelect(amendForm.querySelector('[name="p2"]'), amendPlayers);
+            populatePlayerSelect(amendForm.querySelector('[name="p3"]'), amendPlayers);
+            populatePlayerSelect(amendForm.querySelector('[name="p4"]'), amendPlayers);
             populateScoreSelect(amendForm.querySelector('[name="score1"]'));
             populateScoreSelect(amendForm.querySelector('[name="score2"]'));
             populateCourtSelect(amendForm.querySelector('[name="court_no"]'));
