@@ -144,6 +144,22 @@
         el.hidden = !msg;
     }
 
+    function showToast(message) {
+        var toastEl = document.getElementById('scoreToast');
+        // Created lazily (not at load time) so a slow/blocked Bootstrap JS
+        // load can't throw here and abort the rest of this script.
+        if (!toastEl || typeof bootstrap === 'undefined') return;
+        document.getElementById('scoreToastBody').textContent = message;
+        bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 3000 }).show();
+    }
+
+    function duplicatePlayers(form) {
+        var names = ['p1', 'p2', 'p3', 'p4']
+            .map(function (n) { return form.querySelector('[name="' + n + '"]').value; })
+            .filter(function (v) { return v; });
+        return new Set(names).size !== names.length;
+    }
+
     function formToFields(form) {
         var fd = new FormData(form);
         return {
@@ -162,12 +178,21 @@
 
     // Court No. + all four players + both scores are all `required` selects,
     // so the browser's own validity check already tells us whether every
-    // field has a real (non-placeholder) value picked - no need to duplicate
-    // that field-by-field. Keeps the submit/save button disabled until then,
-    // so a match can't go out (or a server round-trip happen) half-filled.
-    function wireSubmitGate(form, button) {
+    // field has a real (non-placeholder) value picked. On top of that, the
+    // four players must be four *different* people - a player can't be in
+    // both teams. Keeps the submit/save button disabled until both hold, and
+    // explains why via msgEl when the fields are filled in but a player was
+    // picked twice (the case that's otherwise easy to miss).
+    function wireSubmitGate(form, button, msgEl) {
         if (!form || !button) return;
-        function update() { button.disabled = !form.checkValidity(); }
+        function update() {
+            var complete = form.checkValidity();
+            var duplicate = complete && duplicatePlayers(form);
+            button.disabled = !complete || duplicate;
+            if (msgEl) {
+                showError(msgEl, duplicate ? "The same player can't be in both teams." : '');
+            }
+        }
         form.addEventListener('change', update);
         form.addEventListener('input', update);
         update();
@@ -177,11 +202,11 @@
     // --- Add score ---
     var scoreForm = document.getElementById('scoreForm');
     var scoreSubmitBtn = scoreForm ? scoreForm.querySelector('button[type="submit"]') : null;
-    var updateScoreGate = wireSubmitGate(scoreForm, scoreSubmitBtn);
+    var updateScoreGate = wireSubmitGate(scoreForm, scoreSubmitBtn, document.getElementById('formValidationMsg'));
     if (scoreForm) {
         scoreForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            if (!scoreForm.checkValidity()) return; // belt-and-braces; button should already be disabled
+            if (!scoreForm.checkValidity() || duplicatePlayers(scoreForm)) return; // belt-and-braces; button should already be disabled
             var errEl = document.getElementById('formError');
             showError(errEl, '');
             fetch('/weekly-scores/api/matches', {
@@ -199,6 +224,7 @@
                     render();
                     clearForm(scoreForm);
                     updateScoreGate();
+                    showToast('✅ Score submitted.');
                 })
                 .catch(function () { showError(errEl, 'Network error - please try again.'); });
         });
@@ -208,7 +234,7 @@
     var amendModalEl = document.getElementById('amendModal');
     var amendForm = document.getElementById('amendForm');
     var amendSaveBtn = document.getElementById('amendSaveBtn');
-    var updateAmendGate = wireSubmitGate(amendForm, amendSaveBtn);
+    var updateAmendGate = wireSubmitGate(amendForm, amendSaveBtn, document.getElementById('amendValidationMsg'));
 
     function getAmendModal() {
         // Created lazily (not at load time) so a slow/blocked Bootstrap JS
@@ -287,6 +313,7 @@
                     render();
                     var modal = getAmendModal();
                     if (modal) modal.hide();
+                    showToast('✅ Score updated.');
                 })
                 .catch(function () { showError(errEl, 'Network error - please try again.'); });
         });

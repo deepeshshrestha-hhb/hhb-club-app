@@ -488,6 +488,27 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   is what actually starts populating it every week instead of leaving it
   blank, so `get_league()`'s existing `top_players_courts` analytics has real
   data to work with going forward.
+- **2026-09-07 — Weekly Score Upload polish: caching fix, disabled-until-valid
+  submit, Amend prefill fix, compact/winner-first table, success toast,
+  unique-player validation.** Several rapid follow-ups from live use on the
+  first real Sunday: (1) a stale-cache bug where the Court No. dropdown
+  showed blank on the live site, root-caused to the Cloudflare Worker reverse
+  proxy caching the old JS bundle at the edge - fixed generically with an
+  `asset_version()` Jinja global that appends an mtime-based `?v=...` to the
+  script tag. (2) Submit/Save buttons are disabled until every field
+  (`form.checkValidity()`) is filled. (3) Amend was silently failing to
+  pre-select players whose names had fallen off the live attendance list
+  since submission - fixed by always adding the match's own four players as
+  options first. (4) Results table made phone-portrait-friendly: merged
+  Player 1+2 / 3+4 into single "Team" columns, shortened headers, and always
+  shows the winning team first regardless of entry order (display-only - the
+  underlying stored/written data is unchanged). (5) A Bootstrap toast now
+  confirms a successful submit/amend (there was previously no visual cue).
+  (6) The same player can no longer appear in both teams - validated both
+  client-side (button disabled + an inline message explaining why) and
+  server-side (`weekly_score_service._validate_match`, since a duplicate
+  player had already gotten into the live 6-Sep session before this fix
+  shipped - existing bad rows need manual deletion, this only stops new ones).
 
 ---
 
