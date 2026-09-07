@@ -156,6 +156,68 @@ def fetch_members_to_csv():
         print(f"Spond member fetch skipped (using cached CSV): {exc}")
 
 
+async def _fetch_confirmed_attendees_async(target_date):
+    """Fetch confirmed (accepted) attendees for every Spond event on
+    target_date, live, returning [{first_name, last_name}, ...]. Works for a
+    past date as well as a future one - the date bounds just scope the search,
+    Spond's own history isn't limited to upcoming events."""
+    if spond is None:
+        raise RuntimeError(
+            "The 'spond' package is not installed. Run: pip install spond"
+        )
+
+    username = Config.SPOND_USERNAME
+    password = Config.SPOND_PASSWORD
+    group_id = Config.SPOND_GROUP_ID
+
+    if not username or "your_email" in username:
+        raise RuntimeError(
+            "Spond credentials are not set. Update SPOND_USERNAME, SPOND_PASSWORD "
+            "and SPOND_GROUP_ID in config.py."
+        )
+
+    s = spond.Spond(username=username, password=password)
+    try:
+        min_start = datetime(target_date.year, target_date.month, target_date.day)
+        max_start = min_start + timedelta(days=1)
+        events = await s.get_events(
+            group_id=group_id,
+            min_start=min_start,
+            max_start=max_start,
+            include_scheduled=True,
+        )
+        group = await s.get_group(group_id)
+    finally:
+        await s.clientsession.close()
+
+    members = {m.get("id"): m for m in (group.get("members") or [])}
+    attendees = {}
+    for ev in events or []:
+        accepted = (ev.get("responses") or {}).get("acceptedIds") or []
+        for uid in accepted:
+            m = members.get(uid)
+            if not m:
+                continue
+            attendees[uid] = {
+                "first_name": m.get("firstName", ""),
+                "last_name": m.get("lastName", ""),
+            }
+    return list(attendees.values())
+
+
+def get_confirmed_attendees(target_date):
+    """Synchronous wrapper: confirmed attendee {first_name, last_name} dicts
+    for every Spond event on target_date (a date object). Used to populate the
+    Weekly Score Upload player dropdowns with that Sunday's actual sign-ups,
+    right up to submission time. Returns [] (not raising) if Spond is
+    unreachable or there's no matching event, so the form still renders."""
+    try:
+        return asyncio.run(_fetch_confirmed_attendees_async(target_date))
+    except Exception as exc:
+        print(f"Spond attendee fetch failed for {target_date}: {exc}")
+        return []
+
+
 def get_weekly_sessions(weeks_ahead=8):
     """
     Synchronous wrapper that fetches live Spond events (today onwards) and returns
