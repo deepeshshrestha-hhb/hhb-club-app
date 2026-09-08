@@ -33,6 +33,20 @@ SESSION_PATH = Path(Config.DATA_DIR) / "WeeklyScoreSession.json"
 VALID_SCORES = set(range(1, 31))
 VALID_COURTS = set(range(1, 5))
 
+# Guards every read-modify-write cycle on the session file. Render runs
+# gunicorn with a single worker but 4 threads, all sharing this same process
+# and file - without a lock, two near-simultaneous submissions (very plausible
+# with 4-5 people entering scores at once on a Sunday) could both _load() the
+# same "before" state, each append their own match, and the second _save()
+# would silently overwrite the first, losing a submitted score with no error
+# to anyone. Every function that reads and/or writes the session file must
+# hold this lock for the whole cycle - _load()/_save() themselves don't
+# acquire it (they're called by callers that already hold it, and this lock
+# isn't reentrant). Not a substitute for the R2 upload staying off the
+# critical path (see _save()) - this only serializes the fast local
+# read-modify-write, not the background R2 push.
+_session_lock = threading.Lock()
+
 # A resubmission of the exact same match (same 4 players + scores, regardless
 # of team order) within this window is treated as a duplicate tap/retry, not a
 # genuine second match - see add_match().
@@ -214,7 +228,8 @@ def _player_options(target_date):
 
 
 def get_state():
-    data = _load()
+    with _session_lock:
+        data = _load()
     target_date = date.fromisoformat(data["date"]) if data.get("date") else None
     matches = sorted(data["matches"], key=lambda m: m["submitted_at"], reverse=True)
     return {
@@ -227,27 +242,29 @@ def get_state():
 
 def open_session(date_str):
     try:
-        target_date = date.fromisoformat(date_str)
+        date.fromisoformat(date_str)
     except (TypeError, ValueError):
         raise ValueError("Please choose a valid date.")
-    data = _load()
-    if data.get("date") != date_str:
-        # A new date - start a fresh, empty session. (Re-opening the *same*
-        # date, e.g. after an accidental Close, keeps whatever matches are
-        # already there.)
-        data = {"status": "open", "date": date_str, "matches": []}
-    else:
-        data["status"] = "open"
-    _save(data)
+    with _session_lock:
+        data = _load()
+        if data.get("date") != date_str:
+            # A new date - start a fresh, empty session. (Re-opening the
+            # *same* date, e.g. after an accidental Close, keeps whatever
+            # matches are already there.)
+            data = {"status": "open", "date": date_str, "matches": []}
+        else:
+            data["status"] = "open"
+        _save(data)
     return data
 
 
 def close_session():
-    data = _load()
-    if data.get("status") != "open":
-        raise ValueError("There's no open session to close.")
-    data["status"] = "closed"
-    _save(data)
+    with _session_lock:
+        data = _load()
+        if data.get("status") != "open":
+            raise ValueError("There's no open session to close.")
+        data["status"] = "closed"
+        _save(data)
     return data
 
 
@@ -283,81 +300,91 @@ def _validate_match(fields):
 
 
 def add_match(fields):
-    data = _load()
-    if data.get("status") != "open":
-        raise ValueError("The session isn't open for entries right now.")
     match = _validate_match(fields)
+    with _session_lock:
+        data = _load()
+        if data.get("status") != "open":
+            raise ValueError("The session isn't open for entries right now.")
 
-    # A repeated tap (or retry after a slow/no response) resubmitting the
-    # exact same match within RECENT_DUPLICATE_WINDOW is a duplicate, not a
-    # genuine second match - return the existing row instead of creating
-    # another one. This is a server-side safety net independent of the
-    # client-side submit lock (weekly_scores.js), which prevents the same
-    # bug from a different angle (multiple devices, a retried request, a
-    # slow response the client-side lock didn't cover). See the 2026-09-08
-    # Decisions Log entry for the incident this fixes.
-    now = datetime.now()
-    key = _duplicate_key(match)
-    for m in data["matches"]:
-        if _duplicate_key(m) != key:
-            continue
-        try:
-            submitted = datetime.fromisoformat(m["submitted_at"])
-        except ValueError:
-            continue
-        if now - submitted < RECENT_DUPLICATE_WINDOW:
-            return m
+        # A repeated tap (or retry after a slow/no response) resubmitting the
+        # exact same match within RECENT_DUPLICATE_WINDOW is a duplicate, not
+        # a genuine second match - return the existing row instead of
+        # creating another one. This is a server-side safety net independent
+        # of the client-side submit lock (weekly_scores.js), which prevents
+        # the same bug from a different angle (multiple devices, a retried
+        # request, a slow response the client-side lock didn't cover). See
+        # the 2026-09-08 Decisions Log entry for the incident this fixes.
+        now = datetime.now()
+        key = _duplicate_key(match)
+        for m in data["matches"]:
+            if _duplicate_key(m) != key:
+                continue
+            try:
+                submitted = datetime.fromisoformat(m["submitted_at"])
+            except ValueError:
+                continue
+            if now - submitted < RECENT_DUPLICATE_WINDOW:
+                return m
 
-    match["id"] = str(uuid.uuid4())
-    match["submitted_at"] = now.isoformat()
-    data["matches"].append(match)
-    _save(data)
-    return match
+        match["id"] = str(uuid.uuid4())
+        match["submitted_at"] = now.isoformat()
+        data["matches"].append(match)
+        _save(data)
+        return match
 
 
 def amend_match(match_id, fields):
-    data = _load()
-    if data.get("status") != "open":
-        raise ValueError("The session isn't open for edits right now.")
     updated = _validate_match(fields)
-    for m in data["matches"]:
-        if m["id"] == match_id:
-            updated["id"] = match_id
-            updated["submitted_at"] = m["submitted_at"]
-            m.clear()
-            m.update(updated)
-            _save(data)
-            return m
-    raise ValueError("That match no longer exists.")
+    with _session_lock:
+        data = _load()
+        if data.get("status") != "open":
+            raise ValueError("The session isn't open for edits right now.")
+        for m in data["matches"]:
+            if m["id"] == match_id:
+                updated["id"] = match_id
+                updated["submitted_at"] = m["submitted_at"]
+                m.clear()
+                m.update(updated)
+                _save(data)
+                return m
+        raise ValueError("That match no longer exists.")
 
 
 def delete_match(match_id):
-    data = _load()
-    if data.get("status") != "open":
-        raise ValueError("The session isn't open for edits right now.")
-    before = len(data["matches"])
-    data["matches"] = [m for m in data["matches"] if m["id"] != match_id]
-    if len(data["matches"]) == before:
-        raise ValueError("That match no longer exists.")
-    _save(data)
+    with _session_lock:
+        data = _load()
+        if data.get("status") != "open":
+            raise ValueError("The session isn't open for edits right now.")
+        before = len(data["matches"])
+        data["matches"] = [m for m in data["matches"] if m["id"] != match_id]
+        if len(data["matches"]) == before:
+            raise ValueError("That match no longer exists.")
+        _save(data)
 
 
 def submit_to_database():
     """Push the closed session's matches into the league workbook, then clear
     the session so the page is ready for next Sunday. Raises ValueError if the
     session isn't closed, has no date, or has no matches."""
-    data = _load()
-    if data.get("status") != "closed":
-        raise ValueError("Close the session first, then submit to the database.")
-    if not data.get("date"):
-        raise ValueError("No session date set.")
-    if not data.get("matches"):
-        raise ValueError("There are no scores to submit.")
+    with _session_lock:
+        data = _load()
+        if data.get("status") != "closed":
+            raise ValueError("Close the session first, then submit to the database.")
+        if not data.get("date"):
+            raise ValueError("No session date set.")
+        if not data.get("matches"):
+            raise ValueError("There are no scores to submit.")
+        target_date = date.fromisoformat(data["date"])
+        matches = sorted(data["matches"], key=lambda m: m["submitted_at"])
 
-    target_date = date.fromisoformat(data["date"])
-    matches = sorted(data["matches"], key=lambda m: m["submitted_at"])
+    # write_weekly_scores() writes to the league .xlsm - can take a while, and
+    # deliberately runs outside the lock so it doesn't block get_state() polls
+    # for its whole duration. Nothing else can mutate the session meanwhile:
+    # every mutating function above requires status "open", and this session
+    # is already "closed".
     count = write_weekly_scores(target_date, matches)
 
-    SESSION_PATH.unlink(missing_ok=True)
+    with _session_lock:
+        SESSION_PATH.unlink(missing_ok=True)
     r2_service.delete_file(SESSION_PATH)
     return count
