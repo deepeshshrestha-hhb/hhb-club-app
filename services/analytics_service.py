@@ -179,23 +179,53 @@ async def _fetch_member_map(s, group_id):
     return out
 
 
+def _existing_row_count(csv_path):
+    if not os.path.exists(csv_path):
+        return 0
+    try:
+        with open(csv_path, newline="", encoding="utf-8") as f:
+            return sum(1 for _ in csv.DictReader(f))
+    except OSError:
+        return 0
+
+
 def fetch_signups_history():
     """Fetch accepted-attendee signups for the last 6 months, overwrite the local
     data/signups_history.csv cache, and push it to R2. Fails silently (logs and
-    keeps the existing cache) so an admin refresh never 500s on a Spond hiccup."""
+    keeps the existing cache) so an admin refresh never 500s on a Spond hiccup.
+
+    Also refuses to overwrite with a suspiciously small result: a Spond fetch
+    that comes back with far fewer rows than the cache already has is more
+    likely a partial/rate-limited response (Spond "succeeding" but truncating)
+    than a genuine drop in signups - there's no throttling or paging weirdness
+    that would make a real 6-month history legitimately shrink by half
+    overnight. Overwriting in that case would silently lose real history (this
+    replaced a real incident: a refresh landed right after a Spond hiccup and
+    wiped out an already-cached date's attendees with nothing to show for it).
+    """
     csv_path = _data_path(SIGNUPS_CSV)
     try:
         rows = asyncio.run(_fetch_signups_async())
-        with open(csv_path, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=SIGNUPS_FIELDS)
-            writer.writeheader()
-            writer.writerows(rows)
-        logger.info("Signups: %d attendee rows written to %s", len(rows), csv_path)
-        r2_service.upload_file(csv_path)
-        return len(rows)
     except Exception as exc:  # noqa: BLE001
         logger.error("Signup history fetch skipped (using cached CSV): %s", exc)
         return 0
+
+    existing = _existing_row_count(csv_path)
+    if existing > 20 and len(rows) < existing * 0.5:
+        logger.error(
+            "Signup history fetch returned suspiciously few rows (%d vs %d "
+            "cached) - keeping the existing cache instead of overwriting with "
+            "what looks like a partial Spond response.", len(rows), existing,
+        )
+        return 0
+
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=SIGNUPS_FIELDS)
+        writer.writeheader()
+        writer.writerows(rows)
+    logger.info("Signups: %d attendee rows written to %s", len(rows), csv_path)
+    r2_service.upload_file(csv_path)
+    return len(rows)
 
 
 # --------------------------------------------------------------------------- #
