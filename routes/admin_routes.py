@@ -94,9 +94,25 @@ def sync_spond_route():
 def refresh_signups_route():
     """Re-fetch the last 6 months of Spond signups, rebuild the per-player hours
     cache, and upload both to R2. Use to force-refresh the signup analytics (the
-    Players/Calendar pages also auto-refresh it weekly in the background)."""
-    count = analytics_service.refresh_now()
-    flash(f"Signup analytics refreshed for {count} player(s).")
+    Players/Calendar pages also auto-refresh it weekly in the background).
+
+    Reports honestly when the Spond fetch itself failed or was blocked (see
+    analytics_service.refresh_now) - previously this always said "refreshed"
+    even when the fetch silently failed, so a real, ongoing failure looked
+    identical to success and went unnoticed for weeks."""
+    result = analytics_service.refresh_now()
+    if result["signups_fetched"] is None:
+        flash(
+            "Signup history fetch failed or was blocked (see server logs) - "
+            "still using the previously cached data. Player hours were "
+            "recomputed from that cache, but it was NOT refreshed from Spond.",
+            "danger",
+        )
+    else:
+        flash(
+            f"Signup analytics refreshed: {result['signups_fetched']} signup "
+            f"row(s), {result['hours_players']} player(s)."
+        )
     return redirect(url_for("admin.admin_page"))
 
 

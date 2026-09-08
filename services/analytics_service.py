@@ -228,13 +228,22 @@ def fetch_signups_history():
     overnight. Overwriting in that case would silently lose real history (this
     replaced a real incident: a refresh landed right after a Spond hiccup and
     wiped out an already-cached date's attendees with nothing to show for it).
+
+    Returns the number of rows written on a genuine successful fetch (0 is a
+    legitimate result for a brand-new season with nothing cached yet), or
+    None if the fetch failed outright or was blocked by the guard above -
+    callers MUST treat None as "the cache did not change" and must not mark
+    the data as fresh (see the 2026-09-08 refresh_now() fix: this used to be
+    conflated with a successful-but-empty fetch via a 0 return, which let a
+    silently-failing Spond fetch get stamped as up to date indefinitely and
+    masked weeks of real staleness behind a "refreshed" success message).
     """
     csv_path = _data_path(SIGNUPS_CSV)
     try:
         rows = asyncio.run(_fetch_signups_async())
     except Exception as exc:  # noqa: BLE001
         logger.error("Signup history fetch skipped (using cached CSV): %s", exc)
-        return 0
+        return None
 
     existing = _existing_row_count(csv_path)
     if existing > 20 and len(rows) < existing * 0.5:
@@ -243,7 +252,7 @@ def fetch_signups_history():
             "cached) - keeping the existing cache instead of overwriting with "
             "what looks like a partial Spond response.", len(rows), existing,
         )
-        return 0
+        return None
 
     def _write(f):
         writer = csv.DictWriter(f, fieldnames=SIGNUPS_FIELDS)
@@ -510,12 +519,28 @@ def _spond_configured():
 
 
 def refresh_now():
-    """Fetch signups + aggregate hours + stamp last-fetched. Returns the player
-    count. Used by both the admin button and the background auto-refresh."""
-    fetch_signups_history()
-    count = aggregate_hours()
-    _write_last_fetched()
-    return count
+    """Fetch signups + aggregate hours. Used by both the admin button and the
+    background auto-refresh. Returns {"signups_fetched", "hours_players"}:
+    "signups_fetched" is the row count on a genuine successful Spond fetch, or
+    None if the fetch failed or was blocked (see fetch_signups_history) -
+    "hours_players" (aggregate_hours's per-member count) is computed either
+    way, since it's just a recompute over whatever signups_history.csv
+    already has, stale or not.
+
+    last-fetched is only stamped when signups_fetched is not None. Stamping
+    it unconditionally (the previous behaviour) meant a Spond fetch that kept
+    silently failing or getting guard-blocked would still mark the cache as
+    fresh - hiding real staleness behind a "refreshed" message and stalling
+    the 7-day background auto-refresh from ever retrying, since as far as it
+    could tell nothing was overdue. This was the actual root cause of the
+    Weekly Score Upload dropdown reading weeks-stale attendance while every
+    refresh attempt reported success (see the matching 2026-09-08 Decisions
+    Log entry)."""
+    signups_fetched = fetch_signups_history()
+    hours_players = aggregate_hours()
+    if signups_fetched is not None:
+        _write_last_fetched()
+    return {"signups_fetched": signups_fetched, "hours_players": hours_players}
 
 
 def _is_stale():
@@ -528,8 +553,19 @@ def _is_stale():
 def _background_refresh():
     global _refreshing
     try:
-        n = refresh_now()
-        logger.info("Auto-refresh of signup analytics complete (%d players).", n)
+        result = refresh_now()
+        if result["signups_fetched"] is None:
+            logger.warning(
+                "Auto-refresh: signup history fetch did NOT update (still "
+                "stale - see the error above) - hours recomputed for %d "
+                "cached players, last-fetched left unstamped so this retries.",
+                result["hours_players"],
+            )
+        else:
+            logger.info(
+                "Auto-refresh of signup analytics complete (%d signup rows, "
+                "%d players).", result["signups_fetched"], result["hours_players"],
+            )
     except Exception as exc:  # noqa: BLE001
         logger.error("Auto-refresh of signup analytics failed: %s", exc)
     finally:
