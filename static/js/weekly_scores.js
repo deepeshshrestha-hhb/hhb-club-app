@@ -37,7 +37,15 @@
         }
     }
 
+    // Players a given <select> should offer, kept alongside it so the search
+    // combobox (see initPlayerCombobox below) can filter without re-deriving
+    // the list on every keystroke - populatePlayerSelect is the one place
+    // that decides what a select's options are, for both the plain rebuild
+    // and the search-filtered UI layered on top of it.
+    var comboboxPlayers = new WeakMap();
+
     function populatePlayerSelect(select, players) {
+        comboboxPlayers.set(select, players);
         var current = select.value;
         select.innerHTML = '';
         var placeholder = document.createElement('option');
@@ -57,13 +65,115 @@
         }
     }
 
+    function optionLabel(select) {
+        var opt = select.options[select.selectedIndex];
+        return opt && opt.value ? opt.textContent : '';
+    }
+
+    // Keeps a player-select's visible search-box text in sync with its
+    // actual (hidden) selected value - called after anything rebuilds the
+    // select's options or sets its value directly (populatePlayerSelect,
+    // clearForm, amend prefill). Skipped while the box has focus so a poll
+    // refresh mid-search doesn't wipe out what someone's currently typing.
+    function syncComboInput(select) {
+        var wrapper = select.closest('.player-combobox');
+        var input = wrapper && wrapper.querySelector('.player-search-input');
+        if (input && document.activeElement !== input) {
+            input.value = optionLabel(select);
+        }
+    }
+
     function refreshFormOptions() {
         document.querySelectorAll('.score-select').forEach(populateScoreSelect);
         document.querySelectorAll('.court-select').forEach(populateCourtSelect);
         document.querySelectorAll('.player-select').forEach(function (sel) {
             populatePlayerSelect(sel, state.players || []);
+            syncComboInput(sel);
         });
     }
+
+    // Type-ahead search for a player <select>: the real select stays hidden
+    // and is the single source of truth (value, `required`, FormData) so all
+    // existing validation/gating code works unchanged - this just drives it
+    // from a text input instead of a long native dropdown. Wired once per
+    // field at page load; populatePlayerSelect rebuilding the select's
+    // <option>s later doesn't need to re-wire anything here.
+    function initPlayerCombobox(select) {
+        var wrapper = select.closest('.player-combobox');
+        var input = wrapper && wrapper.querySelector('.player-search-input');
+        var menu = wrapper && wrapper.querySelector('.player-search-menu');
+        if (!input || !menu) return;
+
+        function optionEls() { return Array.prototype.slice.call(menu.querySelectorAll('[data-value]')); }
+        function activeIndex() { return optionEls().findIndex(function (o) { return o.classList.contains('active-option'); }); }
+        function setActive(idx) {
+            optionEls().forEach(function (o, i) { o.classList.toggle('active-option', i === idx); });
+            var el = optionEls()[idx];
+            if (el) el.scrollIntoView({ block: 'nearest' });
+        }
+        function closeMenu() { menu.hidden = true; menu.innerHTML = ''; }
+        function openMenu(filterText) {
+            var players = comboboxPlayers.get(select) || [];
+            var q = (filterText || '').trim().toLowerCase();
+            var matches = q ? players.filter(function (n) { return n.toLowerCase().indexOf(q) !== -1; }) : players;
+            if (!matches.length) {
+                menu.innerHTML = '<div class="list-group-item text-muted small">No matches</div>';
+            } else {
+                menu.innerHTML = matches.map(function (n) {
+                    return '<button type="button" class="list-group-item list-group-item-action" data-value="' +
+                        escapeHtml(n) + '">' + escapeHtml(n) + '</button>';
+                }).join('');
+                setActive(0);
+            }
+            menu.hidden = false;
+        }
+        function commit(name) {
+            select.value = name;
+            input.value = name;
+            closeMenu();
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        input.addEventListener('focus', function () { openMenu(''); });
+        input.addEventListener('input', function () { openMenu(input.value); });
+        input.addEventListener('keydown', function (e) {
+            if (menu.hidden) {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') openMenu(input.value);
+                return;
+            }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                setActive(Math.min(activeIndex() + 1, optionEls().length - 1));
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                setActive(Math.max(activeIndex() - 1, 0));
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                var opts = optionEls();
+                var target = opts[activeIndex()] || opts[0];
+                if (target) commit(target.dataset.value);
+            } else if (e.key === 'Escape') {
+                closeMenu();
+                input.value = optionLabel(select);
+            }
+        });
+        menu.addEventListener('mousedown', function (e) {
+            // mousedown (not click) + preventDefault so this fires before the
+            // input's blur handler would otherwise close the menu first.
+            var btn = e.target.closest('[data-value]');
+            if (!btn) return;
+            e.preventDefault();
+            commit(btn.dataset.value);
+        });
+        input.addEventListener('blur', function () {
+            setTimeout(function () {
+                closeMenu();
+                input.value = optionLabel(select);
+            }, 150);
+        });
+    }
+
+    document.querySelectorAll('.player-select').forEach(initPlayerCombobox);
 
     function escapeHtml(s) {
         var div = document.createElement('div');
@@ -174,6 +284,7 @@
         // reset() lands each <select> on the first real (enabled) option
         // instead of clearing it - explicitly blank every select instead.
         form.querySelectorAll('select').forEach(function (sel) { sel.value = ''; });
+        form.querySelectorAll('.player-select').forEach(syncComboInput);
     }
 
     // Court No. + all four players + both scores are all `required` selects,
@@ -276,6 +387,7 @@
             amendForm.querySelector('[name="p3"]').value = match.p3;
             amendForm.querySelector('[name="p4"]').value = match.p4;
             amendForm.querySelector('[name="score2"]').value = match.score2;
+            amendForm.querySelectorAll('.player-select').forEach(syncComboInput);
             updateAmendGate(); // setting .value directly doesn't fire 'change'
             showError(document.getElementById('amendError'), '');
             var modal = getAmendModal();
