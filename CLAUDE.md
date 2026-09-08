@@ -585,6 +585,22 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   incidentally satisfies "don't keep polling Spond for a date that's already
   happened" - once the cache has that date, the 10s state-poll no longer
   makes any live Spond call for it, just a local CSV read.
+- **2026-09-08 — `fetch_signups_history()` refuses to overwrite the cache
+  with a suspiciously small fetch.** Live incident: an Admin → Refresh Signup
+  Analytics click landed right after what looked like a transient Spond
+  hiccup (the same hiccup that briefly emptied the Calendar's live session
+  list) - `data/signups_history.csv` gets **fully overwritten** on every
+  call with whatever that run's live Spond fetch returns, no exception
+  needed, so a fetch that "succeeds" but comes back incomplete (Spond
+  rate-limited/truncated rather than erroring outright) would silently wipe
+  out real cached history - in this case seemingly losing 6-Sep's attendees,
+  which then vanished from the Weekly Score Upload dropdown. Fixed by
+  refusing the overwrite (logging instead, keeping the existing cache) when
+  the new fetch has fewer than half the rows already cached, but only once
+  the cache is non-trivial (>20 rows) so a genuinely small early-season
+  dataset can still grow normally. There's no legitimate scenario where a
+  real 6-month rolling history halves overnight, so this only ever blocks
+  what looks like a bad fetch.
 
 ---
 
