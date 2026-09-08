@@ -688,6 +688,35 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   wasn't caught by the two earlier "transient" fixes:* those (correctly)
   hardened against a bad fetch corrupting good data, but neither one made a
   failing fetch stop pretending to have succeeded - the actual gap.
+- **2026-09-08 — Found and fixed the actual root cause underneath the whole
+  Weekly Score Upload dropdown saga: a Spond login rate-limit storm from
+  zero request caching.** Live server logs (visible to the admin, not to
+  Claude - this dev environment has no production access) showed
+  `429 ... url='https://api.spond.com/core/v1/auth2/login'` even before
+  manually clicking Refresh Signup Analytics. `spond_service.
+  get_confirmed_attendees()` performed a brand-new Spond login on every
+  single call, with no caching anywhere. It's called from
+  `weekly_score_service._player_options()` on every
+  `/weekly-scores/api/state` poll (10s interval, `weekly_scores.js`) -
+  unconditionally for a future-dated still-open session, and, once the
+  signup-history cache fell behind (see the refresh-false-success fix
+  above), for a past date too on every single poll. From just one open
+  browser tab that's hundreds of fresh Spond logins per hour - enough to
+  trip Spond's own rate limiting, which in turn starved the legitimate
+  signup-history refresh of the same login capacity, making the stale
+  cache unable to ever recover on its own: a self-inflicted, self-sustaining
+  loop the app had no way to break out of by itself. Fixed with a 120s
+  in-process cache in `get_confirmed_attendees()`, keyed by date, caching a
+  failed/empty result too (not just success) - retrying a rate-limited
+  endpoint every 10s only prolongs the rate limit. Verified locally: 5
+  rapid calls (simulating 5 poll cycles) now trigger 1 real Spond fetch
+  instead of 5. *Why this wasn't caught by the earlier fixes today:* every
+  prior fix (atomic write, false-success masking, the diagnostic view) was
+  correct and necessary but treated the signup-history side; this is a
+  wholly separate code path (`get_confirmed_attendees`, not
+  `fetch_signups_history`) that only became visible once the false-success
+  masking was removed and a real error started showing up in the logs -
+  a case where fixing one bug's silence was what surfaced the next bug.
 
 ---
 
