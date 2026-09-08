@@ -16,6 +16,7 @@ matches get pushed into the annual league workbook.
 """
 import csv
 import json
+import threading
 import uuid
 from collections import Counter
 from datetime import date, datetime, timedelta
@@ -31,6 +32,11 @@ SESSION_PATH = Path(Config.DATA_DIR) / "WeeklyScoreSession.json"
 
 VALID_SCORES = set(range(1, 31))
 VALID_COURTS = set(range(1, 5))
+
+# A resubmission of the exact same match (same 4 players + scores, regardless
+# of team order) within this window is treated as a duplicate tap/retry, not a
+# genuine second match - see add_match().
+RECENT_DUPLICATE_WINDOW = timedelta(seconds=15)
 
 
 def _defaults():
@@ -55,7 +61,18 @@ def _save(data):
     SESSION_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(SESSION_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
-    r2_service.upload_file(SESSION_PATH)
+    # Fire-and-forget: r2_service.upload_file() is a blocking network call that
+    # retries up to 3x with exponential-backoff sleeps on any hiccup, and this
+    # path runs on every single add/amend/delete/open/close - on a busy Sunday
+    # that's every request tying up a thread for however long R2 takes. Render
+    # gives this app only 4 threads total, so a handful of concurrent or
+    # duplicate-tap submissions blocking here starved every other page on the
+    # site (Dashboard included), not just this one - see the 2026-09-08
+    # Decisions Log entry. The local write above is already durable enough for
+    # the live session (this is the only Render instance running), so a
+    # briefly-eventually-consistent R2 copy is an acceptable trade for keeping
+    # every request fast.
+    threading.Thread(target=r2_service.upload_file, args=(SESSION_PATH,), daemon=True).start()
 
 
 def default_session_date():
@@ -270,8 +287,29 @@ def add_match(fields):
     if data.get("status") != "open":
         raise ValueError("The session isn't open for entries right now.")
     match = _validate_match(fields)
+
+    # A repeated tap (or retry after a slow/no response) resubmitting the
+    # exact same match within RECENT_DUPLICATE_WINDOW is a duplicate, not a
+    # genuine second match - return the existing row instead of creating
+    # another one. This is a server-side safety net independent of the
+    # client-side submit lock (weekly_scores.js), which prevents the same
+    # bug from a different angle (multiple devices, a retried request, a
+    # slow response the client-side lock didn't cover). See the 2026-09-08
+    # Decisions Log entry for the incident this fixes.
+    now = datetime.now()
+    key = _duplicate_key(match)
+    for m in data["matches"]:
+        if _duplicate_key(m) != key:
+            continue
+        try:
+            submitted = datetime.fromisoformat(m["submitted_at"])
+        except ValueError:
+            continue
+        if now - submitted < RECENT_DUPLICATE_WINDOW:
+            return m
+
     match["id"] = str(uuid.uuid4())
-    match["submitted_at"] = datetime.now().isoformat()
+    match["submitted_at"] = now.isoformat()
     data["matches"].append(match)
     _save(data)
     return match

@@ -369,6 +369,12 @@
             if (!scoreForm.checkValidity() || duplicatePlayers(scoreForm)) return; // belt-and-braces; button should already be disabled
             var errEl = document.getElementById('formError');
             showError(errEl, '');
+            // Disable immediately (before the request even starts) so a slow
+            // response can't be mistaken for a failed submit and re-tapped -
+            // that was creating the same match 4-5 times over on a slow
+            // connection. updateScoreGate() in .finally() restores the right
+            // state afterwards (re-disabled if the form is now empty/invalid).
+            scoreSubmitBtn.disabled = true;
             fetch('/weekly-scores/api/matches', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -383,10 +389,10 @@
                     state = res.body;
                     render();
                     clearForm(scoreForm);
-                    updateScoreGate();
                     showToast('✅ Score submitted.');
                 })
-                .catch(function () { showError(errEl, 'Network error - please try again.'); });
+                .catch(function () { showError(errEl, 'Network error - please try again.'); })
+                .finally(function () { updateScoreGate(); });
         });
     }
 
@@ -459,6 +465,9 @@
             var errEl = document.getElementById('amendError');
             showError(errEl, '');
             var id = amendForm.querySelector('[name="id"]').value;
+            // See the matching note on scoreForm's submit handler - disable
+            // immediately so a slow response doesn't invite a repeat click.
+            amendSaveBtn.disabled = true;
             fetch('/weekly-scores/api/matches/' + id + '/amend', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -476,7 +485,8 @@
                     if (modal) modal.hide();
                     showToast('✅ Score updated.');
                 })
-                .catch(function () { showError(errEl, 'Network error - please try again.'); });
+                .catch(function () { showError(errEl, 'Network error - please try again.'); })
+                .finally(function () { updateAmendGate(); });
         });
     }
 
