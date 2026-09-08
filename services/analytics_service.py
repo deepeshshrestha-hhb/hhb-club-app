@@ -31,6 +31,7 @@ import datetime as _dt
 import json
 import logging
 import os
+import tempfile
 import threading
 from datetime import datetime, timedelta
 
@@ -71,6 +72,31 @@ _hours_cache = None
 
 def _data_path(filename):
     return os.path.join(Config.DATA_DIR, filename)
+
+
+def _atomic_write(path, write_fn):
+    """Write a file via a same-directory temp file + os.replace(), so a
+    concurrent reader (gunicorn runs multiple threads sharing this
+    filesystem) always sees either the complete old file or the complete new
+    one - never a truncated/partial one. Plain `open(path, "w")` truncates
+    immediately and streams content out over time, which a request thread
+    reading signups_history.csv or player_hours.csv mid-refresh could catch
+    half-written, producing exactly the flickering "some players missing"
+    symptom this replaced (the file always looked fine moments later, once
+    the write finished - the signature of a race, not a data bug)."""
+    fd, tmp_path = tempfile.mkstemp(
+        dir=os.path.dirname(path) or ".", prefix=os.path.basename(path) + ".tmp"
+    )
+    try:
+        with os.fdopen(fd, "w", newline="", encoding="utf-8") as f:
+            write_fn(f)
+        os.replace(tmp_path, path)
+    except BaseException:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
 
 
 # --------------------------------------------------------------------------- #
@@ -219,10 +245,12 @@ def fetch_signups_history():
         )
         return 0
 
-    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+    def _write(f):
         writer = csv.DictWriter(f, fieldnames=SIGNUPS_FIELDS)
         writer.writeheader()
         writer.writerows(rows)
+
+    _atomic_write(csv_path, _write)
     logger.info("Signups: %d attendee rows written to %s", len(rows), csv_path)
     r2_service.upload_file(csv_path)
     return len(rows)
@@ -285,7 +313,7 @@ def aggregate_hours():
                 if start >= four_weeks_ago:
                     bucket["hours_last_four_weeks"] += duration
 
-    with open(hours_path, "w", newline="", encoding="utf-8") as f:
+    def _write(f):
         writer = csv.writer(f)
         writer.writerow(["full_name", "hours_last_four_weeks", "hours_last_six_months"])
         for name in sorted(totals, key=str.casefold):
@@ -295,6 +323,8 @@ def aggregate_hours():
                 round(t["hours_last_four_weeks"], 1),
                 round(t["hours_last_six_months"], 1),
             ])
+
+    _atomic_write(hours_path, _write)
     logger.info("Player hours written for %d players to %s", len(totals), hours_path)
     r2_service.upload_file(hours_path)
     invalidate_cache()

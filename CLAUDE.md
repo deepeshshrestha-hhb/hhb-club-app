@@ -601,6 +601,37 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   dataset can still grow normally. There's no legitimate scenario where a
   real 6-month rolling history halves overnight, so this only ever blocks
   what looks like a bad fetch.
+- **2026-09-08 — Fixed the real root cause of the recurring Weekly Score
+  Upload dropdown flakiness: a non-atomic CSV write race, not a filtering or
+  caching bug.** After two earlier fixes (the historical-cache lookup and the
+  partial-overwrite guard, both above) the *exact same* symptom kept coming
+  back - the wrong players in the 06-Sep dropdown, self-correcting minutes
+  later with no admin action. That "self-correcting" pattern was the
+  giveaway: `fetch_signups_history()` and `aggregate_hours()` both wrote
+  their CSVs (`signups_history.csv`, `player_hours.csv`) via plain
+  `open(path, "w")`, which truncates the file immediately and then streams
+  rows out over however long the write takes. Render runs `gunicorn
+  --workers 1 --threads 4`, so all requests share one process and
+  filesystem; `analytics_service.maybe_refresh_async()` fires this same
+  `refresh_now()` in a background thread on *every* stale Players/Calendar
+  page load (admin's manual "Refresh Signup Analytics" button hits the same
+  path). Any request landing on `/weekly-scores` while that background
+  thread was mid-write - e.g. the admin refreshing on one tab while checking
+  the dropdown on another - would read `signups_history.csv` while it was
+  truncated or partially rewritten, silently dropping some of that Sunday's
+  attendees until the write finished a moment later. Confirmed with a
+  synthetic race test (slow writer thread + concurrent reader) that this
+  reproduces exactly the "some players missing, others wrongly present,
+  fine again shortly after" behaviour reported live. Fixed with a small
+  `_atomic_write()` helper (write to a same-directory temp file, then
+  `os.replace()`) used by both CSV writers, so a concurrent reader always
+  sees either the complete old file or the complete new one, never a
+  half-written one - re-ran the race test against the fix with zero partial
+  reads. *Why this and not another `_historical_attendees()` tweak?* The
+  prior two fixes were correct changes but were treating symptoms of a data
+  source that was intermittently self-corrupting from a race, not a stale or
+  wrongly-scoped source - no amount of query-logic fixing would have made
+  a torn read complete.
 
 ---
 
