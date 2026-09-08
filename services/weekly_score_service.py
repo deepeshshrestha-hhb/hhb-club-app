@@ -119,6 +119,57 @@ def _historical_attendees(target_date):
     return list(attendees.values())
 
 
+def debug_player_sources(target_date):
+    """Admin diagnostic: every data source in the dropdown-resolution chain
+    for target_date, raw and resolved, so a live mismatch (e.g. an attendee
+    missing or an unexpected name showing) can be pinpointed exactly instead
+    of guessed at. Not used by the normal page - see the admin/debug-players
+    route."""
+    path = Path(Config.DATA_DIR) / "signups_history.csv"
+    csv_total_rows = 0
+    dates_present = set()
+    date_rows = []
+    if path.exists():
+        with open(path, newline="", encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                csv_total_rows += 1
+                try:
+                    start = datetime.fromisoformat(row.get("start") or "")
+                except ValueError:
+                    continue
+                dates_present.add(start.date().isoformat())
+                if start.date() == target_date:
+                    date_rows.append({
+                        "event_id": row.get("event_id"),
+                        "event_heading": row.get("event_heading"),
+                        "start": row.get("start"),
+                        "member_id": row.get("member_id"),
+                        "first_name": row.get("first_name"),
+                        "full_name": row.get("full_name"),
+                    })
+
+    historical_raw = _historical_attendees(target_date)
+    historical_resolved = resolve_attendee_names(target_date.year, historical_raw) if historical_raw else []
+
+    live_raw = spond_service.get_confirmed_attendees(target_date)
+    live_resolved = resolve_attendee_names(target_date.year, live_raw) if live_raw else []
+
+    roster = get_league_roster(target_date.year)
+
+    return {
+        "target_date": target_date.isoformat(),
+        "csv_total_rows": csv_total_rows,
+        "csv_dates_present_recent": sorted(dates_present)[-15:],
+        "csv_rows_for_date": date_rows,
+        "historical_cache_raw": historical_raw,
+        "historical_cache_resolved": historical_resolved,
+        "live_spond_raw": live_raw,
+        "live_spond_resolved": live_resolved,
+        "league_roster": roster,
+        "final_dropdown": _player_options(target_date),
+    }
+
+
 def _player_options(target_date):
     if target_date is None:
         return []
