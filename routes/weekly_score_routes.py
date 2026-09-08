@@ -1,3 +1,5 @@
+from datetime import date
+
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 
 from routes.admin_routes import admin_required
@@ -82,3 +84,18 @@ def admin_submit():
     except ValueError as exc:
         flash(str(exc), "danger")
     return redirect(url_for("weekly_scores.page"))
+
+
+@weekly_bp.route("/weekly-scores/admin/debug-players")
+@admin_required
+def admin_debug_players():
+    """Diagnostic view: shows every data source behind the player dropdown
+    for a given date (raw CSV rows, historical-cache resolution, live Spond
+    resolution, league roster, final result) as JSON, so a live mismatch can
+    be pinpointed exactly. ?date=YYYY-MM-DD, defaults to today."""
+    date_str = request.args.get("date", "").strip()
+    try:
+        target_date = date.fromisoformat(date_str) if date_str else date.today()
+    except ValueError:
+        return jsonify({"error": "Invalid date, use YYYY-MM-DD."}), 400
+    return jsonify(weekly_score_service.debug_player_sources(target_date))
