@@ -1,4 +1,5 @@
 import asyncio
+import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -205,17 +206,39 @@ async def _fetch_confirmed_attendees_async(target_date):
     return list(attendees.values())
 
 
+_attendees_cache = {}  # target_date -> (fetched_at monotonic, result)
+_ATTENDEES_CACHE_TTL = 120  # seconds
+
+
 def get_confirmed_attendees(target_date):
     """Synchronous wrapper: confirmed attendee {first_name, last_name} dicts
     for every Spond event on target_date (a date object). Used to populate the
     Weekly Score Upload player dropdowns with that Sunday's actual sign-ups,
     right up to submission time. Returns [] (not raising) if Spond is
-    unreachable or there's no matching event, so the form still renders."""
+    unreachable or there's no matching event, so the form still renders.
+
+    Cached in-process per date for _ATTENDEES_CACHE_TTL seconds, including a
+    failed/empty result - without this, every 10s Weekly Score Upload state
+    poll called straight through to a fresh Spond login for a future-dated
+    (still-open) session, and, once the signup-history cache fell behind (see
+    the 2026-09-08 refresh-false-success fix), for a past date too on every
+    poll. From even one open browser tab that's hundreds of Spond logins an
+    hour - confirmed live as the actual cause of a 429 on Spond's own login
+    endpoint, which then starved the legitimate signup-history refresh of the
+    same capacity and made a stale cache un-recoverable. Caching the failure
+    too (not just success) is deliberate: retrying a rate-limited endpoint
+    every 10s only prolongs the rate limit."""
+    cached = _attendees_cache.get(target_date)
+    now = time.monotonic()
+    if cached is not None and (now - cached[0]) < _ATTENDEES_CACHE_TTL:
+        return cached[1]
     try:
-        return asyncio.run(_fetch_confirmed_attendees_async(target_date))
+        result = asyncio.run(_fetch_confirmed_attendees_async(target_date))
     except Exception as exc:
         print(f"Spond attendee fetch failed for {target_date}: {exc}")
-        return []
+        result = []
+    _attendees_cache[target_date] = (now, result)
+    return result
 
 
 def get_weekly_sessions(weeks_ahead=8):
