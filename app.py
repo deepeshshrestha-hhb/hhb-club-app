@@ -19,6 +19,7 @@ from services import committee_service
 from services import about_content_service
 from services.profile_service import name_to_slug, get_profile
 from services.charity_service import linkify
+from services.weekly_score_service import format_display_date
 
 # Log to stdout so messages (incl. R2 sync) surface in the Render logs.
 # force=True is required because under gunicorn the root logger already has
@@ -44,6 +45,7 @@ def create_app():
 
     app.jinja_env.filters["slugify"] = name_to_slug
     app.jinja_env.filters["linkify"] = linkify
+    app.jinja_env.filters["display_date"] = format_display_date
 
     @app.template_global()
     def asset_version(filename):

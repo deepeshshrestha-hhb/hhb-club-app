@@ -226,6 +226,44 @@
         }).join('');
     }
 
+    // Player filter dropdown + Total/Won/Lost badges above the table, so
+    // anyone can check how many matches they've reported so far (a Sunday
+    // session averages ~8 per player over 2 hours) without scanning every
+    // row for their name.
+    function populatePlayerFilter(players) {
+        var sel = document.getElementById('playerFilter');
+        if (!sel) return;
+        var current = sel.value;
+        sel.innerHTML = '';
+        var allOpt = document.createElement('option');
+        allOpt.value = '';
+        allOpt.textContent = 'All players';
+        sel.appendChild(allOpt);
+        players.forEach(function (name) {
+            var opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            sel.appendChild(opt);
+        });
+        // Preserve the current selection across a poll refresh, unless that
+        // player has fallen off the attendance list.
+        sel.value = players.indexOf(current) !== -1 ? current : '';
+    }
+
+    function computePlayerStats(matches, player) {
+        var total = 0, won = 0, lost = 0;
+        matches.forEach(function (m) {
+            var inTeam1 = m.p1 === player || m.p2 === player;
+            var inTeam2 = m.p3 === player || m.p4 === player;
+            if (!inTeam1 && !inTeam2) return;
+            total++;
+            var team1Won = m.score1 > m.score2;
+            if ((inTeam1 && team1Won) || (inTeam2 && !team1Won)) won++;
+            else lost++;
+        });
+        return { total: total, won: won, lost: lost };
+    }
+
     function renderTable() {
         var body = document.getElementById('matchesBody');
         var noMsg = document.getElementById('noMatchesMsg');
@@ -233,14 +271,48 @@
         var canEdit = state.status === 'open';
         actionsHead.hidden = !canEdit;
 
-        var matches = state.matches || [];
+        var allMatches = state.matches || [];
         var countEl = document.getElementById('matchCount');
-        if (countEl) countEl.textContent = matches.length + (matches.length === 1 ? ' match' : ' matches');
-        renderCourtCounts(matches);
+        if (countEl) countEl.textContent = allMatches.length + (allMatches.length === 1 ? ' match' : ' matches');
+        renderCourtCounts(allMatches);
+
+        // Union with everyone actually in the matches, not just the current
+        // attendance list - the same reasoning as Amend always including a
+        // match's own players (see the amend-open handler below): someone
+        // can have real recorded matches without being in state.players
+        // right now (attendance-list hiccup, a name resolved differently at
+        // submit time, etc.), and they'd otherwise be impossible to filter
+        // by despite having scores on the board.
+        var filterPlayers = (state.players || []).slice();
+        allMatches.forEach(function (m) {
+            [m.p1, m.p2, m.p3, m.p4].forEach(function (p) {
+                if (p && filterPlayers.indexOf(p) === -1) filterPlayers.push(p);
+            });
+        });
+        filterPlayers.sort(function (a, b) { return a.localeCompare(b); });
+        populatePlayerFilter(filterPlayers);
+        var filterPlayer = document.getElementById('playerFilter').value;
+        var statsEl = document.getElementById('playerFilterStats');
+        if (filterPlayer) {
+            var stats = computePlayerStats(allMatches, filterPlayer);
+            document.getElementById('playerFilterTotal').textContent = stats.total;
+            document.getElementById('playerFilterWon').textContent = stats.won;
+            document.getElementById('playerFilterLost').textContent = stats.lost;
+            statsEl.hidden = false;
+        } else {
+            statsEl.hidden = true;
+        }
+
+        var matches = filterPlayer
+            ? allMatches.filter(function (m) {
+                return m.p1 === filterPlayer || m.p2 === filterPlayer || m.p3 === filterPlayer || m.p4 === filterPlayer;
+            })
+            : allMatches;
 
         if (!matches.length) {
             body.innerHTML = '';
             noMsg.hidden = false;
+            noMsg.textContent = filterPlayer ? 'No matches for ' + filterPlayer + ' yet.' : 'No scores submitted yet.';
             return;
         }
         noMsg.hidden = true;
@@ -273,11 +345,23 @@
         }).join('');
     }
 
+    // '2026-09-06' -> '06-Sep-2026' - matches the server-side display_date
+    // Jinja filter used for the same date wherever it's server-rendered.
+    function formatDisplayDate(isoStr) {
+        if (!isoStr) return '';
+        var parts = isoStr.split('-');
+        if (parts.length !== 3) return isoStr;
+        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        var monthIdx = parseInt(parts[1], 10) - 1;
+        if (monthIdx < 0 || monthIdx > 11) return isoStr;
+        return parts[2] + '-' + months[monthIdx] + '-' + parts[0];
+    }
+
     function applyStatusVisibility() {
         document.getElementById('noSessionMsg').hidden = state.status !== 'none';
         document.getElementById('scoreFormCard').hidden = state.status !== 'open';
         var label = document.getElementById('sessionDateLabel');
-        label.textContent = state.date ? ('— ' + state.date) : '';
+        label.textContent = state.date ? ('— ' + formatDisplayDate(state.date)) : '';
     }
 
     function render() {
@@ -488,6 +572,11 @@
                 .catch(function () { showError(errEl, 'Network error - please try again.'); })
                 .finally(function () { updateAmendGate(); });
         });
+    }
+
+    var playerFilterSelect = document.getElementById('playerFilter');
+    if (playerFilterSelect) {
+        playerFilterSelect.addEventListener('change', renderTable);
     }
 
     render();

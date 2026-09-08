@@ -56,12 +56,12 @@
             <button type="submit" class="btn btn-hhb-accent">Open Session</button>
         </form>
         {% elif state.status == 'open' %}
-        <p class="mb-2"><span class="badge bg-success">Open</span> for <strong>{{ state.date }}</strong> — players can submit, amend and delete scores.</p>
+        <p class="mb-2"><span class="badge bg-success">Open</span> for <strong>{{ state.date | display_date }}</strong> — players can submit, amend and delete scores.</p>
         <form action="{{ url_for('weekly_scores.admin_close') }}" method="post" class="d-inline">
             <button type="submit" class="btn btn-hhb-primary text-white">Close Session</button>
         </form>
         {% elif state.status == 'closed' %}
-        <p class="mb-2"><span class="badge bg-warning text-dark">Closed</span> for <strong>{{ state.date }}</strong> — read-only. Review the list below, then submit to the database.</p>
+        <p class="mb-2"><span class="badge bg-warning text-dark">Closed</span> for <strong>{{ state.date | display_date }}</strong> — read-only. Review the list below, then submit to the database.</p>
         <div class="d-flex gap-2 flex-wrap">
             <form action="{{ url_for('weekly_scores.admin_open') }}" method="post">
                 <input type="hidden" name="date" value="{{ state.date }}">
@@ -123,10 +123,21 @@
 <div class="card hhb-card">
     <div class="card-body">
         <h5 class="card-title">
-            Scores <span id="sessionDateLabel" class="text-muted small">{% if state.date %}— {{ state.date }}{% endif %}</span>
+            Scores <span id="sessionDateLabel" class="text-muted small">{% if state.date %}— {{ state.date | display_date }}{% endif %}</span>
             <span id="matchCount" class="badge bg-secondary align-middle ms-1"></span>
         </h5>
         <div id="courtCounts" class="d-flex gap-2 flex-wrap mb-3"></div>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <label for="playerFilter" class="form-label small mb-0">Filter by player</label>
+            <select id="playerFilter" class="form-select form-select-sm w-auto">
+                <option value="">All players</option>
+            </select>
+            <div id="playerFilterStats" class="d-flex gap-2 flex-wrap" hidden>
+                <span class="badge bg-primary">Total: <span id="playerFilterTotal">0</span></span>
+                <span class="badge bg-success">Won: <span id="playerFilterWon">0</span></span>
+                <span class="badge bg-danger">Lost: <span id="playerFilterLost">0</span></span>
+            </div>
+        </div>
         <div class="table-responsive">
             <table id="scoresTable" class="table table-sm table-hover align-middle mb-0">
                 <thead class="table-dark">
