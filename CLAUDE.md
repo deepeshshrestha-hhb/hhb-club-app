@@ -632,6 +632,21 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   source that was intermittently self-corrupting from a race, not a stale or
   wrongly-scoped source - no amount of query-logic fixing would have made
   a torn read complete.
+- **2026-09-08 — Added an admin diagnostic view for the Weekly Score Upload
+  player dropdown** (`weekly_score_service.debug_player_sources()`,
+  `GET /weekly-scores/admin/debug-players?date=YYYY-MM-DD`, `admin_required`).
+  The 06-Sep dropdown mismatch (wrong players showing/missing) reportedly
+  recurred live even after the atomic-write fix above, which would have
+  fully explained an intermittent version of the symptom but not one that
+  persists after a fresh refresh. Rather than guess a fourth root cause
+  blind (no live/production access from this dev environment - see the
+  Spond credentials note), this returns every stage of the resolution chain
+  as JSON for a given date: raw `signups_history.csv` rows for that date,
+  historical-cache raw/resolved, live Spond raw/resolved, the league
+  roster, and the final computed dropdown - so the actual broken stage can
+  be read off real data instead of inferred. Verified locally against
+  synthetic CSV rows that the pipeline itself correctly includes/excludes
+  attendees by date when the source rows are correct.
 
 ---
 
