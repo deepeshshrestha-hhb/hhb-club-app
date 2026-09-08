@@ -293,14 +293,28 @@
         populatePlayerFilter(filterPlayers);
         var filterPlayer = document.getElementById('playerFilter').value;
         var statsEl = document.getElementById('playerFilterStats');
+        var totalEl = document.getElementById('playerFilterTotal');
+        var wonEl = document.getElementById('playerFilterWon');
+        var lostEl = document.getElementById('playerFilterLost');
         if (filterPlayer) {
             var stats = computePlayerStats(allMatches, filterPlayer);
-            document.getElementById('playerFilterTotal').textContent = stats.total;
-            document.getElementById('playerFilterWon').textContent = stats.won;
-            document.getElementById('playerFilterLost').textContent = stats.lost;
+            totalEl.textContent = stats.total;
+            wonEl.textContent = stats.won;
+            lostEl.textContent = stats.lost;
             statsEl.hidden = false;
+            // Bootstrap's d-flex carries !important, which beats the plain
+            // [hidden]{display:none} the browser applies by default - with
+            // both present at once, hidden had no visible effect and the
+            // badges kept showing whichever player's numbers were computed
+            // last, even after switching back to "All players". Only add
+            // d-flex while actually shown, so hidden works when it's not.
+            statsEl.classList.add('d-flex', 'flex-wrap');
         } else {
             statsEl.hidden = true;
+            statsEl.classList.remove('d-flex', 'flex-wrap');
+            totalEl.textContent = '0';
+            wonEl.textContent = '0';
+            lostEl.textContent = '0';
         }
 
         var matches = filterPlayer
