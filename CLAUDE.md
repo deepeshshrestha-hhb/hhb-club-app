@@ -717,6 +717,22 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   `fetch_signups_history`) that only became visible once the false-success
   masking was removed and a real error started showing up in the logs -
   a case where fixing one bug's silence was what surfaced the next bug.
+- **2026-09-08 — Live-verified the Weekly Score Upload dropdown fix chain end
+  to end; saga closed.** Once Spond's own rate limit (from the login storm
+  above) cleared, a real Refresh Signup Analytics succeeded (1364 signup
+  rows, 47 players), and the `debug-players` diagnostic for 06-Sep then
+  showed everything lined up: `signups_history.csv` has both real Eastwood
+  9-10/10-11 events for that date with the actual 20 attendees, the
+  historical-cache resolution and final dropdown both list Ziad and Vivek
+  and correctly exclude Deepesh (who's only in the static league roster, not
+  that Sunday's real attendance). Confirms all four fixes were needed and
+  each was necessary but not sufficient alone: the atomic CSV write (no
+  torn reads), the honest refresh-failure reporting (surfaced the real
+  error instead of masking it), the Spond login-storm cache (let a refresh
+  actually succeed instead of perpetually rate-limiting itself), and the
+  historical-cache-first lookup from 2026-09-08 earlier (the original fix,
+  correct all along but starved of real data by the other three bugs). No
+  further action needed unless a new symptom appears.
 
 ---
 
