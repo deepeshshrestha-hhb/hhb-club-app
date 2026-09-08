@@ -201,6 +201,31 @@
         return div.innerHTML;
     }
 
+    // Per-court running totals above the table, so it's obvious at a glance
+    // if one court is falling behind the others - the club wants roughly
+    // equal matches across all 4 on a Sunday. The court(s) below the
+    // busiest court are flagged (not just the single lowest), since with 4
+    // courts more than one can be lagging at once.
+    function renderCourtCounts(matches) {
+        var el = document.getElementById('courtCounts');
+        if (!el) return;
+        if (!matches.length) {
+            el.innerHTML = '';
+            return;
+        }
+        var counts = { 1: 0, 2: 0, 3: 0, 4: 0 };
+        matches.forEach(function (m) {
+            if (counts.hasOwnProperty(m.court_no)) counts[m.court_no]++;
+        });
+        var max = Math.max(counts[1], counts[2], counts[3], counts[4]);
+        el.innerHTML = [1, 2, 3, 4].map(function (c) {
+            var n = counts[c];
+            var behind = max > 0 && n < max;
+            var cls = behind ? 'bg-warning text-dark' : 'bg-secondary';
+            return '<span class="badge ' + cls + '">Court ' + c + ': ' + n + '</span>';
+        }).join('');
+    }
+
     function renderTable() {
         var body = document.getElementById('matchesBody');
         var noMsg = document.getElementById('noMatchesMsg');
@@ -211,6 +236,7 @@
         var matches = state.matches || [];
         var countEl = document.getElementById('matchCount');
         if (countEl) countEl.textContent = matches.length + (matches.length === 1 ? ' match' : ' matches');
+        renderCourtCounts(matches);
 
         if (!matches.length) {
             body.innerHTML = '';
