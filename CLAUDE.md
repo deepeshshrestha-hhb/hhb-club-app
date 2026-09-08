@@ -524,6 +524,22 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   underlying value never left that state anyway). *Why not a `<datalist>`?*
   It doesn't enforce picking an actual list entry, which would let a typo'd
   name slip into the league workbook unresolved.
+- **2026-09-08 — Fixed inconsistent player names on Weekly Score Upload**
+  (same person showing as e.g. "Tousif" in one match and "Mohammad Tousif"
+  in another). Root cause: `weekly_score_service._player_options()` had two
+  paths that disagreed - when Spond had confirmed attendees for the date it
+  resolved to the league's short/nickname form via `resolve_attendee_names()`
+  (e.g. "Tousif"), but whenever Spond had nothing for that date (unreachable,
+  or nobody confirmed yet) it fell back to `player_service.get_player_names()`
+  - full "First Last" names from the member CSV. Which path ran depended on
+  Spond's state at the moment each dropdown loaded, so the *same* player
+  could get submitted under either form across different matches. Fixed by
+  falling back to `league_service.get_league_roster()` instead - already in
+  the club's short form, so the fallback path now agrees with the
+  Spond-resolved one; full names are only a last-resort fallback if a
+  season has no roster at all yet. This fixes the dropdown for *new*
+  submissions only - already-submitted rows using the old full-name form
+  need a quick Amend (re-pick from the now-consistent dropdown) to match.
 
 ---
 
