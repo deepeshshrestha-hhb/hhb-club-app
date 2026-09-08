@@ -733,6 +733,62 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   historical-cache-first lookup from 2026-09-08 earlier (the original fix,
   correct all along but starved of real data by the other three bugs). No
   further action needed unless a new symptom appears.
+- **2026-09-08 — Fixed a live incident: duplicate score submissions and
+  site-wide slowness on Weekly Score Upload.** Reported live during active
+  Sunday score entry: the same match appearing 4-5x, and unrelated pages
+  (Dashboard included) running very slowly. Two compounding bugs: (1)
+  `weekly_scores.js` never disabled the Submit/Save buttons while a request
+  was in flight, so a slow response looked like nothing happened and a
+  repeated tap fired another full POST, creating another identical match.
+  (2) `weekly_score_service._save()` ran `r2_service.upload_file()`
+  synchronously, inline in the request thread, on every single
+  add/amend/delete/open/close - `upload_file()` retries up to 3x with
+  exponential-backoff sleeps on any hiccup, and Render gives this app only 4
+  threads total (`gunicorn --workers 1 --threads 4`), so a burst of the
+  duplicate submissions from bug #1 - each blocking on its own R2 upload -
+  was enough to starve every thread, hanging completely unrelated pages.
+  Fixed: the submit/save buttons now disable synchronously the instant a
+  request starts (restored via the existing gate functions in `.finally()`);
+  the R2 upload now runs in a daemon background thread instead of blocking
+  the request; `add_match()` also gained a server-side safety net that
+  treats a resubmission of the exact same match (same 4 players + scores,
+  regardless of team order) within 15 seconds as a duplicate tap/retry and
+  returns the existing row instead of creating another one - covers cases
+  the client-side lock can't (a genuine network retry, a second device).
+  Verified: 5 rapid identical `add_match()` calls collapse into 1 stored
+  match; `_save()` returns in ~1ms instead of blocking for a mocked 2s R2
+  upload; an end-to-end Playwright test against a real browser + an
+  artificially-slowed API route confirmed 4 rapid clicks on Submit produce
+  exactly 1 match. The duplicate rows already created before this shipped
+  were manually deleted by the admin and independently re-verified clean
+  (15 matches, 0 flagged by the existing pink-highlight duplicate logic).
+- **2026-09-08 — Added a lock around the Weekly Score Upload session's
+  read-modify-write.** Raised by the admin while discussing whether the
+  session even needs R2 for performance (it had already been made
+  non-blocking, see the fix above) - the more relevant risk for several
+  people entering scores at once turned out to be a completely separate bug:
+  `_load()`/`_save()` had no locking, so two near-simultaneous submissions
+  could both read the same "before" state, each append their own match, and
+  the second write would silently overwrite the first with no error to
+  anyone. Added a module-level `threading.Lock()` (`_session_lock`) that
+  every function touching the session file now holds for its full
+  read-modify-write cycle (`get_state`, `open_session`, `close_session`,
+  `add_match`, `amend_match`, `delete_match`, and the read/unlink parts of
+  `submit_to_database` - its slow `write_weekly_scores()` Excel call stays
+  outside the lock so it doesn't block `get_state()` polls, safe because
+  every mutating function requires status "open" and this session is
+  already "closed" by then). `_load()`/`_save()` themselves stay lock-free
+  since the lock isn't reentrant and callers already hold it. Verified the
+  race was real, not hypothetical: reproduced the pre-fix unlocked pattern
+  under 20 concurrent submissions with a realistic artificial write delay
+  and it lost 19 of 20 matches; the same test against the locked version
+  keeps all 20. Re-ran the existing duplicate-tap, amend, delete and close
+  tests to confirm no regressions. *Why keep R2 rather than drop it for
+  speed, as originally asked?* Render's filesystem is ephemeral and resets
+  on every deploy, not just spin-down/wake - 3 hotfixes shipped today while
+  this exact session was live, and without R2 each one would have wiped it;
+  the R2 upload no longer blocks requests anyway, so dropping it wouldn't
+  meaningfully improve performance further.
 
 ---
 
