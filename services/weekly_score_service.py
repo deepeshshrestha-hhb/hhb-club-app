@@ -23,7 +23,7 @@ from pathlib import Path
 from config import Config
 from services import r2_service
 from services import spond_service
-from services.league_service import resolve_attendee_names, write_weekly_scores
+from services.league_service import get_league_roster, resolve_attendee_names, write_weekly_scores
 from services.player_service import get_player_names
 
 SESSION_PATH = Path(Config.DATA_DIR) / "WeeklyScoreSession.json"
@@ -86,11 +86,19 @@ def _player_options(target_date):
     if target_date is None:
         return []
     attendees = spond_service.get_confirmed_attendees(target_date)
-    if not attendees:
-        # Spond unreachable, or nobody's confirmed for that date yet - fall
-        # back to the full club roster so the form still works.
-        return sorted(get_player_names(), key=str.casefold)
-    return resolve_attendee_names(target_date.year, attendees)
+    if attendees:
+        return resolve_attendee_names(target_date.year, attendees)
+    # Spond unreachable, or nobody's confirmed for that date yet - fall back
+    # to the league roster. It's already in the club's short/nickname form
+    # (e.g. "Tousif", not "Mohammad Tousif") - same as the Spond-resolved
+    # path above - so names shown here don't flip to full "First Last" from
+    # the member CSV depending on whether Spond happened to have data for
+    # this date. Only fall further back to full names if there's no roster
+    # yet at all (e.g. brand-new season, nothing else to offer).
+    roster = get_league_roster(target_date.year)
+    if roster:
+        return sorted(roster, key=str.casefold)
+    return sorted(get_player_names(), key=str.casefold)
 
 
 def get_state():
