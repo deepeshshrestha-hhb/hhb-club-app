@@ -4,13 +4,15 @@
 <h1 class="page-title">Club Calendar</h1>
 
 <ul class="nav nav-tabs mb-4" id="calendarTabs" role="tablist">
+    {% if session.get('is_admin') %}
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="weekly-tab" data-bs-toggle="tab" data-bs-target="#weekly-pane" type="button" role="tab" aria-controls="weekly-pane" aria-selected="true">
             Weekly Sessions
         </button>
     </li>
+    {% endif %}
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="annual-tab" data-bs-toggle="tab" data-bs-target="#annual-pane" type="button" role="tab" aria-controls="annual-pane" aria-selected="false">
+        <button class="nav-link {% if not session.get('is_admin') %}active{% endif %}" id="annual-tab" data-bs-toggle="tab" data-bs-target="#annual-pane" type="button" role="tab" aria-controls="annual-pane" aria-selected="{% if not session.get('is_admin') %}true{% else %}false{% endif %}">
             Annual Events
         </button>
     </li>
@@ -18,6 +20,7 @@
 
 <div class="tab-content" id="calendarTabsContent">
 
+    {% if session.get('is_admin') %}
     <!-- Weekly / Regular Calendar -->
     <div class="tab-pane fade show active" id="weekly-pane" role="tabpanel" aria-labelledby="weekly-tab">
         <div class="card hhb-card">
@@ -65,9 +68,10 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- Annual Events -->
-    <div class="tab-pane fade" id="annual-pane" role="tabpanel" aria-labelledby="annual-tab">
+    <div class="tab-pane fade {% if not session.get('is_admin') %}show active{% endif %}" id="annual-pane" role="tabpanel" aria-labelledby="annual-tab">
         {% if annual_events %}
         <div class="row">
             {% for ev in annual_events %}
