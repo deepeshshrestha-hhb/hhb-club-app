@@ -659,6 +659,35 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   onto quieter courts can see the imbalance at a glance. Verified in a real
   browser (Playwright) against a locally-seeded session with an
   intentionally uneven court split.
+- **2026-09-08 — Found and fixed the true root cause of the recurring Weekly
+  Score Upload dropdown mismatch: Refresh Signup Analytics was reporting
+  false success.** The new `debug-players` diagnostic (above) showed
+  `signups_history.csv` had nothing past 2026-09-02 despite several admin
+  refresh clicks since - with no cached or live attendance for 06-Sep, the
+  dropdown was silently falling back to the static league roster (every
+  registered player, regardless of whether they actually played that
+  Sunday), which is exactly why Deepesh (on the roster) kept showing and
+  Ziad/Vivek (not yet added to the roster) kept being missing, deterministically,
+  no matter how many times it was refreshed. Root cause:
+  `fetch_signups_history()` returned `0` for both a real failure/guard-block
+  *and* a legitimately-empty fetch, and `refresh_now()` called
+  `_write_last_fetched()` unconditionally regardless - so a silently-failing
+  (or partial-overwrite-guard-blocked, see the earlier 2026-09-08 entry)
+  Spond fetch still got the cache stamped "fresh" every time. That both told
+  the 7-day background auto-refresh there was nothing to do, and made every
+  admin refresh click report a hollow success (`aggregate_hours()`'s nonzero
+  player count, recomputed over the same stale cache, masked the fetch
+  itself having done nothing). Fixed: `fetch_signups_history()` now returns
+  `None` specifically for a failed/blocked fetch (distinct from a
+  legitimate empty one); `refresh_now()` only stamps `last_fetched` on an
+  actual success; the admin flash message and background-refresh log now
+  say plainly when a refresh did **not** update the cache instead of
+  reporting success regardless. Verified locally: a failing fetch leaves
+  `signups_meta.json` unwritten and is reported as a failure; a mocked
+  successful fetch writes it and reports the real row count. *Why this
+  wasn't caught by the two earlier "transient" fixes:* those (correctly)
+  hardened against a bad fetch corrupting good data, but neither one made a
+  failing fetch stop pretending to have succeeded - the actual gap.
 
 ---
 
