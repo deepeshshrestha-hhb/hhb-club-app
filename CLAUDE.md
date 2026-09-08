@@ -540,6 +540,29 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   season has no roster at all yet. This fixes the dropdown for *new*
   submissions only - already-submitted rows using the old full-name form
   need a quick Amend (re-pick from the now-consistent dropdown) to match.
+- **2026-09-08 — Fixed Amend silently swapping a player to an unrelated name
+  after ~10s, added a match-count badge.** The 10s background poll
+  (`fetchState` → `render` → `refreshFormOptions`) rebuilds *every*
+  `.player-select` on the page each time it fires, including the ones inside
+  an open Amend modal someone is actively editing - it only ever used the
+  general attendance list (`state.players`), not the extra match-specific
+  names (e.g. an older full-name value) merged in when that modal was
+  opened. Losing that value mid-rebuild left the `<select>` with no option
+  explicitly marked `selected`, and browsers resolve that by silently
+  picking the first enabled option instead of falling back to the
+  placeholder - which alphabetically was near-always the same name
+  ("Altamash" in this club's roster), overwriting whatever the field
+  actually held with no visual cue. Reproduced and confirmed fixed with a
+  Playwright test that opens Amend, waits past the poll interval, and checks
+  the field's value survived. Two-part fix in `weekly_scores.js`: (1)
+  `refreshFormOptions()` now always keeps a select's current value in its
+  own option list before rebuilding, regardless of whether it's in the
+  general list; (2) `populatePlayerSelect()` decides up front whether the
+  current value is restorable and marks exactly one option selected either
+  way, so any future case where a value truly can't be restored falls back
+  to the visible "Select player…" placeholder rather than silently landing
+  on an arbitrary real name. Also added a match-count badge next to the
+  "Scores" heading (`#matchCount`, updated in `renderTable()`).
 
 ---
 

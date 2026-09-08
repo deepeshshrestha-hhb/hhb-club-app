@@ -47,22 +47,29 @@
     function populatePlayerSelect(select, players) {
         comboboxPlayers.set(select, players);
         var current = select.value;
+        // Decide up front whether `current` survives the rebuild, so exactly
+        // one option ends up marked selected either way. Previously the
+        // placeholder was only marked selected when `current` was empty, so
+        // a *non-empty* current value that didn't exist in the new `players`
+        // list left nothing explicitly selected - which browsers resolve by
+        // silently selecting the first enabled (real) option instead of the
+        // placeholder. That's how this select could jump to an unrelated
+        // name instead of falling back to "Select player…".
+        var restorable = !!current && players.indexOf(current) !== -1;
         select.innerHTML = '';
         var placeholder = document.createElement('option');
         placeholder.value = '';
         placeholder.textContent = 'Select player…';
         placeholder.disabled = true;
-        placeholder.selected = !current;
+        placeholder.selected = !restorable;
         select.appendChild(placeholder);
         players.forEach(function (name) {
             var opt = document.createElement('option');
             opt.value = name;
             opt.textContent = name;
+            if (restorable && name === current) opt.selected = true;
             select.appendChild(opt);
         });
-        if (current && players.indexOf(current) !== -1) {
-            select.value = current;
-        }
     }
 
     function optionLabel(select) {
@@ -87,7 +94,20 @@
         document.querySelectorAll('.score-select').forEach(populateScoreSelect);
         document.querySelectorAll('.court-select').forEach(populateCourtSelect);
         document.querySelectorAll('.player-select').forEach(function (sel) {
-            populatePlayerSelect(sel, state.players || []);
+            // The 10s background poll runs this on *every* player-select on
+            // the page, including ones inside an open Amend modal someone is
+            // actively editing. Rebuilding with only the general attendance
+            // list (state.players) would silently drop whatever's currently
+            // chosen there (e.g. an older full-name value merged in just for
+            // that match) and land on some unrelated name instead - always
+            // keep the field's current value in its own option list across a
+            // rebuild, on top of whatever the general list offers.
+            var players = state.players || [];
+            var current = sel.value;
+            if (current && players.indexOf(current) === -1) {
+                players = players.concat([current]);
+            }
+            populatePlayerSelect(sel, players);
             syncComboInput(sel);
         });
     }
@@ -189,6 +209,9 @@
         actionsHead.hidden = !canEdit;
 
         var matches = state.matches || [];
+        var countEl = document.getElementById('matchCount');
+        if (countEl) countEl.textContent = matches.length + (matches.length === 1 ? ' match' : ' matches');
+
         if (!matches.length) {
             body.innerHTML = '';
             noMsg.hidden = false;
