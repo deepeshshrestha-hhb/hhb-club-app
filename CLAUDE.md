@@ -789,6 +789,29 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   this exact session was live, and without R2 each one would have wiped it;
   the R2 upload no longer blocks requests anyway, so dropping it wouldn't
   meaningfully improve performance further.
+- **2026-09-08 — Added a per-player match filter (Total/Won/Lost badges) and
+  switched Weekly Score Upload dates to DD-Mon-YYYY display.** (1) A
+  dropdown above the Scores table lists everyone with a match on the board -
+  the union of the current attendance list and every `p1`-`p4` actually
+  recorded in `state.matches`, not just the attendance list alone, since
+  testing surfaced that a player can have real matches without being in
+  that list (the same class of gap Amend already guards against - see the
+  earlier 2026-09-08 Amend-prefill fix). Selecting a name filters the table
+  to their matches and shows Total/Won/Lost badges, computed client-side in
+  `weekly_scores.js` (`computePlayerStats`) from data already on the page -
+  a Sunday session averages ~8 matches per player over 2 hours, previously
+  only checkable by scanning every row. (2) Dates now display as
+  `06-Sep-2026` instead of `2026-09-06` everywhere on the page (Scores
+  heading, admin Open/Closed banners, the "session opened for ..." flash
+  message) via a new `format_display_date()` in `weekly_score_service.py`
+  (registered as the `display_date` Jinja filter in `app.py`) and a
+  matching JS `formatDisplayDate()` for the client-rendered poll path; the
+  date-picker input and the hidden Reopen form field deliberately stay ISO
+  since the browser/server still parse those as real form values. Verified
+  in a real browser (Playwright): no raw ISO date string anywhere in the
+  rendered page; a seeded session where a player is only in the match data
+  (not the attendance list) is still filterable and shows correct
+  Total/Won/Lost.
 
 ---
 
