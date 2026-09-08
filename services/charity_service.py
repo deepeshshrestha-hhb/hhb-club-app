@@ -64,7 +64,7 @@ SETTINGS_PATH = Path(Config.DATA_DIR) / "charity_settings.json"
 CONTENT_PATH = Path(Config.DATA_DIR) / "charity_content.json"
 CONTRIBUTIONS_FILE = "CharityContributions.xlsx"
 
-CONTENT_KEYS = ("blurb", "how_to_contribute")
+CONTENT_KEYS = ("blurb", "how_to_contribute", "closing_note")
 
 DEFAULT_CONTENT = {
     "blurb": (
@@ -90,6 +90,15 @@ DEFAULT_CONTENT = {
         "Sort Code: 60-30-30\n\n"
         "Once you've transferred, add your name and amount below so it "
         "shows on the running total."
+    ),
+    "closing_note": (
+        "Thanks to 22 generous members, HHB Club raised £1,435.00 for Nepal "
+        "flood relief. The full amount was donated to HExN via their "
+        "[JustGiving campaign](https://www.justgiving.com/campaign/nepal2026) "
+        "on 8 September 2026 — and with 25% Gift Aid, that becomes £1,793.75 "
+        "for HExN, which will be much needed for the flood relief victims in "
+        "Nepal.\n\n"
+        "Thank you to everyone who contributed. Below is proof of the donation."
     ),
 }
 

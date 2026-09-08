@@ -221,4 +221,72 @@
 </div>
 {% endif %}
 
+<div class="card hhb-card mt-4 position-relative">
+    <div class="card-body">
+        {% if session.get('is_admin') %}
+        <button type="button" class="btn btn-sm btn-light border position-absolute top-0 end-0 m-2"
+                data-bs-toggle="modal" data-bs-target="#editCharityModal-closing_note" title="Edit section">
+            ✏️
+        </button>
+        {% endif %}
+        <h5 class="card-title">✅ Update: Funds Donated</h5>
+        <p class="mb-3" style="white-space: pre-line;">{{ content.closing_note | linkify }}</p>
+        <div class="row g-3">
+            <div class="col-sm-6">
+                <img src="{{ url_for('static', filename='images/charity/donation-proof-1.jpg') }}"
+                     alt="Facebook post announcing the £1,435 raised for HExN's Nepal flood relief" class="img-fluid rounded border">
+            </div>
+            <div class="col-sm-6">
+                <img src="{{ url_for('static', filename='images/charity/donation-proof-2.png') }}"
+                     alt="JustGiving confirmation of the £1,435 donation to Health Exchange Nepal (UK) — click to zoom"
+                     class="img-fluid rounded border" style="cursor: zoom-in;"
+                     data-bs-toggle="modal" data-bs-target="#donationProof2Modal">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Donation proof 2 lightbox (zoom-in) -->
+<div class="modal fade" id="donationProof2Modal" tabindex="-1" aria-label="Full photo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-dark border-0">
+            <div class="modal-header border-0 pb-0">
+                <span class="text-white fw-semibold">JustGiving donation confirmation</span>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-2 text-center">
+                <img src="{{ url_for('static', filename='images/charity/donation-proof-2.png') }}"
+                     alt="JustGiving confirmation of the £1,435 donation to Health Exchange Nepal (UK)"
+                     style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:.5rem;">
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if session.get('is_admin') %}
+<div class="modal fade" id="editCharityModal-closing_note" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form action="{{ url_for('charity.charity_update_content', key='closing_note') }}" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit "Update: Funds Donated"</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea class="form-control" name="content" rows="8">{{ content.closing_note }}</textarea>
+                    <div class="form-text mt-1">
+                        Leave a blank line between paragraphs. A pasted link becomes clickable
+                        automatically; to use custom link text, write it as <code>[link text](https://example.com)</code>.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-hhb-primary text-white">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}
