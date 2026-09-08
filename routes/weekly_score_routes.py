@@ -58,7 +58,7 @@ def admin_open():
     date_str = request.form.get("date", "").strip()
     try:
         weekly_score_service.open_session(date_str)
-        flash(f"Weekly score session opened for {date_str}.")
+        flash(f"Weekly score session opened for {weekly_score_service.format_display_date(date_str)}.")
     except ValueError as exc:
         flash(str(exc), "danger")
     return redirect(url_for("weekly_scores.page"))

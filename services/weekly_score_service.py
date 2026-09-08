@@ -89,6 +89,21 @@ def _save(data):
     threading.Thread(target=r2_service.upload_file, args=(SESSION_PATH,), daemon=True).start()
 
 
+def format_display_date(date_str):
+    """'2026-09-06' -> '06-Sep-2026' for display only. Every ISO date the app
+    stores/parses internally (date-picker values, hidden form fields,
+    date.fromisoformat) is untouched by this - it's purely how a date is
+    shown to someone reading the page or a flash message. Returns the input
+    unchanged if it isn't a valid ISO date (e.g. None/empty), so template
+    truthiness checks on state.date still work."""
+    if not date_str:
+        return date_str
+    try:
+        return date.fromisoformat(date_str).strftime("%d-%b-%Y")
+    except ValueError:
+        return date_str
+
+
 def default_session_date():
     """The Sunday a newly-opened session should default to: today if it's
     already Sunday, yesterday if today is Monday (entering the session that
