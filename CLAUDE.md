@@ -812,6 +812,23 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   rendered page; a seeded session where a player is only in the match data
   (not the attendance list) is still filterable and shows correct
   Total/Won/Lost.
+- **2026-09-08 — Fixed the player-filter Total/Won/Lost badges staying
+  visible with stale numbers after switching back to "All players".** Root
+  cause: `#playerFilterStats` had Bootstrap's `d-flex` class (`display: flex
+  !important`) in its static markup at the same time the JS toggled the
+  `hidden` attribute to show/hide it - the browser's built-in
+  `[hidden]{display:none}` rule carries no `!important`, so Bootstrap's
+  always won and the element never actually hid, regardless of the
+  attribute; it just kept rendering whichever player's numbers were
+  computed last. Fixed by only adding `d-flex`/`flex-wrap` via `classList`
+  when a player is actually selected (removing them otherwise, so `hidden`
+  works cleanly with nothing overriding it), plus explicitly resetting all
+  three badge values to `"0"` when the filter is cleared as defense in
+  depth. Verified with a real browser (Playwright) checking **actual
+  computed style** (`getComputedStyle(...).display`), not just the `hidden`
+  attribute - which is exactly what let this ship unnoticed the first time
+  (the earlier test only checked `el.hidden`, true regardless of whether it
+  visually did anything).
 
 ---
 
