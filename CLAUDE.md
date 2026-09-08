@@ -647,6 +647,18 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   be read off real data instead of inferred. Verified locally against
   synthetic CSV rows that the pipeline itself correctly includes/excludes
   attendees by date when the source rows are correct.
+- **2026-09-08 — Added a live per-court match count to Weekly Score Upload.**
+  The club wants roughly equal matches across all 4 courts each Sunday, but
+  there was no visibility into the split while scores were being entered -
+  only after the fact by counting rows in the results table (Court 1 was
+  reportedly lagging noticeably behind the others). Added a
+  `renderCourtCounts()` badge row (`#courtCounts` in `weekly_scores.html`)
+  above the Scores table, recomputed on every add/amend/delete and on the
+  10s poll alongside the existing match-count badge; any court behind the
+  busiest court gets a warning-coloured badge so an admin steering players
+  onto quieter courts can see the imbalance at a glance. Verified in a real
+  browser (Playwright) against a locally-seeded session with an
+  intentionally uneven court split.
 
 ---
 
