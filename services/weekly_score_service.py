@@ -14,6 +14,7 @@ self-service session. There is at most one session at a time:
 See services/league_service.write_weekly_scores() for how a closed session's
 matches get pushed into the annual league workbook.
 """
+import csv
 import json
 import uuid
 from collections import Counter
@@ -82,9 +83,52 @@ def _annotate(matches):
     return [{**m, "is_duplicate": counts[_duplicate_key(m)] > 1} for m in matches]
 
 
+def _historical_attendees(target_date):
+    """Confirmed attendee {first_name, last_name} dicts for target_date, read
+    from data/signups_history.csv (accepted RSVPs, ~6 months retained - see
+    analytics_service.py) instead of a live Spond query. Once a Sunday has
+    happened, attendance is settled - there's nothing to gain from hitting
+    Spond live for it on every page poll, and a live query for an
+    already-past date isn't something this app has been able to trust (see
+    the 2026-09-08 Decisions Log entry this replaced: querying Spond live for
+    a specific past Sunday could silently come back empty, falling through to
+    the full club roster instead of that Sunday's actual attendees). This
+    cache is exactly date-scoped from RSVP timestamps already fetched, so it
+    doesn't have that problem. Returns [] if the cache has nothing for that
+    date yet (e.g. too recent to have synced) - caller falls back to a live
+    query in that case."""
+    path = Path(Config.DATA_DIR) / "signups_history.csv"
+    if not path.exists():
+        return []
+    attendees = {}
+    with open(path, newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            try:
+                start = datetime.fromisoformat(row.get("start") or "")
+            except ValueError:
+                continue
+            if start.date() != target_date:
+                continue
+            first_name = (row.get("first_name") or "").strip()
+            if not first_name:
+                continue
+            full_name = (row.get("full_name") or "").strip()
+            last_name = full_name[len(first_name):].strip() if full_name.startswith(first_name) else ""
+            key = row.get("member_id") or first_name
+            attendees[key] = {"first_name": first_name, "last_name": last_name}
+    return list(attendees.values())
+
+
 def _player_options(target_date):
     if target_date is None:
         return []
+    if target_date <= date.today():
+        # Already happened (or happening today) - prefer the settled,
+        # exactly-dated history cache over a live query. See
+        # _historical_attendees() for why.
+        attendees = _historical_attendees(target_date)
+        if attendees:
+            return resolve_attendee_names(target_date.year, attendees)
     attendees = spond_service.get_confirmed_attendees(target_date)
     if attendees:
         return resolve_attendee_names(target_date.year, attendees)

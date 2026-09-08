@@ -563,6 +563,28 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   to the visible "Select player…" placeholder rather than silently landing
   on an arbitrary real name. Also added a match-count badge next to the
   "Scores" heading (`#matchCount`, updated in `renderTable()`).
+- **2026-09-08 — Weekly Score Upload's player dropdown now reads past dates
+  from the signup-history cache, not a live Spond query.** Live reports for
+  the 6-Sep session: a player who didn't attend appeared in the dropdown
+  (someone already in the league roster) and one who did attend was missing
+  (not yet added to that roster) - the signature of the dropdown having
+  fallen through to the roster-wide fallback for that date rather than
+  actually reflecting who played. A live Spond query for an already-past
+  date isn't something this app could verify as reliable (no way to test
+  against real Spond servers from this dev environment) - it may simply
+  return nothing for a past date, or something else may be off; either way,
+  the dropdown ended up wrong. Since attendance for a date that's already
+  happened is settled, `weekly_score_service._player_options()` now reads
+  `data/signups_history.csv` (the existing per-player-hours RSVP cache -
+  see `analytics_service.py`) for any date that's today or earlier, filtered
+  to exactly that date's accepted RSVPs, and only falls back to a live
+  Spond query if that cache has nothing yet for the date (e.g. too recent
+  to have synced - prompt an **Admin → Refresh Signup Analytics** to force
+  it). A genuinely future date (session opened ahead of time) still queries
+  Spond live, since attendance for it is still changing. This also
+  incidentally satisfies "don't keep polling Spond for a date that's already
+  happened" - once the cache has that date, the 10s state-poll no longer
+  makes any live Spond call for it, just a local CSV read.
 
 ---
 
