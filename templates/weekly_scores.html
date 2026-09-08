@@ -8,9 +8,33 @@
     #scoresTable th, #scoresTable td { padding: .3rem .4rem; font-size: .82rem; vertical-align: middle; }
     #scoresTable td { line-height: 1.2; }
     .scores-btn-compact { font-size: .72rem; padding: .1rem .4rem; }
+    /* Player type-ahead combobox: a text input drives filtering, the real
+       <select> (visually hidden but still part of the form) stays the source
+       of truth for value/validation - see weekly_scores.js. */
+    .player-combobox { position: relative; }
+    .player-combobox select.player-select {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    .player-search-menu {
+        position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
+        max-height: 220px; overflow-y: auto; margin-top: 2px;
+        box-shadow: 0 .25rem .5rem rgba(0,0,0,.15);
+    }
+    .player-search-menu .list-group-item { cursor: pointer; padding: .35rem .6rem; font-size: .85rem; }
+    .player-search-menu .list-group-item.active-option { background-color: var(--hhb-primary, #0d6efd); color: #fff; }
 </style>
 {% endblock %}
 {% block content %}
+
+{% macro player_search_field(field_name, label) %}
+<label class="form-label small mb-1">{{ label }}</label>
+<div class="player-combobox">
+    <input type="text" class="form-control player-search-input" placeholder="Type a name…" autocomplete="off" spellcheck="false">
+    <select name="{{ field_name }}" class="form-select player-select" required></select>
+    <div class="player-search-menu list-group" hidden></div>
+</div>
+{% endmacro %}
 
 <h1 class="page-title">Submit Scores</h1>
 <p class="text-muted mb-4">
@@ -67,24 +91,20 @@
                 <select name="court_no" class="form-select court-select" required></select>
             </div>
             <div class="col-12 col-md-2">
-                <label class="form-label small mb-1">Team 1 - Player 1</label>
-                <select name="p1" class="form-select player-select" required></select>
+                {{ player_search_field('p1', 'Team 1 - Player 1') }}
             </div>
             <div class="col-12 col-md-2">
-                <label class="form-label small mb-1">Team 1 - Player 2</label>
-                <select name="p2" class="form-select player-select" required></select>
+                {{ player_search_field('p2', 'Team 1 - Player 2') }}
             </div>
             <div class="col-6 col-md-1">
                 <label class="form-label small mb-1">Score</label>
                 <select name="score1" class="form-select score-select" required></select>
             </div>
             <div class="col-12 col-md-2">
-                <label class="form-label small mb-1">Team 2 - Player 1</label>
-                <select name="p3" class="form-select player-select" required></select>
+                {{ player_search_field('p3', 'Team 2 - Player 1') }}
             </div>
             <div class="col-12 col-md-2">
-                <label class="form-label small mb-1">Team 2 - Player 2</label>
-                <select name="p4" class="form-select player-select" required></select>
+                {{ player_search_field('p4', 'Team 2 - Player 2') }}
             </div>
             <div class="col-6 col-md-1">
                 <label class="form-label small mb-1">Score</label>
@@ -144,12 +164,10 @@
                     </div>
                     <div class="col-6"></div>
                     <div class="col-6">
-                        <label class="form-label small mb-1">Team 1 - Player 1</label>
-                        <select name="p1" class="form-select player-select" required></select>
+                        {{ player_search_field('p1', 'Team 1 - Player 1') }}
                     </div>
                     <div class="col-6">
-                        <label class="form-label small mb-1">Team 1 - Player 2</label>
-                        <select name="p2" class="form-select player-select" required></select>
+                        {{ player_search_field('p2', 'Team 1 - Player 2') }}
                     </div>
                     <div class="col-6">
                         <label class="form-label small mb-1">Score</label>
@@ -157,12 +175,10 @@
                     </div>
                     <div class="col-6"></div>
                     <div class="col-6">
-                        <label class="form-label small mb-1">Team 2 - Player 1</label>
-                        <select name="p3" class="form-select player-select" required></select>
+                        {{ player_search_field('p3', 'Team 2 - Player 1') }}
                     </div>
                     <div class="col-6">
-                        <label class="form-label small mb-1">Team 2 - Player 2</label>
-                        <select name="p4" class="form-select player-select" required></select>
+                        {{ player_search_field('p4', 'Team 2 - Player 2') }}
                     </div>
                     <div class="col-6">
                         <label class="form-label small mb-1">Score</label>

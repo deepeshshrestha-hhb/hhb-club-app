@@ -509,6 +509,21 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   server-side (`weekly_score_service._validate_match`, since a duplicate
   player had already gotten into the live 6-Sep session before this fix
   shipped - existing bad rows need manual deletion, this only stops new ones).
+- **2026-09-08 — Type-ahead search for the four player fields on Weekly Score
+  Upload.** Scrolling a plain `<select>` through ~20+ names was the
+  complaint. Each player field is now a small vanilla-JS combobox
+  (`initPlayerCombobox` in `weekly_scores.js`, `player_search_field` Jinja
+  macro in `weekly_scores.html`): a text input filters and shows matches in a
+  dropdown (click or arrow keys + Enter to pick), while the real `<select>`
+  stays in the DOM - visually hidden via CSS clip, not the `hidden`
+  attribute, since a `hidden` element is barred from constraint validation -
+  and remains the single source of truth for value/`required`/FormData, so
+  none of the existing validation, duplicate-player, or submit-gating code
+  needed to change. Typing garbage that doesn't match a real name and
+  clicking away reverts the visible text to the last valid selection (the
+  underlying value never left that state anyway). *Why not a `<datalist>`?*
+  It doesn't enforce picking an actual list entry, which would let a typo'd
+  name slip into the league workbook unresolved.
 
 ---
 
