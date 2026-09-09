@@ -462,7 +462,7 @@
             <div class="card-body">
                 <ol class="mb-0">
                     {% for rule in league.rules %}
-                    <li class="mb-2" style="white-space: pre-line;">{{ rule }}</li>
+                    <li class="mb-2" style="white-space: pre-line;">{{ rule | linkify }}</li>
                     {% endfor %}
                 </ol>
             </div>
