@@ -829,6 +829,36 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   attribute - which is exactly what let this ship unnoticed the first time
   (the earlier test only checked `el.hidden`, true regardless of whether it
   visually did anything).
+- **2026-09-09 — Updated 2026 League Rule 3 for Weekly Score Upload; dropped
+  rules 5 and 8.** The score-reporting rules were still WhatsApp-based, now
+  obsolete since `/weekly-scores` replaced that flow. Rule 3 rewritten and
+  split into two (the admin's own suggestion, since the combined text was
+  getting long): report scores via the Weekly Score Upload page (with a
+  link), plus a new rule 4 for the Hall-connectivity fallback (note matches
+  on your phone, upload once back online). Old rule 5 (a separate "League
+  Scores HHB" WhatsApp group for reporting) removed outright; old rule 8
+  (the WhatsApp message-format example, e.g. "Sengole/Vishal bt Purvaiz/
+  Vasu 21/17 - (Court 3)") removed since the web form's own required fields
+  make a free-text format unnecessary. Net 18 rules -> 17, renumbered
+  sequentially in the `PointRules` sheet of `tournaments/HHB Annual Players
+  League - 2026.xlsm` via a one-off openpyxl script (following this repo's
+  established `load_workbook_normalized(..., keep_vba=True)` pattern from
+  `league_service.py`, per the xlsx skill's guidance on editing `.xlsm`
+  files) - every other rule's text and all other sheets (standings, match
+  data, Dates, MatchRules) verified untouched via `get_league(2026)`
+  afterward. Also wired the existing `linkify` Jinja filter (already used
+  on the Charity page) into the Rules tab's rendering, since rule 3 now
+  contains a URL for the first time - it was plain-escaped text before,
+  so the weekly-scores link would otherwise have rendered as dead text.
+  Verified in a real browser (Playwright): 17 rules render correctly, no
+  leftover WhatsApp/format wording anywhere, rule 3's URL renders as a
+  working `<a href>` link. *Important:* this only updated the **git-tracked
+  copy** of the workbook - Render serves data from R2, not git, and this
+  session has no R2 credentials, so the live site won't reflect this change
+  until the admin runs `scripts/seed_r2.py` locally to push the updated
+  file (same gap as the 2026-09-01 "Sync 2026 Players League scoresheet"
+  precedent commit, where the live update went out via seed_r2.py first
+  and the git sync followed after).
 
 ---
 
