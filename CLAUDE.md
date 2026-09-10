@@ -1025,6 +1025,23 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   over and the last match date and the true end coincide. Verified against
   synthetic in-progress-season data and confirmed no regression against
   real, complete 2024 season data.
+- **2026-09-10 — Fixed Final Standings silently excluding players not yet in
+  the season's roster block** (reported live: Ziad and Vivek had real
+  6-Sep matches but were missing entirely from the table). `get_league()`'s
+  standings loop only ever iterated the static Excel Rank/Name block (the
+  roster an admin maintains by hand) - a brand-new player whose matches
+  resolved to their plain first name via `resolve_attendee_names()`'s
+  fallback (since they weren't in that roster yet) had their matches
+  correctly recorded and counted toward their *opponents'* Played/Won/PD,
+  but their own results never showed up until someone manually added them
+  to the sheet - previously just a documented "Known issue," now fixed:
+  standings cover the roster plus anyone who has actually played a counted
+  match but isn't in it, so a new player can play their first Sunday before
+  an admin gets to Excel and still show up correctly. Removed the
+  now-stale Known-issues note. Verified against synthetic data, and
+  confirmed this wasn't 2026-specific - re-running against the real,
+  complete 2024 season surfaced the identical gap for "Sengole" (2 matches,
+  1 win, previously silently excluded there too), now correctly included.
 
 ---
 
