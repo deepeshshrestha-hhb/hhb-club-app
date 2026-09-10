@@ -170,9 +170,18 @@ def get_league(year):
         won[winner1] += 1
         won[winner2] += 1
 
+    # Roster players with 0 counted matches (not yet played this season, or
+    # only in the struck-off match above) are left out of standings entirely,
+    # not just hidden in the template - keeps "#" a consecutive rank among
+    # actual participants (no gaps), and keeps them out of anything else that
+    # reads standings (top_players_courts, the champion/runner-up/third
+    # lookups, HHB Score's per-season participation level in
+    # player_stats_service.py).
     standings = []
     for p in roster:
         pl = played.get(p, 0)
+        if pl == 0:
+            continue
         w = won.get(p, 0)
         standings.append({
             "player": p,
