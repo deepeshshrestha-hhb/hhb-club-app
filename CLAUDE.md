@@ -859,6 +859,25 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   file (same gap as the 2026-09-01 "Sync 2026 Players League scoresheet"
   precedent commit, where the live update went out via seed_r2.py first
   and the git sync followed after).
+- **2026-09-10 — Fixed a real security gap: anyone could delete anyone's
+  Weekly Score Upload match.** The "Del" button was shown to every visitor
+  while a session was open, and the underlying route (`POST /weekly-scores/
+  api/matches/<id>/delete`) had **no auth check at all** - hiding the
+  button alone would have been cosmetic, since anyone could still call the
+  API directly. Fixed both layers: `api_delete_match` now has
+  `@admin_required` (matching the convention already used for open/close/
+  submit), and `weekly_scores.js` only renders the Del button when
+  `window.WEEKLY_SCORE_IS_ADMIN` is true (already injected into every page
+  load, previously unused). "Edit" (amend) stays open to everyone,
+  unrestricted, per the admin's explicit request - only Delete needed
+  gating. Verified with a Flask test-client (unauthenticated delete
+  redirected and the match confirmed still present afterward; amend still
+  succeeds unauthenticated; an admin session deletes normally) and in a
+  real browser via Playwright, using a signed session cookie (built from
+  `app.session_interface`, since local dev has no `ADMIN_USERNAME`/
+  `PASSWORD` configured to log in with) to simulate an admin: a non-admin
+  visitor sees Edit but zero Delete buttons anywhere on the page; an admin
+  sees Delete and can use it end-to-end through the real UI.
 
 ---
 
