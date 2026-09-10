@@ -2,6 +2,11 @@
 {% block head_extra %}
 <style>
     .duplicate-row { background-color: #fdecea; }
+    /* League Rule 6: only one win per partner per Sunday - a distinct colour
+       from duplicate-row since this can be two genuinely different matches
+       (different scores/opponents), just an invalid repeat pairing among the
+       winners, not necessarily the same match reported twice. */
+    .repeat-winner-row { background-color: #e7f1ff; }
     #playersForm select, #playersForm .form-select { min-width: 140px; }
     /* Compact results table - fits a Sunday's worth of scores on a phone
        screen in portrait without scrolling. */
@@ -100,15 +105,15 @@
                 <label class="form-label small mb-1">Score</label>
                 <select name="score1" class="form-select score-select" required></select>
             </div>
+            <div class="col-6 col-md-1">
+                <label class="form-label small mb-1">Score</label>
+                <select name="score2" class="form-select score-select" required></select>
+            </div>
             <div class="col-12 col-md-2">
                 {{ player_search_field('p3', 'Team 2 - Player 1') }}
             </div>
             <div class="col-12 col-md-2">
                 {{ player_search_field('p4', 'Team 2 - Player 2') }}
-            </div>
-            <div class="col-6 col-md-1">
-                <label class="form-label small mb-1">Score</label>
-                <select name="score2" class="form-select score-select" required></select>
             </div>
             <div class="col-12 col-md-2">
                 <button type="submit" class="btn btn-hhb-accent w-100">Submit Score</button>
@@ -142,11 +147,12 @@
             <table id="scoresTable" class="table table-sm table-hover align-middle mb-0">
                 <thead class="table-dark">
                     <tr>
-                        <th class="text-center">Ct</th>
+                        <th class="text-center">#</th>
                         <th>Team 1</th>
                         <th class="text-center">Sc</th>
-                        <th>Team 2</th>
                         <th class="text-center">Sc</th>
+                        <th>Team 2</th>
+                        <th class="text-center">Ct</th>
                         <th id="actionsHead" class="text-center" {% if state.status != 'open' %}hidden{% endif %}>Actions</th>
                     </tr>
                 </thead>
@@ -156,7 +162,7 @@
         </div>
         <p class="text-muted small mt-2 mb-1">Team 1 is always the <span class="fw-bold text-success">winning</span> team, regardless of the order it was entered in.</p>
         <p class="text-muted small mb-0"><span class="badge" style="background-color:#fdecea;color:#842029;">&nbsp;&nbsp;</span> = possible duplicate (same four players &amp; scores as another row).</p>
-        <p class="text-muted small mb-0"><span class="badge bg-warning text-dark">&nbsp;&nbsp;</span> = this court has fewer matches than the busiest court - aim for an even spread across all 4.</p>
+        <p class="text-muted small mb-0"><span class="badge" style="background-color:#e7f1ff;color:#084298;">&nbsp;&nbsp;</span> = this winning pair already won another match today (only one win per partner per Sunday counts - League Rule 6).</p>
     </div>
 </div>
 
@@ -187,16 +193,15 @@
                         <label class="form-label small mb-1">Score</label>
                         <select name="score1" class="form-select score-select" required></select>
                     </div>
-                    <div class="col-6"></div>
+                    <div class="col-6">
+                        <label class="form-label small mb-1">Score</label>
+                        <select name="score2" class="form-select score-select" required></select>
+                    </div>
                     <div class="col-6">
                         {{ player_search_field('p3', 'Team 2 - Player 1') }}
                     </div>
                     <div class="col-6">
                         {{ player_search_field('p4', 'Team 2 - Player 2') }}
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label small mb-1">Score</label>
-                        <select name="score2" class="form-select score-select" required></select>
                     </div>
                 </form>
             </div>

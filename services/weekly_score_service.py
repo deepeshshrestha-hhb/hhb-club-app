@@ -124,9 +124,39 @@ def _duplicate_key(m):
     return frozenset({(pair_a, m["score1"]), (pair_b, m["score2"])})
 
 
+def _winning_pair(m):
+    """The two players on the winning team, regardless of which slot (Team 1/
+    2) they were entered into - used to flag League Rule 6 violations ('only
+    ONE win with a specific partner on a given Sunday')."""
+    team1_won = m["score1"] > m["score2"]
+    return frozenset({m["p1"], m["p2"]}) if team1_won else frozenset({m["p3"], m["p4"]})
+
+
 def _annotate(matches):
-    counts = Counter(_duplicate_key(m) for m in matches)
-    return [{**m, "is_duplicate": counts[_duplicate_key(m)] > 1} for m in matches]
+    """Add is_duplicate (same 4 players + scores as another row - almost
+    certainly the same match reported twice), is_repeat_winner (this match's
+    winning pair already won another match today - a League Rule 6
+    violation, but a legitimate distinct match otherwise, so flagged with its
+    own colour rather than folded into is_duplicate), and match_number (a
+    stable 1-based reference number in chronological submission order,
+    independent of however this list is currently sorted for display - so
+    "match 7" means the same row whether the table is showing newest-first or
+    not, letting the admin say "delete match 7" unambiguously)."""
+    dup_counts = Counter(_duplicate_key(m) for m in matches)
+    win_counts = Counter(_winning_pair(m) for m in matches)
+    numbers = {
+        m["id"]: i + 1
+        for i, m in enumerate(sorted(matches, key=lambda m: m["submitted_at"]))
+    }
+    return [
+        {
+            **m,
+            "match_number": numbers[m["id"]],
+            "is_duplicate": dup_counts[_duplicate_key(m)] > 1,
+            "is_repeat_winner": win_counts[_winning_pair(m)] > 1,
+        }
+        for m in matches
+    ]
 
 
 def _historical_attendees(target_date):

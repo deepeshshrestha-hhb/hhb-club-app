@@ -332,7 +332,13 @@
         noMsg.hidden = true;
 
         body.innerHTML = matches.map(function (m) {
-            var rowClass = m.is_duplicate ? 'duplicate-row' : '';
+            // is_duplicate (same match reported twice) takes priority over
+            // is_repeat_winner (this winning pair already won another,
+            // otherwise-distinct match today - a League Rule 6 violation)
+            // when both apply, since a duplicate is the more specific and
+            // more urgent problem - two colours on one row would just be
+            // confusing.
+            var rowClass = m.is_duplicate ? 'duplicate-row' : (m.is_repeat_winner ? 'repeat-winner-row' : '');
             // Always show the winning team first, whichever slot (Team 1/2)
             // it was actually entered into - scores can never be equal, so
             // there's always a clear winner to lead with.
@@ -357,11 +363,12 @@
                   '</div></td>'
                 : '';
             return '<tr class="' + rowClass + '" data-match-id="' + m.id + '">' +
-                '<td class="text-center">' + escapeHtml(m.court_no) + '</td>' +
+                '<td class="text-center text-muted">' + m.match_number + '</td>' +
                 '<td>' + escapeHtml(winTeam.join(' / ')) + '</td>' +
                 '<td class="text-center fw-bold text-success">' + winScore + '</td>' +
-                '<td>' + escapeHtml(loseTeam.join(' / ')) + '</td>' +
                 '<td class="text-center text-muted">' + loseScore + '</td>' +
+                '<td>' + escapeHtml(loseTeam.join(' / ')) + '</td>' +
+                '<td class="text-center">' + escapeHtml(m.court_no) + '</td>' +
                 actions +
                 '</tr>';
         }).join('');
