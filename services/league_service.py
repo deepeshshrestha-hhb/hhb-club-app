@@ -178,15 +178,32 @@ def get_league(year):
         won[winner1] += 1
         won[winner2] += 1
 
-    # Roster players with 0 counted matches (not yet played this season, or
-    # only in the struck-off match above) are left out of standings entirely,
-    # not just hidden in the template - keeps "#" a consecutive rank among
-    # actual participants (no gaps), and keeps them out of anything else that
-    # reads standings (top_players_courts, the champion/runner-up/third
-    # lookups, HHB Score's per-season participation level in
-    # player_stats_service.py).
+    # Standings cover the roster plus anyone who has actually played a
+    # counted match but isn't in the roster yet - a brand-new player whose
+    # Weekly Score Upload matches resolved to their plain first name (see
+    # resolve_attendee_names()'s fallback, and the Known issues note on
+    # this in CLAUDE.md) still had their matches correctly recorded and
+    # counted toward their *opponents'* Played/Won/PD above; leaving them
+    # out here as long as nobody's manually added them to the sheet's
+    # Rank/Name block meant their own real results silently vanished from
+    # Final Standings despite having genuinely played (reported live: Ziad
+    # and Vivek missing despite Sunday matches). A brand-new player can now
+    # play before an admin has a chance to add them to Excel and still show
+    # up correctly.
+    names = list(roster)
+    for p in sorted(played):
+        if p not in roster:
+            names.append(p)
+
+    # Roster/played players with 0 counted matches (not yet played this
+    # season, or only in the struck-off match above) are left out of
+    # standings entirely, not just hidden in the template - keeps "#" a
+    # consecutive rank among actual participants (no gaps), and keeps them
+    # out of anything else that reads standings (top_players_courts, the
+    # champion/runner-up/third lookups, HHB Score's per-season
+    # participation level in player_stats_service.py).
     standings = []
-    for p in roster:
+    for p in names:
         pl = played.get(p, 0)
         if pl == 0:
             continue

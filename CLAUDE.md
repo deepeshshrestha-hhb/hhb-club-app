@@ -277,12 +277,6 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   writing scores from the web form means recomputing those columns in Python
   instead of leaving Excel to do it. See the docstring on
   `league_service.write_weekly_scores` for the full reasoning.
-- **A brand-new league player must still be added to the season's roster
-  block in Excel** (the `PLAYERS_IDS`/points-table names, same as before this
-  feature) for their Weekly Score Upload results to count toward standings —
-  `resolve_attendee_names()` falls back to their plain first name so the match
-  itself still gets recorded, but Played/Won/Points won't include them until
-  they're in the roster.
 - `COMPLETED_2026_EVENTS` set in [calendar_service.py](services/calendar_service.py)
   is hand-maintained — update it as 2026 events pass.
 - All three tournament archives (Doubles, Championships, League) auto-discover
