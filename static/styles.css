@@ -440,6 +440,13 @@ h1, h2, h3 {
 #matchesTable th:nth-child(1),
 #matchesTable td:nth-child(1) {
     position: static;
+    /* The shared mobile media query below bumps every cell's padding for
+       touch-friendliness, which left a wide, unused-looking gap around this
+       column's 1-2 digit match number - tighten it back down here since
+       "#" isn't an interactive touch target and that space reads better
+       going to Team 1. */
+    padding-left: .35rem;
+    padding-right: .35rem;
 }
 #matchesTable tbody tr:nth-of-type(odd) td:nth-child(1),
 #matchesTable tbody tr:hover td:nth-child(1) {
