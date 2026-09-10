@@ -1042,6 +1042,23 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   confirmed this wasn't 2026-specific - re-running against the real,
   complete 2024 season surfaced the identical gap for "Sengole" (2 matches,
   1 win, previously silently excluded there too), now correctly included.
+- **2026-09-10 — Added a League link to the Calendar page and an "Individual
+  Weekly Stats" tab on the League page.** (1) The Calendar's Annual Events
+  tab now shows an "IN PROGRESS » View Tournament" badge/link for the
+  Annual Players League while its season is underway, mirroring the
+  existing "COMPLETED » View Tournament/Championship" pattern for Doubles/
+  Championships - but placed outside the `completed_2026` gate, since the
+  League is deliberately never added to `COMPLETED_2026_EVENTS` until the
+  season actually ends in Nov; also added a League branch *inside* that
+  gate so it automatically switches to a COMPLETED link once an admin adds
+  it there later. (2) New "Individual Weekly Stats" tab (next to Overall
+  Stats): Played (P) and Won (W) per Sunday for every player who's played
+  this season, alphabetical, one column pair per Sunday that appears as
+  scores get submitted - a new `get_weekly_stats()` in `league_service.py`
+  built from the same counted (non-struck-off) matches standings already
+  uses. Verified `get_weekly_stats()` against real 2024 season data (11
+  date columns, 26 players, correct per-week Played/Won matching the
+  requested layout) and both features visually via Playwright.
 
 ---
 
