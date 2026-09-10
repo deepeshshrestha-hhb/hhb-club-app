@@ -878,6 +878,40 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   `PASSWORD` configured to log in with) to simulate an admin: a non-admin
   visitor sees Edit but zero Delete buttons anywhere on the page; an admin
   sees Delete and can use it end-to-end through the real UI.
+- **2026-09-10 — Weekly Score Upload: match numbers, League Rule 6
+  highlighting, reordered columns/forms.** (1) Removed the "this court has
+  fewer matches..." footer note under the results table - the admin didn't
+  want text that could read as encouraging players to pick a court number
+  to balance the count rather than reporting whichever court they actually
+  played on; the per-court badge colouring itself is untouched, so the
+  imbalance is still visible at a glance, just without the instructional
+  framing. (2) Added a Rule 6 ("only ONE win with a specific partner on a
+  given Sunday") enforcement aid: `weekly_score_service._winning_pair()`
+  identifies the winning team regardless of which slot (Team 1/2) it was
+  entered into, and `_annotate()` flags `is_repeat_winner` when that pair
+  already won another match today - deliberately separate from
+  `is_duplicate` (a literal same-match repeat) since two matches can share
+  a winning pair while being genuinely different matches (different
+  opponents/scores), so it gets its own light-blue row colour rather than
+  being folded into the pink duplicate highlight (duplicate wins if a row
+  is somehow both). (3) Added a stable `match_number` (1-based, chronological
+  submission order, independent of the table's current newest-first display
+  sort) as the new first column, so the admin can say "delete match 7"
+  unambiguously regardless of how the table is sorted; `Ct` moved to the
+  last data column, and the two score columns now sit adjacent in the
+  middle (`Team 1 | Sc | Sc | Team 2`) since Team 1 is already
+  green-highlighted as the winner. (4) Reordered the "Enter a Score" form
+  and Amend modal fields to match: Court No., Team 1 Player 1/2, Score,
+  Score, Team 2 Player 1/2. (5) Confirmed, no change needed:
+  `submit_to_database()` already sorts matches ascending by `submitted_at`
+  before writing, and `write_weekly_scores()` fills rows in that exact
+  order, so matches already land in the league workbook in the same
+  chronological order as `match_number`. Verified `_annotate()` directly
+  against synthetic data (duplicate and repeat-winner flags computed
+  independently and correctly) and end-to-end in a real browser
+  (Playwright): new column order, correct row colours, removed footer text
+  with the new Rule 6 legend in its place, retained court-badge colouring,
+  matching field order in both forms.
 
 ---
 
