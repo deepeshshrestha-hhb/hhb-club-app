@@ -103,6 +103,14 @@ def get_league(year):
         matches.append({
             "no": no,
             "date": _fmt_date(date_val),
+            # Matches tab shows this per row (32+ rows a Sunday) - the full
+            # "06 Sep 2024" from _fmt_date() (shared with other tournament
+            # pages, so not changed globally) was eating column width that
+            # Team 1 needed; a season never spans a year boundary, so the
+            # year adds nothing here. lstrip (not %-d/%#d) for the no-leading
+            # -zero day, since strftime's no-pad flag isn't portable between
+            # Linux (Render) and Windows (local dev).
+            "date_short": date_val.strftime("%d-%b").lstrip("0"),
             "date_raw": date_val,
             "p1": p1, "p2": p2,
             "score1": int(s1),
@@ -219,8 +227,14 @@ def get_league(year):
 
     is_complete = status == "complete"
 
-    # Resolve season dates: use actual match dates for complete, scheduled header for others
-    if min_date and max_date:
+    # Resolve season dates: use actual match dates once the season is
+    # complete, scheduled header dates otherwise. This used to key off
+    # "any matches exist yet" instead of `is_complete`, so an in-progress
+    # season showed its Season End as the date of its most recent match
+    # (e.g. 6-Sep, the first Sunday played) instead of the real scheduled
+    # end (e.g. 22-Nov) - correct only in hindsight, once the season is
+    # actually over and the last match date and the true end coincide.
+    if is_complete and min_date and max_date:
         season_start_disp = _fmt_date(min_date)
         season_end_disp = _fmt_date(max_date)
     else:

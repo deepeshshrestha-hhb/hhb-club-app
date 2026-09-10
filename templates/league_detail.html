@@ -176,7 +176,7 @@
                             {% for m in league.matches %}
                             <tr data-players="{{ m.players }}" class="{{ 'table-secondary text-decoration-line-through opacity-75' if m.is_struck_off else ('table-warning' if m.is_deuce) }}">
                                 <td class="text-muted small">{{ m.no }}</td>
-                                <td class="text-muted small" style="white-space:nowrap">{{ m.date }}</td>
+                                <td class="text-muted small" style="white-space:nowrap">{{ m.date_short }}</td>
                                 <td class="{{ 'fw-bold' if m.winner == (m.p1 ~ ' & ' ~ m.p2) }}">{{ m.p1 }} &amp; {{ m.p2 }}</td>
                                 <td class="text-center fw-semibold">{{ m.score1 }}</td>
                                 <td class="{{ 'fw-bold' if m.winner == (m.p3 ~ ' & ' ~ m.p4) }}">{{ m.p3 }} &amp; {{ m.p4 }}</td>
