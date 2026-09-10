@@ -94,6 +94,10 @@
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#overall-stats-pane" type="button">Overall Stats</button>
     </li>
     <li class="nav-item">
+        <button class="nav-link {{ 'disabled' if season_not_started }}" data-bs-toggle="tab"
+                data-bs-target="#weekly-stats-pane" type="button" {{ 'disabled' if season_not_started }}>Individual Weekly Stats</button>
+    </li>
+    <li class="nav-item">
         <button class="nav-link {{ 'active' if season_not_started }}" data-bs-toggle="tab"
                 data-bs-target="#rules-pane" type="button">Rules</button>
     </li>
@@ -456,6 +460,50 @@
         <p class="text-muted small mt-2">
             Total Players Playing shows current Spond sign-ups for upcoming Sundays, or actual attendance
             for Sundays that have already happened. Total Games / Max Wins come from the reported match scores.
+        </p>
+    </div>
+
+    <!-- Individual Weekly Stats -->
+    <div class="tab-pane fade" id="weekly-stats-pane">
+        <div class="card hhb-card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th rowspan="2" class="align-middle">Player</th>
+                                {% for d in weekly_stats.dates %}
+                                <th colspan="2" class="text-center">{{ d.label }}</th>
+                                {% endfor %}
+                            </tr>
+                            <tr>
+                                {% for d in weekly_stats.dates %}
+                                <th class="text-center small">P</th>
+                                <th class="text-center small">W</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in weekly_stats.players %}
+                            <tr>
+                                <td>{{ p.player }}</td>
+                                {% for d in weekly_stats.dates %}
+                                <td class="text-center">{{ p.weeks[d.key].played }}</td>
+                                <td class="text-center">{{ p.weeks[d.key].won }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                            {% if not weekly_stats.players %}
+                            <tr><td colspan="{{ 1 + weekly_stats.dates | length * 2 }}" class="text-center text-muted py-4">No matches reported yet.</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <p class="text-muted small mt-2 mb-0">
+            Played (P) and Won (W) per Sunday, for every player who's played this season, A-Z. A new pair of
+            columns appears each week once that Sunday's scores are submitted.
         </p>
     </div>
 

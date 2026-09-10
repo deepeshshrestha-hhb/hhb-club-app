@@ -7,7 +7,7 @@ from services.tournament_service import (
     get_doubles_tournament,
 )
 from services.championship_service import list_championship_years, get_championship
-from services.league_service import list_league_years, get_league, get_overall_stats
+from services.league_service import list_league_years, get_league, get_overall_stats, get_weekly_stats
 from services.podium_service import get_podium_photos, get_podium_photo_pipe
 from services.photos_service import has_event_photos
 
@@ -151,6 +151,7 @@ def league_detail(year):
     event_id = f"league_{year}"
     return render_template("league_detail.html", league=league,
                            overall_stats=get_overall_stats(year),
+                           weekly_stats=get_weekly_stats(year),
                            prev_year=prev_year, next_year=next_year,
                            podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe,
                            event_id=event_id, has_event_photos=has_event_photos(event_id))

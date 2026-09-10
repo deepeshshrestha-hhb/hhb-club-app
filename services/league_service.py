@@ -534,6 +534,50 @@ def get_overall_stats(year):
     return rows
 
 
+def get_weekly_stats(year):
+    """Per-Sunday Played/Won for every player who's played this season, A-Z,
+    for the "Individual Weekly Stats" tab. One column pair (P/W) per Sunday
+    that has counted matches, growing week to week as scores get submitted -
+    unlike get_overall_stats() this only covers dates with actual reported
+    matches, not the full scheduled season calendar. Excludes struck-off
+    matches (League Rule 6), same as standings and get_overall_stats()."""
+    league = get_league(year)
+    if not league:
+        return None
+
+    matches = [m for m in league["matches"] if not m.get("is_struck_off")]
+    if not matches:
+        return {"dates": [], "players": []}
+
+    dates = sorted({m["date_raw"] for m in matches})
+    date_cols = [
+        {"key": d.isoformat(), "label": d.strftime("%d-%b").lstrip("0")}
+        for d in dates
+    ]
+
+    stats = defaultdict(lambda: defaultdict(lambda: {"played": 0, "won": 0}))
+    players = set()
+    for m in matches:
+        key = m["date_raw"].isoformat()
+        margin = m["score1"] - m["score2"]
+        winners = {m["p1"], m["p2"]} if margin > 0 else {m["p3"], m["p4"]}
+        for p in (m["p1"], m["p2"], m["p3"], m["p4"]):
+            players.add(p)
+            stats[p][key]["played"] += 1
+            if p in winners:
+                stats[p][key]["won"] += 1
+
+    rows = [
+        {
+            "player": p,
+            "weeks": {c["key"]: stats[p][c["key"]] for c in date_cols},
+        }
+        for p in sorted(players, key=str.casefold)
+    ]
+
+    return {"dates": date_cols, "players": rows}
+
+
 # --- Weekly Score Upload: writing into the live season's workbook ---------
 
 def get_league_roster(year):
