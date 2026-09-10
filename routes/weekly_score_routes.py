@@ -44,6 +44,7 @@ def api_amend_match(match_id):
 
 
 @weekly_bp.route("/weekly-scores/api/matches/<match_id>/delete", methods=["POST"])
+@admin_required
 def api_delete_match(match_id):
     try:
         weekly_score_service.delete_match(match_id)
