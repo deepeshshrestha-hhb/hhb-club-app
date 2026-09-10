@@ -5,8 +5,15 @@
     /* League Rule 6: only one win per partner per Sunday - a distinct colour
        from duplicate-row since this can be two genuinely different matches
        (different scores/opponents), just an invalid repeat pairing among the
-       winners, not necessarily the same match reported twice. */
-    .repeat-winner-row { background-color: #e7f1ff; }
+       winners, not necessarily the same match reported twice. A plain pale
+       background alone (the original version of this rule) turned out to be
+       too subtle to notice on a busy phone-sized table during a live Sunday
+       session - a repeat pair went unflagged-looking despite the row having
+       the class - so this also gets a left accent border and an explicit
+       badge (added in renderTable(), see weekly_scores.js) rather than
+       relying on background colour alone. */
+    .repeat-winner-row { background-color: #e7f1ff; border-left: 4px solid #0d6efd; }
+    .repeat-winner-row td:first-child { padding-left: calc(.4rem - 4px); }
     #playersForm select, #playersForm .form-select { min-width: 140px; }
     /* Compact results table - fits a Sunday's worth of scores on a phone
        screen in portrait without scrolling. */
