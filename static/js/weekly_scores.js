@@ -341,11 +341,19 @@
             var winScore = team1Won ? m.score1 : m.score2;
             var loseTeam = team1Won ? [m.p3, m.p4] : [m.p1, m.p2];
             var loseScore = team1Won ? m.score2 : m.score1;
+            // Delete is admin-only - letting any visitor delete anyone's
+            // score (not just their own) was a real risk, not just a UI
+            // nicety, so this is paired with @admin_required on the
+            // /delete route itself (hiding the button alone would be
+            // cosmetic - anyone could still call the API directly).
+            var deleteBtn = window.WEEKLY_SCORE_IS_ADMIN
+                ? '<button class="btn btn-outline-danger btn-sm scores-btn-compact" data-delete="' + m.id + '">Del</button>'
+                : '';
             var actions = canEdit
                 ? '<td class="text-center text-nowrap">' +
                   '<div class="d-flex flex-column gap-1">' +
                   '<button class="btn btn-outline-secondary btn-sm scores-btn-compact" data-amend="' + m.id + '">Edit</button>' +
-                  '<button class="btn btn-outline-danger btn-sm scores-btn-compact" data-delete="' + m.id + '">Del</button>' +
+                  deleteBtn +
                   '</div></td>'
                 : '';
             return '<tr class="' + rowClass + '" data-match-id="' + m.id + '">' +
