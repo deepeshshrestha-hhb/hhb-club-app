@@ -1016,6 +1016,21 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   against synthetic data and against real, complete 2024 season data (no
   regressions: all 25 standings entries have played > 0, 10 top pairs still
   show at 11 Sundays).
+- **2026-09-10 — Shortened Matches tab dates to "6-Sep"; fixed Season End
+  showing the last match's date instead of the real scheduled end.** (1)
+  Each Matches tab row now shows a new `date_short` field ("6-Sep") instead
+  of the shared `_fmt_date()` output ("06 Sep 2024") - a season never spans
+  a year boundary, so the year was pure column width Team 1 needed on a
+  32+-row phone-sized table; `_fmt_date()` itself is untouched since other
+  tournament pages still use it. (2) `get_league()`'s season-dates block
+  used actual match min/max dates whenever *any* matches existed rather
+  than only once `is_complete` - exactly what the comment above the code
+  already said was intended, just not what the code did - so the 2026
+  season (only 6-Sep played so far) showed Season End as `6-Sep` instead
+  of the real scheduled `22-Nov`; only correct once a season is actually
+  over and the last match date and the true end coincide. Verified against
+  synthetic in-progress-season data and confirmed no regression against
+  real, complete 2024 season data.
 
 ---
 
