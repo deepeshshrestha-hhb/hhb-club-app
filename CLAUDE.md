@@ -912,6 +912,75 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   (Playwright): new column order, correct row colours, removed footer text
   with the new Rule 6 legend in its place, retained court-badge colouring,
   matching field order in both forms.
+- **2026-09-10 — Fixed League Table standings, Matches tab layout, and added
+  League Rule 6 auto-strike-off, after the first real Weekly Score Upload
+  submission (32 matches, 6-Sep) exposed all three.** (1) `get_league()`'s
+  Final Standings rank/order (and now Played/Won/Lost/Points/PF too) had
+  been read straight from a static Excel Rank/Name block that
+  `write_weekly_scores()` deliberately never resorts (see its docstring) -
+  correct the moment scores were hand-entered in rank order, but stale as
+  soon as the automated Weekly Score Upload flow started writing real
+  results: a 0-played player (Yogi) stayed near the top of the table, and a
+  high-win player (Waqas, 8 wins) didn't rise, and no amount of client-side
+  re-sorting in `league_detail.html` could fix it since that JS's "Won
+  desc" default view just restores the (stale) server-rendered order.
+  Fixed by computing every standings number in Python directly from the
+  parsed `matches` list instead of trusting the sheet: Played/Won/Lost via
+  simple counters, point-differential (NPD) computed from each match's
+  score margin rather than the sheet's Points-Against column (a live SUMIF
+  formula that reads back blank after any openpyxl save - the same
+  cache-wipe issue documented on `write_weekly_scores`), then sorted by
+  Wins -> NPD -> Win% -> name per League Rule 9 ("Rankings will be based on
+  number of WINS, then NPD and then WIN %"); the sheet's Rank/Name block is
+  now read only to source the season's player roster (so a 0-match player
+  still appears, correctly last). (2) The "Matches" tab table reused the
+  Calendar page's `.sticky-table-wrapper` CSS class verbatim, including a
+  hardcoded 64px offset for a 2nd frozen column tuned for Calendar's narrow
+  "Day" abbreviation - wrong for this table's "#" match-number column,
+  which pushed the frozen "Date" column visually on top of "Team 1". Fixed
+  with `#matchesTable`-scoped overrides: only "Date" freezes now (at the
+  left edge), "#" scrolls normally instead of getting its own hardcoded
+  offset, and the shared `nth-child(5)` rule (meant for Calendar's numeric
+  "Confirmed" count) no longer force-squeezes this table's actual 5th
+  column ("Team 2", a name) into a narrow centered/nowrap style. (3) League
+  Rule 6 ("only ONE win with a specific partner on a given Sunday") had
+  already been violated in the live 6-Sep submission before anyone caught
+  it (Waqas/Nawaz and Santosh/Mansoor each won twice) - rather than require
+  a manual Excel fix, `get_league()` now detects a winning pair's 2nd+ win
+  on the same date automatically (a forward scan over `matches`, which are
+  already in chronological submission order per `write_weekly_scores()`'s
+  own docstring) and marks it `is_struck_off`: excluded from standings and
+  *every* analytics calculation (pair records, court usage, score
+  frequency, Overall Stats' per-week totals, etc. - built from a new
+  `counted_matches` list with struck-off rows removed) while still shown in
+  the Matches tab, greyed out with strikethrough and a "Struck off" badge,
+  so the double-report stays visible without corrupting any numbers. (4)
+  Separately, the Weekly Score Upload page's own pre-submission
+  `repeat-winner-row` highlight (added earlier the same day) apparently
+  didn't visually register during the live 6-Sep session despite the two
+  known repeat pairs - re-verified `_annotate()`/`_winning_pair()` end to
+  end against a synthetic repeat-winning-pair session and found the
+  detection logic itself correct (confirmed the admin submitted all 32
+  matches in one continuous open session, ruling out the one structural gap
+  this feature has: it can only compare matches within the *current*
+  session, so submitting to the database mid-Sunday and reopening for more
+  entries would hide an earlier win from later detection - not what
+  happened here). Best remaining explanation is that a plain pale-blue
+  background alone was too subtle to notice live on a busy phone-sized
+  table, so strengthened it regardless of root cause: added a blue left
+  accent border plus an explicit "Repeat win" badge next to the winning
+  team's name. Verified standings sort and strike-off logic against
+  synthetic match data, and both the Matches tab CSS fix (against real 2024
+  season data) and the strengthened repeat-winner highlight (against a
+  synthetic session) visually via Playwright. *Why not also fix "Overall
+  Stats: Total Players Playing not populated for 6-Sep"* (also raised the
+  same day)? Traced to `_historical_players_playing()`'s dependency on
+  `data/signups_history.csv`, verified correct against synthetic data - the
+  live blank cells are most likely the same class of stale-cache issue
+  already root-caused multiple times earlier this week (see the 2026-09-08
+  entries), fixable via Admin → Refresh Signup Analytics, not a code bug
+  this sandbox could confirm without production access; left as a follow-up
+  if refreshing doesn't resolve it.
 
 ---
 
