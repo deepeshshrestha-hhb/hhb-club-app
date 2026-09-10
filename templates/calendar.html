@@ -102,6 +102,11 @@
                                        class="badge ms-1 text-decoration-none" style="background-color: darkgreen;">
                                         COMPLETED &raquo; View Championship
                                     </a>
+                                    {% elif ev.name == 'Annual Players League' %}
+                                    <a href="{{ url_for('tournaments.league_detail', year=2026) }}"
+                                       class="badge ms-1 text-decoration-none" style="background-color: darkgreen;">
+                                        COMPLETED &raquo; View Tournament
+                                    </a>
                                     {% elif ev.name == 'Annual Club Holiday' %}
                                     <span class="badge ms-1" style="background-color: darkgreen;">COMPLETED</span>
                                     <a href="https://canva.link/wlxb4tfjg95p1q6" target="_blank" rel="noopener"
@@ -111,6 +116,11 @@
                                     {% else %}
                                     <span class="badge ms-1" style="background-color: darkgreen;">COMPLETED</span>
                                     {% endif %}
+                                {% elif ev.name == 'Annual Players League' %}
+                                <a href="{{ url_for('tournaments.league_detail', year=2026) }}"
+                                   class="badge ms-1 text-decoration-none" style="background-color: #fd7e14;">
+                                    IN PROGRESS &raquo; View Tournament
+                                </a>
                                 {% endif %}
                                 {% if slug_2026 in photo_event_ids %}
                                 <a href="{{ url_for('photos.event_gallery', event_id=slug_2026) }}"
