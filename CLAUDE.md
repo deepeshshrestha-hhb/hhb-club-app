@@ -998,6 +998,24 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   `styles.css` now serves with a `?v=<mtime>` param, and the Matches tab
   layout visually via Playwright at a real phone viewport (412×915, 2.6x
   DPR) against real 2024 league data.
+- **2026-09-10 — Hid 0-match players from Final Standings; hid "Top Pairs by
+  Wins" until the season has 3+ Sundays of data.** (1) A player with 0
+  counted matches (not yet played this season, or whose only appearance was
+  a struck-off match) is now excluded from `get_league()`'s `standings`
+  list entirely, not just filtered in the template - so the "#" rank stays
+  a consecutive number among actual participants (no gaps from a filtered
+  row), and the exclusion automatically applies everywhere else that reads
+  `standings` too: `top_players_courts`, the champion/runner-up/third
+  lookups, and HHB Score's per-season participation level in
+  `player_stats_service.py` (a player shouldn't get a "participated" credit
+  for a season they haven't actually played in yet). (2) The Analytics
+  tab's "Top Pairs by Wins" card is now gated on `a.total_sundays >= 3` -
+  with only 1-2 Sundays played, a pair's win/loss record is too small a
+  sample to be meaningful, and (per the existing `pair_records` threshold)
+  it wasn't showing much useful data that early anyway. Verified both
+  against synthetic data and against real, complete 2024 season data (no
+  regressions: all 25 standings entries have played > 0, 10 top pairs still
+  show at 11 Sundays).
 
 ---
 
