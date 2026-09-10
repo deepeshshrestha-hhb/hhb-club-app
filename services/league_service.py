@@ -115,36 +115,87 @@ def get_league(year):
             "players": f"{p1}|{p2}|{p3}|{p4}",
         })
 
+    # League Rule 6: only one win with a specific partner counts per Sunday -
+    # a winning pair's second (and any later) win on the same date must be
+    # struck off: still shown in the Matches tab (so the double-report stays
+    # visible) but excluded from every calculation below (standings,
+    # analytics, Overall Stats). `matches` is already in row order, which is
+    # chronological submission order for anything written by
+    # write_weekly_scores() (see its docstring), so a forward scan correctly
+    # flags the later occurrence(s) as struck off.
+    seen_winning_pairs = set()
+    for m in matches:
+        margin = m["score1"] - m["score2"]
+        winning_pair = frozenset({m["p1"], m["p2"]}) if margin > 0 else frozenset({m["p3"], m["p4"]})
+        key = (m["date_raw"], winning_pair)
+        m["is_struck_off"] = key in seen_winning_pairs
+        seen_winning_pairs.add(key)
+
+    counted_matches = [m for m in matches if not m["is_struck_off"]]
+
     # --- Standings ---
-    standings = []
+    # Rank/Name (T/U, or S/T pre-2026) is a static roster block that
+    # write_weekly_scores() never resorts, and its Played/Won/Lost/Points
+    # reflect every match written to the sheet - including ones now struck
+    # off above. So every number here, not just rank, is computed directly
+    # from `counted_matches`; the sheet's Rank/Name block is read only for
+    # the season's player roster, so anyone with zero counted matches still
+    # appears (e.g. at 0/0). Per League Rule 9: rank by Wins, then NPD (point
+    # differential, computed here rather than trusted from the sheet's
+    # Points-Against SUMIF, which is a formula and so reads back blank after
+    # any openpyxl save - see the module docstring on write_weekly_scores),
+    # then Win %.
+    roster = []
     for row in range(3, 100):
-        rank = match_ws.cell(row, rank_col).value
+        rank_cell = match_ws.cell(row, rank_col).value
         player = match_ws.cell(row, rank_col + 1).value
-        if rank is None or player is None or not isinstance(rank, (int, float)):
+        if rank_cell is None or player is None or not isinstance(rank_cell, (int, float)):
             break
-        p = _clean(player)
-        pl = match_ws.cell(row, rank_col + 2).value or 0
-        w = match_ws.cell(row, rank_col + 3).value or 0
-        lo = match_ws.cell(row, rank_col + 4).value or 0
-        pts = match_ws.cell(row, rank_col + 5).value or 0
+        roster.append(_clean(player))
+
+    played = Counter()
+    won = Counter()
+    point_diff = defaultdict(int)
+    for m in counted_matches:
+        margin = m["score1"] - m["score2"]
+        played[m["p1"]] += 1
+        played[m["p2"]] += 1
+        played[m["p3"]] += 1
+        played[m["p4"]] += 1
+        point_diff[m["p1"]] += margin
+        point_diff[m["p2"]] += margin
+        point_diff[m["p3"]] -= margin
+        point_diff[m["p4"]] -= margin
+        winner1, winner2 = (m["p1"], m["p2"]) if margin > 0 else (m["p3"], m["p4"])
+        won[winner1] += 1
+        won[winner2] += 1
+
+    standings = []
+    for p in roster:
+        pl = played.get(p, 0)
+        w = won.get(p, 0)
         standings.append({
-            "rank": int(rank),
             "player": p,
-            "wins": int(w),
-            "played": int(pl),
-            "losses": int(lo),
-            "points": int(pts),
+            "wins": w,
+            "played": pl,
+            "losses": pl - w,
+            "points": 100 + 15 * w,
             "win_pct": round(w / pl * 100) if pl else 0,
+            "point_diff": point_diff.get(p, 0),
         })
 
-    # --- Analytics ---
-    total = len(matches)
-    sundays = len({m["date_raw"] for m in matches})
-    deuce = [m for m in matches if m["is_deuce"]]
-    diffs = [m["diff"] for m in matches if m["diff"] > 0]
+    standings.sort(key=lambda s: (-s["wins"], -s["point_diff"], -s["win_pct"], s["player"].casefold()))
+    for i, s in enumerate(standings, start=1):
+        s["rank"] = i
+
+    # --- Analytics --- (counted_matches - struck-off matches don't count)
+    total = len(counted_matches)
+    sundays = len({m["date_raw"] for m in counted_matches})
+    deuce = [m for m in counted_matches if m["is_deuce"]]
+    diffs = [m["diff"] for m in counted_matches if m["diff"] > 0]
     avg_diff = round(sum(diffs) / len(diffs), 1) if diffs else 0
-    biggest = max(matches, key=lambda m: m["diff"]) if matches else None
-    squeaky = [m for m in matches if m["diff"] == 1]
+    biggest = max(counted_matches, key=lambda m: m["diff"]) if counted_matches else None
+    squeaky = [m for m in counted_matches if m["diff"] == 1]
 
     # --- Status ---
     today = date.today()
@@ -169,14 +220,14 @@ def get_league(year):
 
     # Score frequency
     score_counter = Counter()
-    for m in matches:
+    for m in counted_matches:
         hi, lo = max(m["score1"], m["score2"]), min(m["score1"], m["score2"])
         score_counter[(hi, lo)] += 1
     top_scores = [(f"{h}-{l}", c) for (h, l), c in score_counter.most_common(5)]
 
     # Max wins by individual on a single day — Top 3
     day_wins = defaultdict(int)  # (player, date) -> wins
-    for m in matches:
+    for m in counted_matches:
         for w in [m["p1"] if m["winner"] == f"{m['p1']} & {m['p2']}" else None,
                   m["p2"] if m["winner"] == f"{m['p1']} & {m['p2']}" else None,
                   m["p3"] if m["winner"] == f"{m['p3']} & {m['p4']}" else None,
@@ -189,7 +240,7 @@ def get_league(year):
     # Pair wins/losses across full season
     pair_wins = defaultdict(int)
     pair_losses = defaultdict(int)
-    for m in matches:
+    for m in counted_matches:
         pair1 = tuple(sorted([m["p1"], m["p2"]]))
         pair2 = tuple(sorted([m["p3"], m["p4"]]))
         winner_pair = tuple(sorted([w.strip() for w in m["winner"].split("&")])) if "&" in m["winner"] else None
@@ -221,7 +272,7 @@ def get_league(year):
 
     # Matches per Sunday
     by_date = defaultdict(int)
-    for m in matches:
+    for m in counted_matches:
         by_date[m["date_raw"]] += 1
     busiest = max(by_date.items(), key=lambda x: x[1]) if by_date else None
 
@@ -236,16 +287,16 @@ def get_league(year):
     # Court usage for the top 5 standings players (added 2026 season) — lets us
     # see whether stronger players are actually spending more time on the top
     # courts, per the rotation rules.
-    has_court_data = any(m["court_no"] for m in matches)
+    has_court_data = any(m["court_no"] for m in counted_matches)
     court_columns = sorted(
-        {m["court_no"] for m in matches if m["court_no"]},
+        {m["court_no"] for m in counted_matches if m["court_no"]},
         key=lambda c: (0, int(c)) if c.isdigit() else (1, c),
     )
     top_players_courts = []
     if has_court_data:
         top_names = [s["player"] for s in standings[:5]]
         court_counts = {name: Counter() for name in top_names}
-        for m in matches:
+        for m in counted_matches:
             if not m["court_no"]:
                 continue
             for p in (m["p1"], m["p2"], m["p3"], m["p4"]):
@@ -368,6 +419,8 @@ def get_overall_stats(year):
 
     matches_by_date = defaultdict(list)
     for m in league["matches"]:
+        if m.get("is_struck_off"):
+            continue
         d = m["date_raw"].date() if hasattr(m["date_raw"], "date") else m["date_raw"]
         matches_by_date[d].append(m)
 

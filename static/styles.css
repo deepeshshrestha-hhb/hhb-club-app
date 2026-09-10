@@ -427,6 +427,41 @@ h1, h2, h3 {
     background-color: #eaeaea;
 }
 
+/* League "Matches" tab (#matchesTable) reuses .sticky-table-wrapper but has
+   different columns than Calendar (# | Date | Team 1 | Score | Team 2 |
+   Score | Margin | Court, vs Calendar's Date | Day | Session | ... |
+   Confirmed) - the shared rules above assume Date is column 1 and freeze a
+   2nd column at a hardcoded 64px (tuned for Calendar's narrow "Day"
+   abbreviation), which instead pinned this table's Date column mid-way
+   across the table and overlapped it into Team 1. Only Date needs freezing
+   here; unfreeze "#" (column 1) rather than give it its own hardcoded
+   offset, and stop forcing the Calendar "Confirmed" count styling onto this
+   table's column 5, which is "Team 2" (a name), not a 2-digit number. */
+#matchesTable th:nth-child(1),
+#matchesTable td:nth-child(1) {
+    position: static;
+}
+#matchesTable tbody tr:nth-of-type(odd) td:nth-child(1),
+#matchesTable tbody tr:hover td:nth-child(1) {
+    background-color: transparent;
+}
+#matchesTable th:nth-child(2),
+#matchesTable td:nth-child(2) {
+    left: 0;
+}
+#matchesTable th:nth-child(5),
+#matchesTable td:nth-child(5) {
+    width: auto;
+    white-space: normal;
+    text-align: left;
+}
+@media (max-width: 991px) {
+    #matchesTable th:nth-child(2),
+    #matchesTable td:nth-child(2) {
+        left: 0;
+    }
+}
+
 /* Make tables use full available width on small/landscape screens */
 @media (max-width: 991px) {
     .table-responsive {
