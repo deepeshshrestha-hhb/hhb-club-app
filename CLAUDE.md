@@ -981,6 +981,23 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   entries), fixable via Admin → Refresh Signup Analytics, not a code bug
   this sandbox could confirm without production access; left as a follow-up
   if refreshing doesn't resolve it.
+- **2026-09-10 — `styles.css` now cache-busted like `weekly_scores.js`; the
+  previous day's Matches tab CSS fix had shipped but a real phone still
+  showed the old broken layout.** Root cause: `base.html`'s stylesheet
+  `<link>` used a fixed `/static/styles.css` URL with no versioning, so the
+  Cloudflare Worker reverse proxy (or the phone's own browser cache) could
+  keep serving pre-deploy bytes indefinitely - exactly the failure mode the
+  `asset_version()` Jinja global was built for on 2026-09-07, but that fix
+  was only ever applied to the `weekly_scores.js` script tag, never to
+  `styles.css` itself, even though the stylesheet is loaded on every page
+  and just as vulnerable. Added the same `?v={{ asset_version('styles.css')
+  }}` to `base.html`'s `<link>`, closing the gap site-wide rather than
+  per-page. Also tightened `#matchesTable`'s "#" column padding specifically
+  (the shared mobile media query's touch-friendly padding bump left a
+  disproportionately wide gap around a 1-2 digit match number). Verified
+  `styles.css` now serves with a `?v=<mtime>` param, and the Matches tab
+  layout visually via Playwright at a real phone viewport (412×915, 2.6x
+  DPR) against real 2024 league data.
 
 ---
 
