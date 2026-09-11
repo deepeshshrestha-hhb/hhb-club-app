@@ -459,8 +459,12 @@ h1, h2, h3 {
 #matchesTable th:nth-child(5),
 #matchesTable td:nth-child(5) {
     width: auto;
-    white-space: normal;
     text-align: left;
+    /* Team 2 (a name, like Team 1) shouldn't be squeezed into the Calendar
+       "Confirmed" count's narrow/centered layout - width and alignment are
+       still overridden here, but white-space nowrap is requested and now
+       set directly on the <td> in league_detail.html (matching Team 1),
+       not overridden back to wrap here. */
 }
 @media (max-width: 991px) {
     #matchesTable th:nth-child(2),

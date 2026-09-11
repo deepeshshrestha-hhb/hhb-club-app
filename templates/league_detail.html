@@ -162,7 +162,7 @@
         </div>
         <div class="card hhb-card">
             <div class="card-body p-0">
-                <div class="sticky-table-wrapper" style="max-height:65vh;">
+                <div class="sticky-table-wrapper" style="max-height:80vh;">
                     <table class="table table-sm table-hover align-middle mb-0" id="matchesTable">
                         <thead class="table-dark">
                             <tr>
@@ -181,9 +181,9 @@
                             <tr data-players="{{ m.players }}" class="{{ 'table-secondary text-decoration-line-through opacity-75' if m.is_struck_off else ('table-warning' if m.is_deuce) }}">
                                 <td class="text-muted small">{{ m.no }}</td>
                                 <td class="text-muted small" style="white-space:nowrap">{{ m.date_short }}</td>
-                                <td class="{{ 'fw-bold' if m.winner == (m.p1 ~ ' & ' ~ m.p2) }}">{{ m.p1 }} &amp; {{ m.p2 }}</td>
+                                <td class="{{ 'fw-bold' if m.winner == (m.p1 ~ ' & ' ~ m.p2) }}" style="white-space:nowrap">{{ m.p1 }}/{{ m.p2 }}</td>
                                 <td class="text-center fw-semibold">{{ m.score1 }}</td>
-                                <td class="{{ 'fw-bold' if m.winner == (m.p3 ~ ' & ' ~ m.p4) }}">{{ m.p3 }} &amp; {{ m.p4 }}</td>
+                                <td class="{{ 'fw-bold' if m.winner == (m.p3 ~ ' & ' ~ m.p4) }}" style="white-space:nowrap">{{ m.p3 }}/{{ m.p4 }}</td>
                                 <td class="text-center fw-semibold">{{ m.score2 }}</td>
                                 <td class="text-muted small text-center">{{ m.diff }}{% if m.is_deuce %} <span class="badge bg-warning text-dark" style="font-size:0.65rem">D</span>{% endif %}{% if m.is_struck_off %} <span class="badge bg-secondary" style="font-size:0.65rem">Struck off</span>{% endif %}</td>
                                 {% if league.analytics.has_court_data %}<td class="text-muted small text-center">{{ m.court_no }}</td>{% endif %}
