@@ -1059,6 +1059,20 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   uses. Verified `get_weekly_stats()` against real 2024 season data (11
   date columns, 26 players, correct per-week Played/Won matching the
   requested layout) and both features visually via Playwright.
+- **2026-09-11 — Matches tab: taller table, no-wrap team names, "/" instead
+  of "&".** (1) The scrollable wrapper's `max-height` went from `65vh` to
+  `80vh` - only ~7 rows fit before scrolling on a phone. (2) Team 2 was
+  wrapping onto two lines while Team 1 stayed on one - the 2026-09-10
+  Calendar-CSS-reuse fix had force-set `white-space:normal` on Team 2 to
+  stop it being squeezed like Calendar's numeric "Confirmed" column, but
+  never revisited nowrap once that specific problem was fixed. Both team
+  cells are now `nowrap`, consistent with each other. (3) Team pairs now
+  display as `Vasu/Waqas` instead of `Vasu & Waqas`, saving width - only
+  the display text changed; the winner bold-highlight comparison still
+  checks against `m.winner` (an `" & "`-joined string from the sheet),
+  untouched. Verified visually via Playwright at a real phone viewport
+  against real 2024 season data: 18 rows now visible before scrolling
+  (was ~7), both team columns confirmed `white-space: nowrap`.
 
 ---
 
