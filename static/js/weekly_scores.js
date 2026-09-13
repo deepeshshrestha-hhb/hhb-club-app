@@ -364,15 +364,18 @@
                 : '';
             // A pale row background alone turned out to be easy to miss on a
             // busy phone-sized table during a live Sunday session (see the
-            // CSS comment on .repeat-winner-row) - an explicit badge next to
-            // the winning team makes a repeat pairing impossible to scroll
-            // past unnoticed.
-            var repeatBadge = (!m.is_duplicate && m.is_repeat_winner)
-                ? ' <span class="badge bg-primary" style="font-size:.65rem">Repeat win</span>'
-                : '';
+            // CSS comment on .duplicate-row / .repeat-winner-row) - an
+            // explicit badge next to the winning team makes either flag
+            // impossible to scroll past unnoticed. Duplicate takes priority
+            // over repeat-win, same as the row colour above.
+            var flagBadge = m.is_duplicate
+                ? ' <span class="badge bg-danger" style="font-size:.65rem">Duplicate</span>'
+                : (m.is_repeat_winner
+                    ? ' <span class="badge bg-primary" style="font-size:.65rem">Repeat win</span>'
+                    : '');
             return '<tr class="' + rowClass + '" data-match-id="' + m.id + '">' +
                 '<td class="text-center text-muted">' + m.match_number + '</td>' +
-                '<td>' + escapeHtml(winTeam.join(' / ')) + repeatBadge + '</td>' +
+                '<td>' + escapeHtml(winTeam.join(' / ')) + flagBadge + '</td>' +
                 '<td class="text-center fw-bold text-success">' + winScore + '</td>' +
                 '<td class="text-center text-muted">' + loseScore + '</td>' +
                 '<td>' + escapeHtml(loseTeam.join(' / ')) + '</td>' +
