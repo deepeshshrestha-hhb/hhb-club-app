@@ -1,17 +1,19 @@
 {% extends "base.html" %}
 {% block head_extra %}
 <style>
-    .duplicate-row { background-color: #fdecea; }
+    /* A plain pale background alone turned out to be too subtle to notice on
+       a busy phone-sized table during a live Sunday session - confirmed for
+       .repeat-winner-row on 2026-09-10 (fixed with a left accent border +
+       explicit badge) but .duplicate-row never got the same treatment since
+       nobody had reported it as unnoticed yet - live reports on 2026-09-13
+       (rows correctly detected as duplicate but not visibly flagged) say it
+       has the exact same problem, so it gets the same fix here. */
+    .duplicate-row { background-color: #fdecea; border-left: 4px solid #dc3545; }
+    .duplicate-row td:first-child { padding-left: calc(.4rem - 4px); }
     /* League Rule 6: only one win per partner per Sunday - a distinct colour
        from duplicate-row since this can be two genuinely different matches
        (different scores/opponents), just an invalid repeat pairing among the
-       winners, not necessarily the same match reported twice. A plain pale
-       background alone (the original version of this rule) turned out to be
-       too subtle to notice on a busy phone-sized table during a live Sunday
-       session - a repeat pair went unflagged-looking despite the row having
-       the class - so this also gets a left accent border and an explicit
-       badge (added in renderTable(), see weekly_scores.js) rather than
-       relying on background colour alone. */
+       winners, not necessarily the same match reported twice. */
     .repeat-winner-row { background-color: #e7f1ff; border-left: 4px solid #0d6efd; }
     .repeat-winner-row td:first-child { padding-left: calc(.4rem - 4px); }
     #playersForm select, #playersForm .form-select { min-width: 140px; }
