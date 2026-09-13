@@ -1073,6 +1073,20 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   untouched. Verified visually via Playwright at a real phone viewport
   against real 2024 season data: 18 rows now visible before scrolling
   (was ~7), both team columns confirmed `white-space: nowrap`.
+- **2026-09-13 — Strengthened the Weekly Score Upload duplicate-row
+  highlight** (reported live: matches 5/28 and 24/34 were genuine exact
+  duplicates but showed no highlight). Verified `_duplicate_key()`/
+  `_annotate()` against a synthetic exact-duplicate pair first - the
+  detection logic itself is correct, it flags them fine. The actual gap:
+  `.duplicate-row` still only had a plain pale pink background - the exact
+  same "too subtle to notice on a busy phone-sized table" problem already
+  found and fixed for `.repeat-winner-row` on 2026-09-10 (left accent
+  border + explicit badge), just never applied to `.duplicate-row` since
+  nobody had reported it as unnoticed until now. Same fix: a red left
+  accent border plus an explicit "Duplicate" badge next to the winning
+  team's name (still takes priority over "Repeat win" when both apply).
+  Verified visually against the synthetic duplicate pair: both rows
+  correctly flagged and now clearly visible, not just a faint tint.
 
 ---
 
