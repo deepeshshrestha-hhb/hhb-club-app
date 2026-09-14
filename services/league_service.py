@@ -1,7 +1,7 @@
 import csv
 import os
 from collections import Counter, defaultdict
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from config import Config
 from services import r2_service
@@ -456,6 +456,23 @@ def get_overall_stats(year):
 
     wb = load_workbook_normalized(path, data_only=True)
     stats_ws = wb["Overall Stats"]
+    # Every row after the first is a "=<prev cell>+7" formula (a straight
+    # weekly chain, off-weeks included), not a literal date - and *any*
+    # openpyxl save anywhere in this workbook (a Weekly Score Upload submit,
+    # a one-off admin script) drops the cached result of every formula in
+    # the file, this column included (see the module docstring on
+    # write_weekly_scores). Once that happens, trusting stats_ws.cell(row, 2)
+    # for week 2 onwards reads back blank, and the old "not a date -> end of
+    # table" check below stopped the whole loop after week 1 - reported
+    # live: Overall Stats still showed only the 6-Sep row after 13-Sep's
+    # scores were submitted, even though that submission's own save is
+    # exactly what wipes this cache. A raw (data_only=False) load lets us
+    # tell "formula present, cache just stale" (still part of the table)
+    # apart from "genuinely blank" (real end of table), and the date itself
+    # is computed from the one cell that's always a literal, not a formula -
+    # row 4's Week 1 date - plus a weekly offset, replicating what the
+    # formula chain would have computed.
+    stats_ws_raw = load_workbook_normalized(path, data_only=False)["Overall Stats"]
 
     matches_by_date = defaultdict(list)
     for m in league["matches"]:
@@ -469,12 +486,19 @@ def get_overall_stats(year):
     need_live = False
     week_dates = []
     last_break_note = None
+    anchor_date = None
     for row in range(4, 60):
         week_no = stats_ws.cell(row, 1).value
-        date_val = stats_ws.cell(row, 2).value
-        if not hasattr(date_val, "year"):
-            break  # end of the table
-        d = date_val.date()
+        if stats_ws_raw.cell(row, 2).value is None:
+            break  # genuinely empty cell (no formula, no literal) - end of the table
+        if anchor_date is None:
+            anchor_date = stats_ws.cell(row, 2).value  # row 4's Date is always a literal
+            if not hasattr(anchor_date, "year"):
+                break  # malformed sheet - bail out rather than guess
+            d = anchor_date.date()
+            anchor_row = row
+        else:
+            d = (anchor_date + timedelta(weeks=row - anchor_row)).date()
         if week_no is None:
             # An off week (e.g. a school-holidays break) — no week number, and
             # usually only the first row of the break carries the note text, so
