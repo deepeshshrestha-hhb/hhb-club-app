@@ -1087,6 +1087,35 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   team's name (still takes priority over "Repeat win" when both apply).
   Verified visually against the synthetic duplicate pair: both rows
   correctly flagged and now clearly visible, not just a faint tint.
+- **2026-09-14 — Fixed Overall Stats silently stopping after Week 1 once any
+  workbook save happens** (reported live: after submitting 13-Sep's scores,
+  Overall Stats still only showed the 6-Sep row). Every row after the first
+  in the "Overall Stats" sheet's Date column is a formula
+  (`=<prev row>+7`, a straight weekly chain, off-weeks included) - only
+  Week 1's date (row 4) is a literal value. Any openpyxl save anywhere in
+  the workbook (a Weekly Score Upload submit included - exactly what
+  13-Sep's own submission had just done) drops the cached result of every
+  formula in the file, this column included (the same cache-wipe behind
+  `write_weekly_scores`'s whole design - see its docstring), and
+  `get_overall_stats()` was reading this column with `data_only=True` and
+  breaking out of its per-week loop the moment a cell wasn't a real date -
+  which is every row from week 2 onward once the cache is gone, so the
+  loop silently stopped right after week 1 every time, not just for 6-Sep.
+  Fixed by no longer trusting the cached formula value at all: a second
+  raw (`data_only=False`) read tells "formula present, cache just stale"
+  (still part of the table) apart from a genuinely empty cell (real end of
+  the table), and each week's date is computed in Python from Week 1's
+  literal date plus a 7-day-per-row offset, replicating what the formula
+  chain would have produced. Verified against the local 2026 workbook
+  (which already exhibits this exact cache-wiped state): now returns all
+  10 scheduled weeks plus the 2 October break rows correctly dated,
+  instead of stopping after week 1; confirmed no regression against the
+  real, complete 2024 season (all 11 weeks unchanged). *Note:* this is a
+  different bug from the still-open "Total Players Playing not populated
+  for 6-Sep" item in the 2026-09-10 entry - that one is about Week 1's own
+  player counts (likely a `signups_history.csv` cache gap) and is
+  untouched by this fix, which was purely about later weeks never being
+  reached at all.
 
 ---
 
