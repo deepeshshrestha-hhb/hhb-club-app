@@ -63,9 +63,14 @@ def _save(data: dict):
 
 
 def get_candidates() -> list:
-    """The current Top 20 from Club Rankings, in rank order. Pulled live
-    rather than a hardcoded list so it always matches /players/rankings."""
-    return get_rankings()["players"][:TOP_N]
+    """The current Top 20 from Club Rankings, alphabetical rather than rank
+    order - shown that way on purpose so the ballot doesn't visually nudge
+    members toward the committee's existing ranking while they pick their
+    own Top 10 (per committee discussion). Still pulled live from Club
+    Rankings rather than a hardcoded list, so it always matches the same
+    Top 20 shown on /players/rankings."""
+    top20 = get_rankings()["players"][:TOP_N]
+    return sorted(top20, key=str.casefold)
 
 
 def get_voter_names() -> list:
