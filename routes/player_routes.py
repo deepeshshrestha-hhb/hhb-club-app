@@ -1,10 +1,12 @@
 import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, abort, send_file, flash, session
+from routes.admin_routes import admin_required
 from services.player_service import get_all_players
 from services.analytics_service import get_club_analytics, maybe_refresh_async
 from services.profile_service import (
     get_profile, save_profile, name_to_slug, get_photo_path, get_all_profile_slugs, delete_profile
 )
+from services import club_rankings_service
 
 player_bp = Blueprint("players", __name__)
 
@@ -18,8 +20,51 @@ def players_page():
     players = get_all_players()
     profile_slugs = get_all_profile_slugs()
     analytics = get_club_analytics(players)
+    rankings_visible = club_rankings_service.is_visible_to_public()
     return render_template("players.html", players=players,
-                           profile_slugs=profile_slugs, analytics=analytics)
+                           profile_slugs=profile_slugs, analytics=analytics,
+                           rankings_visible=rankings_visible)
+
+
+@player_bp.route("/players/rankings")
+def club_rankings_page():
+    """Manually-curated Club Rankings (distinct from the HHB Score leaderboard).
+    Admin-only until the committee turns it public via visible_to_public."""
+    data = club_rankings_service.get_rankings()
+    if not data["visible_to_public"] and not session.get("is_admin"):
+        abort(404)
+    profile_slugs = get_all_profile_slugs()
+    rankings = [
+        {"rank": i + 1, "full_name": name, "slug": name_to_slug(name)}
+        for i, name in enumerate(data["players"])
+    ]
+    return render_template("club_rankings.html", rankings=rankings,
+                           visible_to_public=data["visible_to_public"],
+                           profile_slugs=profile_slugs,
+                           disclaimer=club_rankings_service.DISCLAIMER)
+
+
+@player_bp.route("/players/rankings/move", methods=["POST"])
+@admin_required
+def club_rankings_move():
+    name = request.form.get("player", "")
+    direction = request.form.get("direction", "")
+    if not club_rankings_service.move_player(name, direction):
+        flash("Could not move that player.", "warning")
+    return redirect(url_for("players.club_rankings_page"))
+
+
+@player_bp.route("/players/rankings/visibility", methods=["POST"])
+@admin_required
+def club_rankings_visibility():
+    visible = request.form.get("visible_to_public") == "1"
+    club_rankings_service.set_visible_to_public(visible)
+    flash(
+        "Club Rankings is now visible to everyone." if visible
+        else "Club Rankings is now admin-only again.",
+        "success",
+    )
+    return redirect(url_for("players.club_rankings_page"))
 
 
 @player_bp.route("/players/<slug>")

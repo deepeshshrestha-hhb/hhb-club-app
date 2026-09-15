@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="d-flex align-items-center justify-content-between flex-wrap mb-1 gap-2">
+    <h1 class="page-title mb-0">🏆 Club Rankings</h1>
+    <a href="{{ url_for('players.players_page') }}" class="text-muted small">&larr; Back to Players</a>
+</div>
+<p class="text-muted small mb-3">{{ rankings | length }} players, ranked 1&ndash;{{ rankings | length }}</p>
+
+{% if session.get('is_admin') %}
+<div class="alert {{ 'alert-success' if visible_to_public else 'alert-warning' }} d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <div>
+        {% if visible_to_public %}
+        <i class="bi bi-eye-fill me-1"></i> <strong>Visible to everyone.</strong> Any member can see this page.
+        {% else %}
+        <i class="bi bi-eye-slash-fill me-1"></i> <strong>Admin-only.</strong> This page is hidden from members until you make it public.
+        {% endif %}
+    </div>
+    <form method="POST" action="{{ url_for('players.club_rankings_visibility') }}" class="mb-0">
+        <input type="hidden" name="visible_to_public" value="{{ '0' if visible_to_public else '1' }}">
+        <button type="submit" class="btn btn-sm {{ 'btn-outline-secondary' if visible_to_public else 'btn-success' }}">
+            {{ 'Make Admin-Only' if visible_to_public else 'Make Public' }}
+        </button>
+    </form>
+</div>
+{% endif %}
+
+<div class="card hhb-card mb-4">
+    <div class="card-body">
+        <p class="mb-0 small text-muted">
+            <i class="bi bi-info-circle me-1"></i> {{ disclaimer }}
+        </p>
+    </div>
+</div>
+
+<div class="card hhb-card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0" id="rankingsTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th style="width:60px;">#</th>
+                        <th>Player</th>
+                        {% if session.get('is_admin') %}<th style="width:110px;" class="text-center">Adjust</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in rankings %}
+                    <tr>
+                        <td class="rank-cell fw-bold">
+                            {% if r.rank == 1 %}🏆{% elif r.rank == 2 %}🥈{% elif r.rank == 3 %}🥉{% else %}{{ r.rank }}{% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('players.player_profile', slug=r.slug) }}" class="text-decoration-none fw-semibold"
+                               style="color:{% if r.slug in profile_slugs %}var(--hhb-primary){% else %}inherit{% endif %}">
+                                {{ r.full_name }}
+                            </a>
+                            {% if r.slug in profile_slugs %}
+                            <span class="ms-1" title="Has a profile" style="font-size:.7rem;color:var(--hhb-accent)">●</span>
+                            {% endif %}
+                        </td>
+                        {% if session.get('is_admin') %}
+                        <td class="text-center">
+                            <form method="POST" action="{{ url_for('players.club_rankings_move') }}" class="d-inline">
+                                <input type="hidden" name="player" value="{{ r.full_name }}">
+                                <input type="hidden" name="direction" value="up">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary py-0 px-2" title="Move up"
+                                        {{ 'disabled' if r.rank == 1 }}>&uarr;</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('players.club_rankings_move') }}" class="d-inline">
+                                <input type="hidden" name="player" value="{{ r.full_name }}">
+                                <input type="hidden" name="direction" value="down">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary py-0 px-2" title="Move down"
+                                        {{ 'disabled' if r.rank == rankings | length }}>&darr;</button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                    {% if not rankings %}
+                    <tr><td colspan="3" class="text-center text-muted py-4">No rankings yet.</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

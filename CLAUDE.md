@@ -83,7 +83,8 @@ config.py               # Config class; loads .env (SECRET_KEY, Spond creds, DAT
 routes/                 # Flask blueprints (thin; delegate to services)
   calendar_routes.py    # /calendar, /api/calendar
   tournament_routes.py  # /tournaments/* (doubles, championships, league)
-  player_routes.py      # /players (+ Analytics tab), profile pages, add/edit/delete profile
+  player_routes.py      # /players (+ Analytics tab), profile pages, add/edit/delete profile,
+                        #   /players/rankings (Club Rankings, admin-only until published)
   photos_routes.py      # /photos gallery + per-event photos + profile photo uploads;
                         #   event summary view/save + Claude AI assist endpoint (admin)
   hours_routes.py       # /api/hours-played/* JSON (most-active, inactive, per-player)
@@ -107,6 +108,8 @@ services/               # Business logic + data parsing (the heart of the app)
   analytics_service.py  # Signup-hours pipeline (Spond RSVPs → CSV → per-player hours) +
                         #   club analytics + lazy weekly background auto-refresh
   profile_service.py    # name_to_slug() + player profile data (jinja `slugify` filter)
+  club_rankings_service.py # Manually-curated Club Rankings (data/club_rankings.json): ordered
+                        #   player list + visible_to_public flag + move_player() up/down
   photos_service.py     # Club + event photo CRUD (Photos.xlsx + static/images/photos/)
   podium_service.py     # Podium photos in static/images/podium/ (numbered _1, _2 …)
   feedback_service.py   # User feedback CRUD (Feedback.xlsx, General + Feature Request)
@@ -1142,6 +1145,38 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   open correctly; date+player filters combine correctly (34/66 matches for a
   single Sunday, further narrowed to 7 for one player); Clear Filters resets
   both dropdowns in one click; no console errors.
+- **2026-09-15 — Added a manually-curated "Club Rankings" page** (`/players/rankings`,
+  `club_rankings_service.py`, `templates/club_rankings.html`), separate from
+  the automated HHB Score leaderboard already on `/players`. The committee
+  decided the automated ranking (weighted blend of League-last-3-years rank
+  and HHB Score rank, explored earlier this session) wasn't accurate enough
+  on its own, given how many active players lack recent League history - so
+  this is a hand-ordered list instead, seeded from the committee's own
+  34-player ranking. Storage follows the same pattern as `committee.json`/
+  `charity_settings.json`: a gitignored `data/club_rankings.json`
+  (`{"visible_to_public": bool, "players": [name, ...]}`, rank = list
+  position + 1), created on first save and R2-backed; the initial 34-name
+  order lives as a `DEFAULT_PLAYERS` constant in the service (same pattern
+  `committee_service.DEFAULT_MEMBERS` uses), not committed as data. Gated
+  **admin-only for now** via `visible_to_public` (defaults to `False`) - the
+  route 404s for non-admins until an admin clicks "Make Public" (a small
+  toggle button on the page itself); a "Club Rankings" link appears on
+  `/players` for admins always, and for everyone once it's public. Admins get
+  ↑/↓ buttons per row (`club_rankings_service.move_player()`, a simple
+  adjacent-swap, POST + redirect - no drag-and-drop, matching what was
+  asked for) instead of a raw text/JSON editor. The disclaimer text ("50%
+  League last 3 years / 50% subjective committee review, reviewed twice a
+  year - December around the Annual Dinner, June after the Annual Doubles
+  Classic") is hardcoded verbatim as given, not admin-editable, since that
+  wasn't requested. Verified in a real browser: anonymous request 404s while
+  admin-only; toggling Make Public flips a fresh cookie-less `curl` request
+  to 200; an ↑/↓ click swaps the two rows and persists (confirmed via the
+  saved JSON); re-toggled back to admin-only afterwards, matching the
+  requested starting state. *Note:* since local dev is R2-connected to the
+  live bucket (see Local Tooling Notes), this session's verification clicks
+  already wrote the seeded list to production R2 - harmless, since it left
+  the file in exactly the intended state (original order, admin-only) and
+  nothing serves that route in production yet until this deploys.
 
 ---
 
