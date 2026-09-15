@@ -1116,6 +1116,32 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   player counts (likely a `signups_history.csv` cache gap) and is
   untouched by this fix, which was purely about later weeks never being
   reached at all.
+- **2026-09-15 — League page: Matches tab date filter, one-click clear, and
+  direct tab URLs.** Requested feedback: the Matches tab only had "Filter by
+  player" and no quick way to reset it (had to reopen the dropdown and pick
+  "All Players"), and there was no way to link straight to a specific tab
+  (e.g. Matches or Analytics) instead of always landing on the default pane.
+  Added a second "Filter by date" dropdown (populated from each match's own
+  `date` field, deduplicated in sheet order) that ANDs with the existing
+  player filter, plus a single "Clear Filters" button that resets both in one
+  click (`weekly_scores.js`-style vanilla JS, no new dependency). For tab
+  URLs, `tournament_routes.league_detail` now accepts an optional
+  `/<tab>` path segment (`/tournaments/league/2026/Matches`,
+  `/tournaments/league/2026/Analytics`, etc. - case-insensitive, with a couple
+  of forgiving aliases like `overall-stats`/`overallstats`), mapped via a
+  `LEAGUE_TAB_SLUGS` dict to the tab-pane id to activate server-side (falling
+  back to the same default pane logic as before - Rules if the season hasn't
+  started yet, else Final Standings - for an unknown/missing slug). Clicking
+  a tab client-side also updates the address bar to match (`history.
+  replaceState` on Bootstrap's `shown.bs.tab` event), so any tab reached by
+  navigation is trivially linkable/bookmarkable without a page reload. Only
+  applied to the League detail page (that's what was asked for) - the same
+  pattern could be extended to Doubles/Championships detail pages if wanted.
+  Verified in a real browser against the live 2026 season data: direct links
+  to Matches, Analytics, Overall Stats, and the newer Weekly Stats tab all
+  open correctly; date+player filters combine correctly (34/66 matches for a
+  single Sunday, further narrowed to 7 for one player); Clear Filters resets
+  both dropdowns in one click; no console errors.
 
 ---
 
