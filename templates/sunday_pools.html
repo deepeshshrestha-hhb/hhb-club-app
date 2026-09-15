@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <div class="text-center mb-2">
+            <h1 class="page-title mb-1">🎱 Sunday Pool Play</h1>
+            <h2 class="h5 text-muted fw-normal">10&ndash;11am &mdash; Courts split by Club Ranking</h2>
+            <hr class="my-2">
+        </div>
+
+        <p class="text-muted small text-center mb-4">
+            Pool A plays Courts 1 &amp; 2, Pool B plays Courts 3 &amp; 4, for the 10&ndash;11am half of the
+            session &mdash; see the full
+            <a href="{{ url_for('rules.club_rules') }}?open=pool_play">Sunday Pool Play rule</a> for how this works.
+        </p>
+
+        {% if session.get('is_admin') %}
+        <div class="card hhb-card mb-4">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">Generate Pools</h6>
+                <form method="POST" action="{{ url_for('sunday_pools.generate_sunday_pools') }}"
+                      class="row g-2 align-items-end">
+                    <div class="col-sm-5">
+                        <label class="form-label small mb-1">Date</label>
+                        <input type="date" name="date" class="form-control form-control-sm"
+                               value="{{ default_date }}" required>
+                    </div>
+                    <div class="col-sm-4">
+                        <button type="submit" class="btn btn-hhb-primary text-white btn-sm w-100">
+                            Generate &amp; Publish
+                        </button>
+                    </div>
+                </form>
+                <p class="text-muted small mt-2 mb-0">
+                    Pulls that date's confirmed 10&ndash;11am sign-ups from Spond, splits them by the current
+                    <a href="{{ url_for('players.club_rankings_page') }}">Club Rankings</a> (top half &rarr; Pool A,
+                    bottom half &rarr; Pool B), and publishes the result below. Re-generating the same date
+                    overwrites its pools. A player not yet in Club Rankings defaults into Pool B.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if generated_dates|length > 1 %}
+        <form method="GET" action="{{ url_for('sunday_pools.sunday_pools_page') }}" class="d-flex align-items-center gap-2 justify-content-center mb-3">
+            <label class="small text-muted mb-0">View week:</label>
+            <select name="date" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()">
+                {% for d in generated_dates %}
+                <option value="{{ d }}" {{ 'selected' if d == shown_date }}>{{ d }}</option>
+                {% endfor %}
+            </select>
+        </form>
+        {% endif %}
+
+        {% if pools %}
+        <p class="text-center text-muted small mb-3">
+            Pools for <strong>{{ shown_date }}</strong>
+            &middot; {{ (pools.pool_a | length) + (pools.pool_b | length) }} players
+        </p>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card hhb-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title d-flex justify-content-between align-items-center">
+                            <span>🅰️ Pool A</span>
+                            <span class="badge bg-hhb-primary text-white">Courts 1 &amp; 2</span>
+                        </h5>
+                        <ol class="mb-0 ps-3">
+                            {% for p in pools.pool_a %}
+                            <li class="mb-1">
+                                {{ p }}
+                                {% if p in pools.unranked %}<span class="text-muted small" title="Not yet in Club Rankings">*</span>{% endif %}
+                            </li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card hhb-card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title d-flex justify-content-between align-items-center">
+                            <span>🅱️ Pool B</span>
+                            <span class="badge bg-secondary">Courts 3 &amp; 4</span>
+                        </h5>
+                        <ol class="mb-0 ps-3">
+                            {% for p in pools.pool_b %}
+                            <li class="mb-1">
+                                {{ p }}
+                                {% if p in pools.unranked %}<span class="text-muted small" title="Not yet in Club Rankings">*</span>{% endif %}
+                            </li>
+                            {% endfor %}
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if pools.unranked %}
+        <p class="text-muted small text-center mb-4">* not yet in Club Rankings &mdash; placed in Pool B by default.</p>
+        {% endif %}
+        {% else %}
+        <div class="alert alert-secondary text-center">
+            {% if shown_date %}
+            No pools found for <strong>{{ shown_date }}</strong>.
+            {% else %}
+            No pools have been generated yet.
+            {% endif %}
+            {% if session.get('is_admin') %}Use the form above to generate this Sunday's pools.
+            {% else %}Check back closer to Sunday.{% endif %}
+        </div>
+        {% endif %}
+
+        <div class="text-center mb-4">
+            <a href="/" class="btn btn-outline-secondary px-4">Back to Dashboard</a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

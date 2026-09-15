@@ -37,6 +37,9 @@ data/CharityContributions.xlsx
 # Club Rankings - admin-editable, created on first save, stored in R2, not source-controlled
 data/club_rankings.json
 
+# Sunday Pool Play - admin-generated, created on first save, stored in R2, not source-controlled
+data/sunday_pools.json
+
 # Signup analytics caches - derived from Spond, stored in R2, not source-controlled
 data/signups_history.csv
 data/player_hours.csv

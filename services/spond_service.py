@@ -210,6 +210,83 @@ _attendees_cache = {}  # target_date -> (fetched_at monotonic, result)
 _ATTENDEES_CACHE_TTL = 120  # seconds
 
 
+async def _fetch_confirmed_attendees_for_hour_async(target_date, hour):
+    """Like _fetch_confirmed_attendees_async, but only for the Spond event(s)
+    on target_date whose start time is `hour` (24hr, local time). A plain
+    per-date fetch merges every event that day (e.g. both the 9-10 and 10-11
+    Eastwood sessions), which is fine for Weekly Score Upload but not for
+    Sunday Pool Play, which only splits the 10-11 half of the session and
+    needs to isolate just that event's sign-ups."""
+    if spond is None:
+        raise RuntimeError(
+            "The 'spond' package is not installed. Run: pip install spond"
+        )
+
+    username = Config.SPOND_USERNAME
+    password = Config.SPOND_PASSWORD
+    group_id = Config.SPOND_GROUP_ID
+
+    if not username or "your_email" in username:
+        raise RuntimeError(
+            "Spond credentials are not set. Update SPOND_USERNAME, SPOND_PASSWORD "
+            "and SPOND_GROUP_ID in config.py."
+        )
+
+    s = spond.Spond(username=username, password=password)
+    try:
+        min_start = datetime(target_date.year, target_date.month, target_date.day)
+        max_start = min_start + timedelta(days=1)
+        events = await s.get_events(
+            group_id=group_id,
+            min_start=min_start,
+            max_start=max_start,
+            include_scheduled=True,
+        )
+        group = await s.get_group(group_id)
+    finally:
+        await s.clientsession.close()
+
+    members = {m.get("id"): m for m in (group.get("members") or [])}
+    attendees = {}
+    for ev in events or []:
+        start = _parse_timestamp(ev.get("startTimestamp"))
+        if start is None or start.hour != hour:
+            continue
+        accepted = (ev.get("responses") or {}).get("acceptedIds") or []
+        for uid in accepted:
+            m = members.get(uid)
+            if not m:
+                continue
+            attendees[uid] = {
+                "first_name": m.get("firstName", ""),
+                "last_name": m.get("lastName", ""),
+            }
+    return list(attendees.values())
+
+
+_hour_attendees_cache = {}  # (target_date, hour) -> (fetched_at monotonic, result)
+
+
+def get_confirmed_attendees_for_hour(target_date, hour):
+    """Synchronous wrapper: confirmed attendee {first_name, last_name} dicts
+    for target_date's event(s) starting at `hour` only (e.g. hour=10 for the
+    10-11am Sunday Pool Play half). Same caching behaviour as
+    get_confirmed_attendees() - including caching a failed/empty result, for
+    the same Spond-login-rate-limit reasons documented on that function."""
+    key = (target_date, hour)
+    cached = _hour_attendees_cache.get(key)
+    now = time.monotonic()
+    if cached is not None and (now - cached[0]) < _ATTENDEES_CACHE_TTL:
+        return cached[1]
+    try:
+        result = asyncio.run(_fetch_confirmed_attendees_for_hour_async(target_date, hour))
+    except Exception as exc:
+        print(f"Spond attendee fetch failed for {target_date} hour={hour}: {exc}")
+        result = []
+    _hour_attendees_cache[key] = (now, result)
+    return result
+
+
 def get_confirmed_attendees(target_date):
     """Synchronous wrapper: confirmed attendee {first_name, last_name} dicts
     for every Spond event on target_date (a date object). Used to populate the
