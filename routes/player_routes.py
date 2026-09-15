@@ -38,6 +38,11 @@ def club_rankings_page():
         {"rank": i + 1, "full_name": name, "slug": name_to_slug(name)}
         for i, name in enumerate(data["players"])
     ]
+    # Non-admins only ever see the current Top 20 - the committee wants the
+    # full ranked list (of ~35) kept admin-only for now, not just gated
+    # behind visible_to_public.
+    if not session.get("is_admin"):
+        rankings = rankings[:20]
     unranked_members = sorted(
         (n for n in get_player_names() if n not in data["players"]), key=str.casefold
     )

@@ -1349,6 +1349,25 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   the current state where Club Rankings/Rules promo buttons are
   deliberately hidden pending committee review (see the entry just above);
   `/vote` and `/vote/results` are direct-URL-only for now.
+- **2026-09-15 — Club Rankings: non-admins now see only the Top 20, not the
+  full ~35-player list; Player Vote candidates sorted alphabetically, not
+  by rank.** Two follow-up requests after the two features above shipped:
+  (1) `player_routes.club_rankings_page()` now slices `rankings` to the
+  first 20 entries for anyone without `session.is_admin` - admins still see
+  the full list (Adjust/Add-Player controls were already admin-gated, so
+  this only changes what the ranked table itself shows). (2)
+  `vote_service.get_candidates()` now returns the Top 20 sorted
+  alphabetically (`sorted(..., key=str.casefold)`) instead of in rank
+  order, per committee discussion that showing candidates in their existing
+  Club Rankings order would visually bias how members pick their own Top
+  10; `vote.html`'s "Top 20 Candidates" heading now says "(sorted
+  alphabetically)" so it's explicit on the page. This candidate order
+  change is safe everywhere else `get_candidates()` feeds into -
+  `submit_vote()`'s validation is a membership check, and
+  `compute_rankings()`'s final leaderboard order comes from vote points/
+  tie-break, not candidate iteration order - verified both in the browser
+  after a full dev-server restart (Python route/service changes need one;
+  template-only edits don't).
 
 ---
 
