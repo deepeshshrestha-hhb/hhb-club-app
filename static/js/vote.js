@@ -37,6 +37,15 @@
     function showError(msg) {
         errorEl.textContent = msg || '';
         errorEl.hidden = !msg;
+        if (msg) scrollToTop();
+    }
+
+    // The confirmation/PIN alerts render near the top of the page, but on
+    // mobile a voter is scrolled well down into "Your Top 10" by the time
+    // they tap Submit - without this, "Vote recorded" and the PIN are
+    // invisible off-screen and the submission looks like it did nothing.
+    function scrollToTop() {
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     }
 
     function showPinError(msg) {
@@ -214,6 +223,7 @@
                 } else {
                     successEl.hidden = false;
                 }
+                scrollToTop();
             })
             .catch(function () {
                 showError('Network error - please try again.');
