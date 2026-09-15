@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block head_extra %}
+<style>
+    .vote-candidate-list .list-group-item { cursor: pointer; }
+    .vote-candidate-list .list-group-item.picked { opacity: .45; pointer-events: none; }
+    .vote-pick-list .list-group-item { cursor: grab; }
+    .vote-pick-list .rank-badge {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 1.6rem; height: 1.6rem; border-radius: 50%; flex-shrink: 0;
+        background-color: var(--hhb-primary); color: #fff; font-weight: 600; font-size: .8rem;
+        cursor: grab;
+    }
+</style>
+{% endblock %}
+{% block content %}
+
+<h1 class="page-title">🗳️ Top 20 Player Vote</h1>
+<p class="text-muted mb-4">
+    Pick your Top 10 (in order) from the club's current Top 20. Tap a name on the left to
+    add it, drag the number badge in "Your Top 10" to reorder, or tap the &times; to remove it.
+</p>
+
+{% if not voting_open %}
+<div class="alert alert-warning">
+    <i class="bi bi-lock-fill me-1"></i> Voting has ended. Check back once results are published.
+</div>
+{% else %}
+
+<div class="card hhb-card mb-3">
+    <div class="card-body">
+        <label class="form-label fw-semibold">Voting as</label>
+        <select id="voterSelect" class="form-select" style="max-width: 320px;">
+            <option value="" selected disabled>Select your name…</option>
+            {% for name in voter_names %}
+            <option value="{{ name }}">{{ name }}</option>
+            {% endfor %}
+        </select>
+        <p class="text-muted small mt-2 mb-0">If you've already voted, your previous picks load automatically.</p>
+    </div>
+</div>
+
+<p id="voteError" class="text-danger small" hidden></p>
+<div id="voteSuccess" class="alert alert-success" hidden>
+    <i class="bi bi-check-circle-fill me-1"></i> Thanks — your vote is recorded. You can pick your name again
+    above any time before voting closes to review or change it.
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <div class="card hhb-card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">Top 20 Candidates</h6>
+                <div class="list-group vote-candidate-list" id="candidateList"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card hhb-card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">Your Top 10 <span id="pickCount" class="badge bg-secondary">0 / 10</span></h6>
+                <ol class="list-group vote-pick-list" id="pickList"></ol>
+                <p class="text-muted small mt-2 mb-0" id="pickHint">Tap a candidate on the left to add them here.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<button type="button" id="submitVoteBtn" class="btn btn-hhb-accent" disabled>Submit My Top 10</button>
+
+<script>
+    window.VOTE_CANDIDATES = {{ candidates | tojson }};
+    window.VOTE_VOTER_NAMES = {{ voter_names | tojson }};
+</script>
+{% endif %}
+
+{% endblock %}
+{% block extra_js %}
+{% if voting_open %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="{{ url_for('static', filename='js/vote.js') }}?v={{ asset_version('js/vote.js') }}"></script>
+{% endif %}
+{% endblock %}

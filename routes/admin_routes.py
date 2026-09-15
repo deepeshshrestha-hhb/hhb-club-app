@@ -10,6 +10,7 @@ from services import r2_service
 from services import analytics_service
 from services import committee_service
 from services import about_content_service
+from services import vote_service
 from services.spond_service import fetch_members_to_csv
 from services.player_stats_service import invalidate_cache
 from services.podium_service import get_podium_photo_list, save_podium_photos, delete_podium_photo
@@ -75,7 +76,14 @@ def logout():
 @admin_bp.route("/admin")
 @admin_required
 def admin_page():
-    return render_template("admin.html", committee_visible=committee_service.is_visible())
+    vote_voted, vote_total = vote_service.get_progress()
+    return render_template(
+        "admin.html",
+        committee_visible=committee_service.is_visible(),
+        vote_state=vote_service.get_state(),
+        vote_voted=vote_voted,
+        vote_total=vote_total,
+    )
 
 
 @admin_bp.route("/admin/sync_spond", methods=["POST"])

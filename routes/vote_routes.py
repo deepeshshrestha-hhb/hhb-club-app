@@ -1,0 +1,68 @@
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session
+
+from routes.admin_routes import admin_required
+from services import vote_service
+
+vote_bp = Blueprint("vote", __name__)
+
+
+@vote_bp.route("/vote")
+def page():
+    state = vote_service.get_state()
+    return render_template(
+        "vote.html",
+        candidates=vote_service.get_candidates(),
+        voter_names=vote_service.get_voter_names(),
+        voting_open=state["voting_open"],
+    )
+
+
+@vote_bp.route("/vote/api/existing")
+def api_existing():
+    """A member's previously submitted Top 10 (or null), for the page to
+    prefill after they pick their name - identity isn't known until then,
+    since there's no login."""
+    member = request.args.get("member", "").strip()
+    if member not in vote_service.get_voter_names():
+        return jsonify({"rankings": None})
+    return jsonify({"rankings": vote_service.get_existing_vote(member)})
+
+
+@vote_bp.route("/vote", methods=["POST"])
+def submit():
+    body = request.get_json(silent=True) or {}
+    ok, reason = vote_service.submit_vote(body.get("member_name", ""), body.get("rankings") or [])
+    if not ok:
+        return jsonify({"ok": False, "error": reason}), 400
+    return jsonify({"ok": True})
+
+
+@vote_bp.route("/vote/results")
+def results():
+    state = vote_service.get_state()
+    voted, total = vote_service.get_progress()
+    is_admin = bool(session.get("is_admin"))
+    show_leaderboard = state["results_published"] or is_admin
+    return render_template(
+        "vote_results.html",
+        voted=voted,
+        total=total,
+        results_published=state["results_published"],
+        is_admin=is_admin,
+        show_leaderboard=show_leaderboard,
+        leaderboard=vote_service.get_leaderboard() if show_leaderboard else None,
+    )
+
+
+@vote_bp.route("/vote/admin/toggle-voting", methods=["POST"])
+@admin_required
+def toggle_voting():
+    vote_service.set_voting_open(request.form.get("open") == "1")
+    return redirect(url_for("admin.admin_page"))
+
+
+@vote_bp.route("/vote/admin/toggle-publish", methods=["POST"])
+@admin_required
+def toggle_publish():
+    vote_service.set_results_published(request.form.get("published") == "1")
+    return redirect(url_for("admin.admin_page"))

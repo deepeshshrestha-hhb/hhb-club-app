@@ -94,6 +94,7 @@ routes/                 # Flask blueprints (thin; delegate to services)
   weekly_score_routes.py # /weekly-scores + api/ (add/amend/delete) + admin/ (open/close/submit)
   rules_routes.py        # /rules (Club Rules - rotation, sitting out, pool play sections)
   sunday_pools_routes.py # /sunday-pools + /sunday-pools/generate (admin) - Sunday Pool Play
+  vote_routes.py         # /vote + /vote/results + /vote/admin/toggle-* (admin) - Top 20 Player Vote
 services/               # Business logic + data parsing (the heart of the app)
   spond_service.py      # Live Spond fetch: events (calendar) + members (CSV) + per-date confirmed
                         #   attendees (get_confirmed_attendees, for Weekly Score Upload, and
@@ -120,6 +121,10 @@ services/               # Business logic + data parsing (the heart of the app)
   sunday_pools_service.py # Sunday Pool Play (data/sunday_pools.json): generate_pools() splits
                         #   a date's confirmed 10-11am Spond sign-ups into Pool A/B by the
                         #   current Club Rankings order and publishes to /sunday-pools
+  vote_service.py       # Top 20 Player Vote (data/player_votes.json): member Top-10 ballots,
+                        #   admin voting_open/results_published flags, compute_rankings()
+                        #   (pure Borda-scoring function) - see Decisions Log for why JSON,
+                        #   not the Excel workbook the original feature spec asked for
   photos_service.py     # Club + event photo CRUD (Photos.xlsx + static/images/photos/)
   podium_service.py     # Podium photos in static/images/podium/ (numbered _1, _2 …)
   feedback_service.py   # User feedback CRUD (Feedback.xlsx, General + Feature Request)
@@ -273,6 +278,10 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   — worth a close look at the first live submission (see the Suggested Build
   Approach's step 6 in the original spec: "test the full weekly cycle
   end-to-end for one Sunday before rolling out to players").
+- Top 20 Player Vote (`/vote`, `/vote/results`): tap-to-rank Top 10 ballot
+  from the current Club Rankings Top 20, admin-controlled `voting_open`/
+  `results_published` flags via a card on `/admin`. Not yet linked from
+  the nav — direct-URL-only until the admin is ready to announce it.
 
 **In progress / partial:**
 - `/api/calendar` still serves `ClubCalendar.xlsx` data, not live Spond — noted
@@ -1286,6 +1295,60 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   two sit out, next two are skipped, continue to the next two Pool B
   players) verbatim, since it explains the mechanism more plainly than a
   further paragraph of prose would.
+- **2026-09-15 — Added the Top 20 Player Vote** (`vote_service.py`,
+  `vote_routes.py`, `templates/vote.html` + `vote_results.html`,
+  `static/js/vote.js`), letting members vote their own Top 10 (ranked) from
+  the club's current Top 20 (Club Rankings), identity confirmed via a name
+  dropdown - no login. The feature spec that kicked this off asked for an
+  Excel workbook (`player_votes.xlsx`), but that didn't fit this codebase's
+  conventions: `Feedback.xlsx`, the closest Excel precedent, turned out to
+  be append-only with no overwrite-by-submitter logic, and pandas
+  round-tripping a row with 10 ranked-name columns plus admin flags would
+  have been clunky. Storage is instead `data/player_votes.json`
+  (gitignored, R2-backed), copying `weekly_score_service.py`'s pattern
+  exactly: a `_vote_lock = threading.Lock()` around every read-modify-write
+  cycle (Render's single-worker/4-thread setup), and a backgrounded R2
+  upload so a burst of Sunday-night voting can't tie up request threads the
+  way an inline upload once did for Weekly Score Upload (see the
+  2026-09-08 duplicate-submission entries). A member's ballot is a dict
+  keyed by their name, so resubmission is a plain overwrite - no separate
+  lookup/delete-and-reinsert logic needed. The candidate list itself isn't
+  hardcoded (the spec's own suggestion, if avoidable): `get_candidates()`
+  reads the live Top 20 straight from `club_rankings_service.get_rankings()`,
+  so it always matches `/players/rankings`. Scoring is a pure function,
+  `compute_rankings()` (no file I/O, easy to test in isolation): Borda
+  points (rank 1 = 10 ... rank 10 = 1, 0 if absent from a ballot), ties
+  broken on the vector of #1-place votes, then #2-place, etc., then name -
+  verified against a hand-computed example and against a real 10-vote test
+  ballot in the browser before resetting the data file. The tap-to-rank UI
+  (`vote.js`, vanilla JS matching `weekly_scores.js`'s conventions: a local
+  `state`/`render()` loop, event delegation, disable-before-fetch) uses
+  SortableJS (CDN, loaded only on `vote.html`) for drag-to-reorder within
+  the picked Top 10 - the first drag-and-drop in this codebase; a plain
+  tap-to-add/tap-to-remove flow handles everything else with no dependency.
+  Per the spec's own confirmed decisions: results stay hidden from members
+  behind a `results_published` admin flag (admins get an unpublished
+  preview), voting can be closed behind a `voting_open` flag with no
+  auto-close-by-date, and both toggle via a new "Player Vote" card on the
+  existing `/admin` page (checkbox-auto-submit pattern copied from the
+  Committee-visibility card) rather than a separate admin sub-page - the
+  "X / Y voted" progress counter is always visible, even pre-publish,
+  scoped to the full club roster like the spec asked. Verified end-to-end
+  in a real browser: picked and drag-reordered a real Top 10, submitted,
+  confirmed `data/player_votes.json` held the overwritten row on
+  resubmission, exercised all four server-side validation failures (wrong
+  count, unrecognised member, duplicate pick, non-candidate pick) directly
+  against `submit_vote()`, toggled both admin flags and confirmed the
+  public/admin-preview/published views all matched, then reset the vote
+  data back to `{voting_open: true, results_published: false, votes: {}}`
+  before finishing - since local dev here is R2-connected to the live
+  bucket (see Local Tooling Notes), leaving real test data in `player_votes.json`
+  would have been the same kind of stray-write the 2026-09-15 Club Rankings
+  entry already flagged, even though nothing serves this route in
+  production yet until this deploys. No nav link was added yet - matches
+  the current state where Club Rankings/Rules promo buttons are
+  deliberately hidden pending committee review (see the entry just above);
+  `/vote` and `/vote/results` are direct-URL-only for now.
 
 ---
 
