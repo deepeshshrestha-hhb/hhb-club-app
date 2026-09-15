@@ -1257,6 +1257,21 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   script to restore the exact 34-player list, same as the two other
   production-R2 test-data notes above - nothing serves any of these routes
   live until this deploys).
+- **2026-09-16 — Temporarily hid the Dashboard "View Club Rules" CTA and the
+  Players page "Club Rankings" button** while the admin reviews the new
+  Sunday Pool Play rule and the Club Rankings list with the committee live
+  on the site. Both pages stay fully reachable by direct URL (`/rules`,
+  `/players/rankings`) for anyone who knows/is given the link - only the
+  promotional entry points are removed, via a commented-out block in
+  `dashboard.html` / `players.html` (not a data flag, since this is a
+  short-lived manual state the admin will ask to reverse once the committee
+  is happy - a code change either way). *Note:* `players.html`'s
+  `rankings_visible` route variable is now unused by the template but left
+  wired in `player_routes.py`, since restoring the button later needs no
+  route changes, only un-commenting the markup. Also confirmed (no code
+  needed) that `/rules?open=pool_play` already gives Sunday Pool Play Rules
+  the same direct-link support the other two Club Rules sections have -
+  the `?open=<key>` mechanism was already generic across all sections.
 
 ---
 
