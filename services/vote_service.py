@@ -9,9 +9,24 @@ write, backgrounded R2 upload) rather than an Excel workbook - the closest
 Excel precedent, Feedback.xlsx, is append-only and has no clean way to
 overwrite-by-submitter or hold admin flags alongside the rows.
 
+Since there's no login, picking a name from the dropdown alone isn't enough
+to prove identity - anyone could otherwise view or overwrite someone else's
+ballot. Each member's first submission generates a 4-digit PIN, shown to
+them once; viewing or changing that ballot afterwards requires it. Only the
+PIN's hash is stored (never the plaintext, so it can't be read back from
+the data file - not that this is a high-value target, but it costs nothing
+extra given hmac.compare_digest is already the pattern admin login uses).
+Admins bypass this entirely via a separate read-only "all ballots" view
+(see routes/vote_routes.py) and can clear a member's vote outright if they
+forget their PIN or want to redo it - clearing is the only recovery path,
+there's no "resend the PIN" since it was never stored anywhere to resend.
+
 See routes/vote_routes.py for the /vote and /vote/results pages.
 """
+import hashlib
+import hmac
 import json
+import secrets
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
@@ -25,6 +40,7 @@ VOTES_PATH = Path(Config.DATA_DIR) / "player_votes.json"
 
 TOP_N = 20
 PICK_N = 10
+PIN_LENGTH = 4
 
 # Guards every read-modify-write cycle on the votes file - same rationale as
 # weekly_score_service._session_lock: Render runs one gunicorn worker with 4
@@ -86,10 +102,33 @@ def get_state() -> dict:
     return {"voting_open": data["voting_open"], "results_published": data["results_published"]}
 
 
-def get_existing_vote(member_name: str):
-    """A member's previously submitted Top 10, or None if they haven't
-    voted yet - used to prefill the form on resubmission."""
-    return _load()["votes"].get(member_name, {}).get("rankings")
+def _hash_pin(pin: str) -> str:
+    return hashlib.sha256((pin or "").strip().encode("utf-8")).hexdigest()
+
+
+def _generate_pin() -> str:
+    return f"{secrets.randbelow(10 ** PIN_LENGTH):0{PIN_LENGTH}d}"
+
+
+def has_voted(member_name: str) -> bool:
+    return member_name in _load()["votes"]
+
+
+def verify_pin(member_name: str, pin: str) -> bool:
+    entry = _load()["votes"].get(member_name)
+    if not entry:
+        return False
+    return hmac.compare_digest(entry.get("pin_hash", ""), _hash_pin(pin))
+
+
+def get_vote_with_pin(member_name: str, pin: str):
+    """A member's Top 10 if `pin` matches their stored PIN, else None -
+    the only way to read back an existing ballot (besides the admin-only
+    all-ballots view), so picking a name from the dropdown alone can't
+    leak what someone else voted."""
+    if not verify_pin(member_name, pin):
+        return None
+    return _load()["votes"][member_name]["rankings"]
 
 
 def get_progress() -> tuple:
@@ -100,30 +139,48 @@ def get_progress() -> tuple:
     return len(data["votes"]), len(get_voter_names())
 
 
-def submit_vote(member_name: str, rankings: list) -> tuple:
-    """Validates and stores/overwrites `member_name`'s Top 10. Returns
-    (True, "") on success or (False, reason) on failure rather than
-    raising, so the route can surface the real reason either way."""
+def submit_vote(member_name: str, rankings: list, pin: str = None) -> tuple:
+    """Validates and stores/overwrites `member_name`'s Top 10. On a first
+    submission this generates a new PIN and returns it (plaintext, the one
+    and only time it's ever available - only its hash gets stored); on a
+    resubmission the caller must supply the PIN that was shown the first
+    time, checked against that stored hash, and the same PIN carries over
+    unchanged (never regenerated, so one PIN covers every future edit).
+
+    Returns (True, "", new_pin_or_None) on success, (False, reason, None)
+    on failure - never raises, so the route can surface the real reason."""
     member_name = (member_name or "").strip()
     with _vote_lock:
         data = _load()
         if not data["voting_open"]:
-            return False, "Voting is currently closed."
+            return False, "Voting is currently closed.", None
         if member_name not in get_voter_names():
-            return False, "Unrecognised member."
+            return False, "Unrecognised member.", None
         if not isinstance(rankings, list) or len(rankings) != PICK_N:
-            return False, f"Pick exactly {PICK_N} players."
+            return False, f"Pick exactly {PICK_N} players.", None
         if len(set(rankings)) != PICK_N:
-            return False, "Duplicate player in your ranking."
+            return False, "Duplicate player in your ranking.", None
         candidates = set(get_candidates())
         if not all(name in candidates for name in rankings):
-            return False, "One or more picks aren't in the current Top 20."
+            return False, "One or more picks aren't in the current Top 20.", None
+
+        existing = data["votes"].get(member_name)
+        new_pin = None
+        if existing:
+            if not hmac.compare_digest(existing.get("pin_hash", ""), _hash_pin(pin)):
+                return False, "Incorrect PIN.", None
+            pin_hash = existing["pin_hash"]
+        else:
+            new_pin = _generate_pin()
+            pin_hash = _hash_pin(new_pin)
+
         data["votes"][member_name] = {
             "rankings": rankings,
             "submitted_at": datetime.now(timezone.utc).isoformat(),
+            "pin_hash": pin_hash,
         }
         _save(data)
-    return True, ""
+    return True, "", new_pin
 
 
 def set_voting_open(open_: bool):
@@ -175,3 +232,28 @@ def compute_rankings(votes: dict) -> list:
 def get_leaderboard() -> list:
     """compute_rankings() over the currently stored votes."""
     return compute_rankings(_load()["votes"])
+
+
+def admin_get_all_votes() -> list:
+    """Every submitted ballot, alphabetical by member - the admin-only
+    read path that bypasses PINs entirely (see module docstring). Never
+    includes pin_hash."""
+    data = _load()
+    return [
+        {"member_name": name, "rankings": entry["rankings"], "submitted_at": entry["submitted_at"]}
+        for name, entry in sorted(data["votes"].items(), key=lambda kv: kv[0].casefold())
+    ]
+
+
+def admin_clear_vote(member_name: str) -> bool:
+    """Deletes a member's ballot (and its PIN) so they can vote fresh - the
+    only recovery path if they forget their PIN, since it was never stored
+    anywhere retrievable. Returns False if they hadn't voted."""
+    member_name = (member_name or "").strip()
+    with _vote_lock:
+        data = _load()
+        if member_name not in data["votes"]:
+            return False
+        del data["votes"][member_name]
+        _save(data)
+    return True
