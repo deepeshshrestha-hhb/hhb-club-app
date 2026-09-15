@@ -1406,6 +1406,18 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   real PIN for it to check against). Test data reset to defaults
   afterward per the usual note about this session's local dev being
   R2-connected to the live bucket.
+- **2026-09-15 — Vote page now scrolls to top on submit.** Reported live on
+  mobile (where most voting happens): after tapping "Submit My Top 10" at
+  the bottom of the page, the "Vote recorded"/PIN confirmation renders up
+  near the "Voting as" card, off-screen below the fold from wherever the
+  voter was scrolled to - looked like the submission silently did nothing.
+  `vote.js`'s submit handler now calls `window.scrollTo({top:0, behavior:
+  'smooth'})` right after showing either the PIN-reveal or "Vote updated"
+  alert; `showError()` does the same for a failed submit, since it renders
+  in the same spot and has the identical off-screen problem. Verified at a
+  real 375×812 mobile viewport: picking 10 and submitting from fully
+  scrolled-down auto-scrolls back to the top with the PIN confirmation
+  immediately visible, no manual scroll needed.
 
 ---
 
