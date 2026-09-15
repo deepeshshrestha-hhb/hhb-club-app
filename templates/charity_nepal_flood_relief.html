@@ -61,22 +61,8 @@
 </div>
 {% endif %}
 
-<div class="row mb-4">
-    <div class="col-lg-8 mb-3 mb-lg-0">
-        <div class="card hhb-card h-100 position-relative">
-            <div class="card-body">
-                {% if session.get('is_admin') %}
-                <button type="button" class="btn btn-sm btn-light border position-absolute top-0 end-0 m-2"
-                        data-bs-toggle="modal" data-bs-target="#editCharityModal-how_to_contribute" title="Edit section">
-                    ✏️
-                </button>
-                {% endif %}
-                <h5 class="card-title">How to contribute</h5>
-                <p class="mb-0" style="white-space: pre-line;">{{ content.how_to_contribute | linkify }}</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-4">
+<div class="row mb-4 justify-content-center">
+    <div class="col-lg-6">
         <div class="card hhb-card h-100">
             <div class="card-body text-center d-flex flex-column justify-content-center">
                 <p class="text-muted small mb-1">Raised so far</p>
@@ -100,29 +86,6 @@
         </div>
     </div>
 </div>
-
-{% if session.get('is_admin') %}
-<div class="modal fade" id="editCharityModal-how_to_contribute" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form action="{{ url_for('charity.charity_update_content', key='how_to_contribute') }}" method="post">
-                <div class="modal-header">
-                    <h5 class="modal-title">Edit "How to contribute"</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <textarea class="form-control" name="content" rows="8">{{ content.how_to_contribute }}</textarea>
-                    <div class="form-text mt-1">Bank details live here — edit if the account changes.</div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-sm btn-hhb-primary text-white">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endif %}
 
 <div class="card hhb-card mb-4">
     <div class="card-body">

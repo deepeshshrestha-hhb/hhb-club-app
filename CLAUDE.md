@@ -1177,6 +1177,23 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   already wrote the seeded list to production R2 - harmless, since it left
   the file in exactly the intended state (original order, admin-only) and
   nothing serves that route in production yet until this deploys.
+- **2026-09-15 — Removed the "How to Contribute" (bank details) section from
+  the Nepal Flood Relief page.** The campaign is closed and already fully
+  donated (see the "Update: Funds Donated" section), so the admin's personal
+  bank account details displayed there were no longer relevant and asked to
+  be removed. Dropped the whole card + its admin edit modal from
+  `charity_nepal_flood_relief.html` (the standalone "Raised so far" card now
+  centers alone in that row instead of sharing it), and removed
+  `how_to_contribute` from `charity_service.py`'s `CONTENT_KEYS`/
+  `DEFAULT_CONTENT` so it can't be re-added via the generic content-edit
+  route. Also proactively scrubbed the real bank details (account number +
+  sort code) out of the persisted `data/charity_content.json` **on production
+  R2** (this session's local dev is R2-connected to the live bucket - see
+  Local Tooling Notes) with a one-off script, rather than leaving them
+  sitting unused in storage indefinitely. Verified in a real browser: no
+  bank-details card or edit button anywhere on the page, no console errors,
+  contributions table and the funds-donated/donation-proof section below it
+  both unaffected.
 
 ---
 

@@ -6,8 +6,8 @@ Three small stores, all mirrored to R2 via the existing patterns:
   * data/charity_settings.json  - campaign on/off switch + fundraising target
     (same shape as committee_service's committee.json).
   * data/charity_content.json   - admin-editable freeform text for the top
-    write-up and the "How to Contribute" (bank details) section, so wording
-    tweaks don't need a redeploy (same pattern as about_content_service.py).
+    write-up and the closing note, so wording tweaks don't need a redeploy
+    (same pattern as about_content_service.py).
   * data/CharityContributions.xlsx - the pledge ledger (ID, Timestamp, Member
     Name, Amount), loaded/saved via the shared load_excel/save_excel helpers
     used by feedback_service.
@@ -64,7 +64,7 @@ SETTINGS_PATH = Path(Config.DATA_DIR) / "charity_settings.json"
 CONTENT_PATH = Path(Config.DATA_DIR) / "charity_content.json"
 CONTRIBUTIONS_FILE = "CharityContributions.xlsx"
 
-CONTENT_KEYS = ("blurb", "how_to_contribute", "closing_note")
+CONTENT_KEYS = ("blurb", "closing_note")
 
 DEFAULT_CONTENT = {
     "blurb": (
@@ -82,14 +82,6 @@ DEFAULT_CONTENT = {
         "Rather than everyone donating individually, please transfer your "
         "contribution to the club and add it below — we'll make one "
         "combined donation on JustGiving and share proof with everyone."
-    ),
-    "how_to_contribute": (
-        "Transfer your contribution to:\n\n"
-        "Name: Deepesh Shrestha\n"
-        "Account No.: 30550270\n"
-        "Sort Code: 60-30-30\n\n"
-        "Once you've transferred, add your name and amount below so it "
-        "shows on the running total."
     ),
     "closing_note": (
         "Thanks to 22 generous members, HHB Club raised £1,435.00 for Nepal "
@@ -180,7 +172,7 @@ def _save_content(data: dict):
 
 
 def get_content() -> dict:
-    """Returns {"blurb": str, "how_to_contribute": str}."""
+    """Returns {"blurb": str, "closing_note": str}."""
     return _load_content()
 
 
