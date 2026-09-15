@@ -1272,6 +1272,20 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   needed) that `/rules?open=pool_play` already gives Sunday Pool Play Rules
   the same direct-link support the other two Club Rules sections have -
   the `?open=<key>` mechanism was already generic across all sections.
+- **2026-09-16 — Corrected the Sunday Pool Play rule's Sitting Out wording.**
+  The original draft said each pool keeps its own arrival-order queue - the
+  admin corrected this: there's only ever **one** queue (everyone signs the
+  board in arrival order at 9am, same as before), since 20 players can't
+  realistically split into two separate sign-in queues. The actual rule:
+  work down that single queue as normal, but each round needs 2 sitting out
+  from Pool A and 2 from Pool B specifically, not just the next 4 names -
+  skip anyone from a pool that's already got its 2 for that round and keep
+  going until both pools are covered, then mark X on the board as usual
+  (`club_rules_service.py` `DEFAULT_SECTIONS["pool_play"]`). Added the
+  admin's own worked example (four Pool A players due up in a row -> first
+  two sit out, next two are skipped, continue to the next two Pool B
+  players) verbatim, since it explains the mechanism more plainly than a
+  further paragraph of prose would.
 
 ---
 
