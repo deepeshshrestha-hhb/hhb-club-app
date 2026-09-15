@@ -1,7 +1,7 @@
 import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, abort, send_file, flash, session
 from routes.admin_routes import admin_required
-from services.player_service import get_all_players
+from services.player_service import get_all_players, get_player_names
 from services.analytics_service import get_club_analytics, maybe_refresh_async
 from services.profile_service import (
     get_profile, save_profile, name_to_slug, get_photo_path, get_all_profile_slugs, delete_profile
@@ -38,10 +38,35 @@ def club_rankings_page():
         {"rank": i + 1, "full_name": name, "slug": name_to_slug(name)}
         for i, name in enumerate(data["players"])
     ]
+    unranked_members = sorted(
+        (n for n in get_player_names() if n not in data["players"]), key=str.casefold
+    )
     return render_template("club_rankings.html", rankings=rankings,
                            visible_to_public=data["visible_to_public"],
                            profile_slugs=profile_slugs,
+                           unranked_members=unranked_members,
                            disclaimer=club_rankings_service.DISCLAIMER)
+
+
+@player_bp.route("/players/rankings/add", methods=["POST"])
+@admin_required
+def club_rankings_add():
+    name = request.form.get("player", "").strip()
+    try:
+        position = int(request.form.get("position", "").strip())
+    except ValueError:
+        flash("Please enter a valid position number.", "warning")
+        return redirect(url_for("players.club_rankings_page"))
+    if not name:
+        flash("Please select a player to add.", "warning")
+    elif not club_rankings_service.add_player(name, position):
+        flash(
+            f"Could not add {name} at position {position} - they may already be "
+            "ranked, or the position is out of range.", "warning",
+        )
+    else:
+        flash(f"{name} added to Club Rankings at #{position}.", "success")
+    return redirect(url_for("players.club_rankings_page"))
 
 
 @player_bp.route("/players/rankings/move", methods=["POST"])

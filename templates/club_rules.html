@@ -57,6 +57,11 @@
                         data-bs-toggle="modal" data-bs-target="#sittingOutTldrModal">
                     <span>📋</span> Tap for quick reference
                 </button>
+                {% elif key == 'pool_play' %}
+                <a href="{{ url_for('sunday_pools.sunday_pools_page') }}"
+                   class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-2 mb-3">
+                    <span>🎱</span> View this Sunday's Pool A / Pool B
+                </a>
                 {% endif %}
 
                 {{ rules_content[key] | safe }}

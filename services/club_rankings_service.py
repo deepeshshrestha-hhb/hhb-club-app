@@ -73,6 +73,26 @@ def set_visible_to_public(visible: bool):
     _save(data)
 
 
+def add_player(name: str, position: int) -> bool:
+    """Insert `name` into the rankings at 1-based `position` - everyone
+    already at or below that position shifts down one. Returns False if the
+    name is empty, already ranked, or the position is out of range
+    (1..len(players)+1, i.e. anywhere from the top to straight after the
+    current last place)."""
+    name = (name or "").strip()
+    if not name:
+        return False
+    data = _load()
+    players = data["players"]
+    if name in players:
+        return False
+    if position < 1 or position > len(players) + 1:
+        return False
+    players.insert(position - 1, name)
+    _save(data)
+    return True
+
+
 def move_player(name: str, direction: str) -> bool:
     """Swap `name` with its neighbour one place up ('up') or down ('down').
     Returns False if the player isn't in the list, an unknown direction was

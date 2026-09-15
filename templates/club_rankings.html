@@ -33,6 +33,41 @@
     </div>
 </div>
 
+{% if session.get('is_admin') %}
+<div class="card hhb-card mb-4">
+    <div class="card-body">
+        <h6 class="fw-bold mb-3">Add Player to Ranking</h6>
+        {% if unranked_members %}
+        <form method="POST" action="{{ url_for('players.club_rankings_add') }}" class="row g-2 align-items-end">
+            <div class="col-sm-6">
+                <label class="form-label small mb-1">Player</label>
+                <select name="player" class="form-select form-select-sm" required>
+                    <option value="" selected disabled>Select a club member&hellip;</option>
+                    {% for m in unranked_members %}
+                    <option value="{{ m }}">{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label small mb-1">Position</label>
+                <input type="number" name="position" class="form-control form-control-sm"
+                       min="1" max="{{ rankings | length + 1 }}" value="{{ rankings | length + 1 }}" required>
+            </div>
+            <div class="col-sm-3">
+                <button type="submit" class="btn btn-hhb-primary text-white btn-sm w-100">Add</button>
+            </div>
+        </form>
+        <p class="text-muted small mt-2 mb-0">
+            Only club members not already in the ranking are listed. They're inserted at the position
+            you choose (1 = top) and everyone at or below that position shifts down one.
+        </p>
+        {% else %}
+        <p class="text-muted small mb-0">Every club member is already in the ranking.</p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 <div class="card hhb-card">
     <div class="card-body p-0">
         <div class="table-responsive">

@@ -21,8 +21,9 @@ CLUB_RULES_CONTENT_PATH = Path(Config.DATA_DIR) / "club_rules_content.json"
 SECTION_TITLES = {
     "rotation": "Sunday Doubles Player Rotation Rules",
     "sitting_out": "Sunday Doubles Player Sitting Out & Latecomer Rules",
+    "pool_play": "Sunday Pool Play Rules (10–11am)",
 }
-SECTION_ORDER = ["rotation", "sitting_out"]
+SECTION_ORDER = ["rotation", "sitting_out", "pool_play"]
 
 DEFAULT_SECTIONS = {
     "rotation": (
@@ -116,6 +117,43 @@ DEFAULT_SECTIONS = {
         "<p class=\"text-muted small mb-0\">Coming late never works in your favour &mdash; your name "
         "lands near the bottom of the list. But you won't be double-penalised if the timing genuinely "
         "wasn't in your control.</p>"
+    ),
+    "pool_play": (
+        "<p>To balance players who come for a competitive game with players who prefer a more relaxed "
+        "one, our 10&ndash;11am hour is split into two pools by ability "
+        "<span class=\"text-muted small\">(introduced 20 Sep 2026)</span>.</p>"
+        "<h6 class=\"fw-bold small text-uppercase text-muted mt-3 mb-2\">9:00&ndash;10:00am &mdash; Open Play</h6>"
+        "<p>Unchanged. The normal Rotation and Sitting Out rules above apply, with no manual "
+        "intervention from Court Wardens to balance games.</p>"
+        "<h6 class=\"fw-bold small text-uppercase text-muted mt-3 mb-2\">10:00&ndash;11:00am &mdash; Pool Play</h6>"
+        "<p>For the second hour, players are split into two pools:</p>"
+        "<ul class=\"ps-3 mb-2\">"
+        "<li class=\"mb-1\"><strong>Pool A</strong> &mdash; Courts 1 &amp; 2</li>"
+        "<li class=\"mb-0\"><strong>Pool B</strong> &mdash; Courts 3 &amp; 4</li>"
+        "</ul>"
+        "<p>Pools are formed from everyone confirmed for that Sunday's 10&ndash;11am session on Spond, "
+        "split by the current <a href=\"/players/rankings\">Club Rankings</a> &mdash; the top half by "
+        "rank go into Pool A, the bottom half into Pool B. Anyone not yet in Club Rankings (e.g. a "
+        "recently-joined player) defaults into Pool B.</p>"
+        "<h6 class=\"fw-bold small text-uppercase text-muted mt-3 mb-2\">Sitting Out</h6>"
+        "<p>The usual sitting-out rotation (see above) continues, applied separately within each pool "
+        "&mdash; each pool keeps its own arrival-order queue and marks its own sit-outs with an X on "
+        "the board.</p>"
+        "<div class=\"table-responsive mt-2\">"
+        "<table class=\"table table-sm table-bordered align-middle mb-1 hhb-rules-table\">"
+        "<thead class=\"table-light\"><tr><th>Signed up</th><th>Pool A (Courts 1&ndash;2)</th>"
+        "<th>Pool B (Courts 3&ndash;4)</th><th>Sitting out per round</th></tr></thead>"
+        "<tbody><tr><td>20</td><td>10</td><td>10</td><td>2 from Pool A + 2 from Pool B</td></tr></tbody>"
+        "</table>"
+        "</div>"
+        "<p class=\"text-muted small mb-2\">Example above assumes an even 20 sign-ups split 10/10 "
+        "&mdash; an uneven turnout still splits into two pools as evenly as possible, with the extra "
+        "player (if any) going to Pool A.</p>"
+        "<p class=\"text-muted small mb-0\">Each Sunday's Pool A / Pool B is published in advance at "
+        "<a href=\"/sunday-pools\">/sunday-pools</a> &mdash; check there before you arrive. Club "
+        "Rankings are compiled by the committee from the last 3 years of Players League results plus "
+        "the committee's judgement of current playing ability, and are reviewed twice a year &mdash; "
+        "see the <a href=\"/players/rankings\">Club Rankings</a> page for the full methodology.</p>"
     ),
 }
 

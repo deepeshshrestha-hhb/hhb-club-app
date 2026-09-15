@@ -92,9 +92,13 @@ routes/                 # Flask blueprints (thin; delegate to services)
                         #   Refresh Data from R2, club + podium photo mgmt; admin_required
   feedback_routes.py    # /feedback, /feedback/submit, /feedback/status, /feedback/delete (admin)
   weekly_score_routes.py # /weekly-scores + api/ (add/amend/delete) + admin/ (open/close/submit)
+  rules_routes.py        # /rules (Club Rules - rotation, sitting out, pool play sections)
+  sunday_pools_routes.py # /sunday-pools + /sunday-pools/generate (admin) - Sunday Pool Play
 services/               # Business logic + data parsing (the heart of the app)
   spond_service.py      # Live Spond fetch: events (calendar) + members (CSV) + per-date confirmed
-                        #   attendees (get_confirmed_attendees, for Weekly Score Upload); _parse_timestamp, LOCAL_TZ
+                        #   attendees (get_confirmed_attendees, for Weekly Score Upload, and
+                        #   get_confirmed_attendees_for_hour, for Sunday Pool Play's 10-11 slot
+                        #   only); _parse_timestamp, LOCAL_TZ
   calendar_service.py   # Weekly sessions (via Spond) + annual events (Excel)
   excel_service.py      # load_excel/save_excel + load_workbook_normalized() (backslash-zip fix)
   tournament_service.py # Generic tournament CRUD + Doubles .xlsm parser
@@ -109,7 +113,13 @@ services/               # Business logic + data parsing (the heart of the app)
                         #   club analytics + lazy weekly background auto-refresh
   profile_service.py    # name_to_slug() + player profile data (jinja `slugify` filter)
   club_rankings_service.py # Manually-curated Club Rankings (data/club_rankings.json): ordered
-                        #   player list + visible_to_public flag + move_player() up/down
+                        #   player list + visible_to_public flag + move_player() up/down +
+                        #   add_player() (admin-inserts an unranked club member at a chosen position)
+  club_rules_service.py # Club Rules page copy (data/club_rules_content.json): rotation,
+                        #   sitting_out, pool_play sections (see about_content_service pattern)
+  sunday_pools_service.py # Sunday Pool Play (data/sunday_pools.json): generate_pools() splits
+                        #   a date's confirmed 10-11am Spond sign-ups into Pool A/B by the
+                        #   current Club Rankings order and publishes to /sunday-pools
   photos_service.py     # Club + event photo CRUD (Photos.xlsx + static/images/photos/)
   podium_service.py     # Podium photos in static/images/podium/ (numbered _1, _2 …)
   feedback_service.py   # User feedback CRUD (Feedback.xlsx, General + Feature Request)
@@ -1194,6 +1204,59 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   bank-details card or edit button anywhere on the page, no console errors,
   contributions table and the funds-donated/donation-proof section below it
   both unaffected.
+- **2026-09-15/16 — Added Sunday Pool Play: a new Club Rules section, a
+  published `/sunday-pools` page, and a Club Rankings "Add Player" admin
+  tool.** Per a committee WhatsApp announcement, the 10-11am half of the
+  Sunday session now splits into two pools by ability - Pool A (Courts 1-2)
+  and Pool B (Courts 3-4) - while 9-10am stays unchanged open play. Three
+  pieces:
+  (1) **Club Rules**: new third accordion section "Sunday Pool Play Rules
+  (10-11am)" (`club_rules_service.py` `SECTION_ORDER`/`SECTION_TITLES`/
+  `DEFAULT_SECTIONS["pool_play"]`), written up from the committee's comms -
+  explains the 9-10/10-11 split, how Pool A/B are formed, that the existing
+  sitting-out rotation continues separately within each pool, a worked
+  20-signups example table, and links to Club Rankings and `/sunday-pools`.
+  (2) **`/sunday-pools`** (`sunday_pools_service.py`, `sunday_pools_routes.py`,
+  `templates/sunday_pools.html`): an admin picks a date and clicks
+  "Generate & Publish"; `generate_pools()` fetches that date's confirmed
+  **10-11am-only** Spond sign-ups (a new `spond_service.
+  get_confirmed_attendees_for_hour()`, since the existing
+  `get_confirmed_attendees()` merges every event on a date - Weekly Score
+  Upload wants that, Pool Play specifically doesn't), splits them by the
+  current Club Rankings order (top half -> Pool A, bottom half -> Pool B,
+  Pool A gets the extra player on an odd turnout, an unranked attendee
+  defaults into Pool B), and publishes to `data/sunday_pools.json` (same
+  R2-backed, gitignored pattern as `club_rankings.json`). The page itself is
+  **public** (unlike Club Rankings) since players need to check it before
+  Sunday - only the generate form is admin-gated. Historical-cache-first /
+  live-Spond-fallback for the attendee fetch mirrors `weekly_score_service.
+  _historical_attendees()`'s reasoning exactly (a whole day's worth of hard
+  Spond-rate-limit lessons from the Weekly Score Upload saga - see the many
+  2026-09-08 entries above), deliberately not re-derived from scratch.
+  (3) **Club Rankings "Add Player"** (`club_rankings_service.add_player()`,
+  `players.club_rankings_add` route): admin-only form on `/players/rankings`
+  - a dropdown of club members not yet ranked (from `player_service.
+  get_player_names()`, diffed against the current list) plus a 1-based
+  position field; inserts the player there, shifting everyone at/below that
+  position down one, reusing the existing move_player() up/down arrows for
+  any further adjustment. *Why scoped to insert-only:* the user asked
+  specifically for add-and-position, not removal - no delete function was
+  built.
+  Before building anything, the user asked to see a preview first (they were
+  on a phone via remote control, so `localhost` links wouldn't reach them) -
+  handled by publishing a static Artifact mock-up (reusing the site's actual
+  `styles.css` tokens/Bootstrap classes, not a generic template) showing both
+  the new Rules section and a `/sunday-pools` render with real generated data
+  from a live test run. Verified in a real browser end-to-end after
+  approval: `/rules?open=pool_play` opens directly on the new section;
+  `/sunday-pools` generated real Pool A/B from actual 13-Sep-2026 sign-up
+  data (20 players, one unranked attendee correctly flagged and defaulted
+  into Pool B); anonymous `curl` confirms the generate form is admin-only
+  while the pools themselves are public; Add Player correctly inserted a
+  test player at #5 and shifted the rest down (then removed via a one-off
+  script to restore the exact 34-player list, same as the two other
+  production-R2 test-data notes above - nothing serves any of these routes
+  live until this deploys).
 
 ---
 
