@@ -1368,6 +1368,44 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   tie-break, not candidate iteration order - verified both in the browser
   after a full dev-server restart (Python route/service changes need one;
   template-only edits don't).
+- **2026-09-15 — Added PIN protection to the Player Vote, closing a real
+  identity gap the admin caught by testing live: anyone could pick any
+  member's name from the dropdown and see or overwrite their ballot.**
+  A member's first submission now generates a 4-digit PIN
+  (`vote_service._generate_pin()`, `secrets.randbelow`) shown to them
+  exactly once in a persistent success alert; only its SHA-256 hash is
+  ever stored (`pin_hash`, checked with `hmac.compare_digest`, matching
+  the constant-time-compare pattern `admin_routes._check_credentials`
+  already uses) - the plaintext PIN is never written anywhere, so there's
+  no "forgot your PIN" recovery path other than an admin clearing the
+  ballot outright. Picking a name that's already voted now shows a
+  PIN-gate panel ("Vote already in for X. Enter your PIN to view or
+  change it.") instead of silently prefilling their picks - the old
+  `GET /vote/api/existing` endpoint (which returned a ballot's rankings to
+  anyone who asked) is gone, replaced by `GET /vote/api/status` (boolean
+  only, never the picks) and `POST /vote/api/verify` (returns the
+  rankings only if the PIN matches). `submit_vote()` now takes an optional
+  `pin` and requires+checks it whenever a ballot already exists for that
+  member, reusing (not regenerating) the same `pin_hash` across edits so
+  one PIN covers every future resubmission. Admins get a separate
+  bypass: `/vote/results` now renders an admin-only "All Ballots" table
+  (`vote_service.admin_get_all_votes()`) showing every member's picks with
+  no PIN needed, plus a "Clear Vote" button per row
+  (`vote_service.admin_clear_vote()`, `POST /vote/admin/clear-vote`) - the
+  only way to recover from a forgotten PIN, since there's nothing to
+  resend. Verified end-to-end in the browser: a fresh submission reveals
+  the PIN once; the wrong PIN is rejected with the picker staying hidden;
+  the right PIN unlocks and correctly prefills the exact stored order; an
+  edited resubmission reuses the same `pin_hash` (confirmed via
+  `verify_pin()` still matching the original PIN after the update) and
+  shows a plain "Vote updated" with no PIN repeated; the admin ballot
+  table and Clear Vote both worked against a real pre-PIN legacy ballot
+  that the admin had left in production R2 from live-testing the original
+  flaw (a vote with no `pin_hash` at all, so it was correctly permanently
+  PIN-locked until cleared - expected, not a bug, since there was never a
+  real PIN for it to check against). Test data reset to defaults
+  afterward per the usual note about this session's local dev being
+  R2-connected to the live bucket.
 
 ---
 

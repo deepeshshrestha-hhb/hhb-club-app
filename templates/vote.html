@@ -35,37 +35,63 @@
             <option value="{{ name }}">{{ name }}</option>
             {% endfor %}
         </select>
-        <p class="text-muted small mt-2 mb-0">If you've already voted, your previous picks load automatically.</p>
+        <p class="text-muted small mt-2 mb-0">
+            First time voting? Just pick your picks below. Already voted? You'll be asked for your PIN.
+        </p>
     </div>
 </div>
 
 <p id="voteError" class="text-danger small" hidden></p>
+
+<div id="votePinReveal" class="alert alert-success" hidden>
+    <i class="bi bi-key-fill me-1"></i> Vote recorded! Your PIN is <strong id="votePinValue" style="font-size:1.15rem;"></strong>
+    — please note it down, you'll need it if you want to change your vote later. It won't be shown again.
+</div>
 <div id="voteSuccess" class="alert alert-success" hidden>
-    <i class="bi bi-check-circle-fill me-1"></i> Thanks — your vote is recorded. You can pick your name again
-    above any time before voting closes to review or change it.
+    <i class="bi bi-check-circle-fill me-1"></i> Vote updated.
 </div>
 
-<div class="row">
-    <div class="col-md-6 mb-3">
-        <div class="card hhb-card h-100">
-            <div class="card-body">
-                <h6 class="fw-bold mb-3">Top 20 Candidates <span class="fw-normal text-muted">(sorted alphabetically)</span></h6>
-                <div class="list-group vote-candidate-list" id="candidateList"></div>
+<div id="pinGateCard" class="card hhb-card mb-3" hidden>
+    <div class="card-body">
+        <p class="mb-2">Vote already in for <strong id="pinGateName"></strong>. Enter your PIN to view or change it.</p>
+        <div class="d-flex gap-2 align-items-end flex-wrap">
+            <div>
+                <label class="form-label small mb-1">4-digit PIN</label>
+                <input type="text" id="pinInput" class="form-control" style="max-width: 140px;"
+                       inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off">
             </div>
+            <button type="button" id="pinUnlockBtn" class="btn btn-hhb-primary text-white">Unlock</button>
         </div>
-    </div>
-    <div class="col-md-6 mb-3">
-        <div class="card hhb-card h-100">
-            <div class="card-body">
-                <h6 class="fw-bold mb-3">Your Top 10 <span id="pickCount" class="badge bg-secondary">0 / 10</span></h6>
-                <ol class="list-group vote-pick-list" id="pickList"></ol>
-                <p class="text-muted small mt-2 mb-0" id="pickHint">Tap a candidate on the left to add them here.</p>
-            </div>
-        </div>
+        <p id="pinError" class="text-danger small mt-2 mb-0" hidden></p>
+        <p class="text-muted small mt-2 mb-0">
+            Forgotten your PIN? Ask an admin to clear your vote so you can vote fresh.
+        </p>
     </div>
 </div>
 
-<button type="button" id="submitVoteBtn" class="btn btn-hhb-accent" disabled>Submit My Top 10</button>
+<div id="pickerArea" hidden>
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="card hhb-card h-100">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">Top 20 Candidates <span class="fw-normal text-muted">(sorted alphabetically)</span></h6>
+                    <div class="list-group vote-candidate-list" id="candidateList"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card hhb-card h-100">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">Your Top 10 <span id="pickCount" class="badge bg-secondary">0 / 10</span></h6>
+                    <ol class="list-group vote-pick-list" id="pickList"></ol>
+                    <p class="text-muted small mt-2 mb-0" id="pickHint">Tap a candidate on the left to add them here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" id="submitVoteBtn" class="btn btn-hhb-accent" disabled>Submit My Top 10</button>
+</div>
 
 <script>
     window.VOTE_CANDIDATES = {{ candidates | tojson }};
