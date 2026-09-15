@@ -79,26 +79,26 @@
 {% set season_not_started = league.status == 'not_started' %}
 <ul class="nav nav-tabs mb-4" id="leagueTabs" role="tablist">
     <li class="nav-item">
-        <button class="nav-link {{ 'disabled' if season_not_started else 'active' }}" data-bs-toggle="tab"
+        <button class="nav-link {{ 'disabled' if season_not_started }} {{ 'active' if active_pane == 'standings-pane' }}" data-bs-toggle="tab"
                 data-bs-target="#standings-pane" type="button" {{ 'disabled' if season_not_started }}>Final Standings</button>
     </li>
     <li class="nav-item">
-        <button class="nav-link {{ 'disabled' if season_not_started }}" data-bs-toggle="tab"
+        <button class="nav-link {{ 'disabled' if season_not_started }} {{ 'active' if active_pane == 'matches-pane' }}" data-bs-toggle="tab"
                 data-bs-target="#matches-pane" type="button" {{ 'disabled' if season_not_started }}>Matches</button>
     </li>
     <li class="nav-item">
-        <button class="nav-link {{ 'disabled' if season_not_started }}" data-bs-toggle="tab"
+        <button class="nav-link {{ 'disabled' if season_not_started }} {{ 'active' if active_pane == 'analytics-pane' }}" data-bs-toggle="tab"
                 data-bs-target="#analytics-pane" type="button" {{ 'disabled' if season_not_started }}>Analytics</button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#overall-stats-pane" type="button">Overall Stats</button>
+        <button class="nav-link {{ 'active' if active_pane == 'overall-stats-pane' }}" data-bs-toggle="tab" data-bs-target="#overall-stats-pane" type="button">Overall Stats</button>
     </li>
     <li class="nav-item">
-        <button class="nav-link {{ 'disabled' if season_not_started }}" data-bs-toggle="tab"
+        <button class="nav-link {{ 'disabled' if season_not_started }} {{ 'active' if active_pane == 'weekly-stats-pane' }}" data-bs-toggle="tab"
                 data-bs-target="#weekly-stats-pane" type="button" {{ 'disabled' if season_not_started }}>Individual Weekly Stats</button>
     </li>
     <li class="nav-item">
-        <button class="nav-link {{ 'active' if season_not_started }}" data-bs-toggle="tab"
+        <button class="nav-link {{ 'active' if active_pane == 'rules-pane' }}" data-bs-toggle="tab"
                 data-bs-target="#rules-pane" type="button">Rules</button>
     </li>
 </ul>
@@ -113,7 +113,7 @@
 <div class="tab-content">
 
     <!-- Standings -->
-    <div class="tab-pane fade {{ '' if season_not_started else 'show active' }}" id="standings-pane">
+    <div class="tab-pane fade {{ 'show active' if active_pane == 'standings-pane' }}" id="standings-pane">
         <div class="card hhb-card">
             <div class="card-body">
                 <div class="table-responsive">
@@ -149,7 +149,7 @@
     </div>
 
     <!-- Matches -->
-    <div class="tab-pane fade" id="matches-pane">
+    <div class="tab-pane fade {{ 'show active' if active_pane == 'matches-pane' }}" id="matches-pane">
         <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
             <label class="fw-semibold mb-0">Filter by player:</label>
             <select id="playerFilter" class="form-select form-select-sm" style="max-width:200px;">
@@ -158,6 +158,14 @@
                 <option value="{{ p }}">{{ p }}</option>
                 {% endfor %}
             </select>
+            <label class="fw-semibold mb-0">Filter by date:</label>
+            <select id="dateFilter" class="form-select form-select-sm" style="max-width:160px;">
+                <option value="">All Dates</option>
+                {% for d in match_dates %}
+                <option value="{{ d }}">{{ d }}</option>
+                {% endfor %}
+            </select>
+            <button type="button" id="clearFilters" class="btn btn-sm btn-outline-secondary">Clear Filters</button>
             <span id="matchCount" class="text-muted small"></span>
         </div>
         <div class="card hhb-card">
@@ -178,7 +186,7 @@
                         </thead>
                         <tbody>
                             {% for m in league.matches %}
-                            <tr data-players="{{ m.players }}" class="{{ 'table-secondary text-decoration-line-through opacity-75' if m.is_struck_off else ('table-warning' if m.is_deuce) }}">
+                            <tr data-players="{{ m.players }}" data-date="{{ m.date }}" class="{{ 'table-secondary text-decoration-line-through opacity-75' if m.is_struck_off else ('table-warning' if m.is_deuce) }}">
                                 <td class="text-muted small">{{ m.no }}</td>
                                 <td class="text-muted small" style="white-space:nowrap">{{ m.date_short }}</td>
                                 <td class="{{ 'fw-bold' if m.winner == (m.p1 ~ ' & ' ~ m.p2) }}" style="white-space:nowrap">{{ m.p1 }}/{{ m.p2 }}</td>
@@ -199,7 +207,7 @@
     </div>
 
     <!-- Analytics -->
-    <div class="tab-pane fade" id="analytics-pane">
+    <div class="tab-pane fade {{ 'show active' if active_pane == 'analytics-pane' }}" id="analytics-pane">
         {% set a = league.analytics %}
         <div class="row g-3 mb-4">
             <div class="col-6 col-md-3">
@@ -412,7 +420,7 @@
     </div>
 
     <!-- Overall Stats -->
-    <div class="tab-pane fade" id="overall-stats-pane">
+    <div class="tab-pane fade {{ 'show active' if active_pane == 'overall-stats-pane' }}" id="overall-stats-pane">
         <div class="card hhb-card">
             <div class="card-body">
                 <div class="table-responsive">
@@ -464,7 +472,7 @@
     </div>
 
     <!-- Individual Weekly Stats -->
-    <div class="tab-pane fade" id="weekly-stats-pane">
+    <div class="tab-pane fade {{ 'show active' if active_pane == 'weekly-stats-pane' }}" id="weekly-stats-pane">
         <div class="card hhb-card">
             <div class="card-body">
                 <div class="table-responsive">
@@ -508,7 +516,7 @@
     </div>
 
     <!-- Rules -->
-    <div class="tab-pane fade {{ 'show active' if season_not_started }}" id="rules-pane">
+    <div class="tab-pane fade {{ 'show active' if active_pane == 'rules-pane' }}" id="rules-pane">
         <div class="card hhb-card">
             <div class="card-body">
                 <ol class="mb-0">
@@ -524,24 +532,63 @@
 
 <script>
 (function () {
-    const filter = document.getElementById('playerFilter');
+    const playerFilter = document.getElementById('playerFilter');
+    const dateFilter = document.getElementById('dateFilter');
+    const clearBtn = document.getElementById('clearFilters');
     const rows = document.querySelectorAll('#matchesTable tbody tr');
     const countEl = document.getElementById('matchCount');
 
     function applyFilter() {
-        const val = filter.value.toLowerCase();
+        const playerVal = playerFilter.value.toLowerCase();
+        const dateVal = dateFilter.value;
+        const filtered = !!playerVal || !!dateVal;
         let visible = 0;
         rows.forEach(row => {
             const players = row.dataset.players.toLowerCase();
-            const show = !val || players.includes(val);
+            const matchesPlayer = !playerVal || players.includes(playerVal);
+            const matchesDate = !dateVal || row.dataset.date === dateVal;
+            const show = matchesPlayer && matchesDate;
             row.style.display = show ? '' : 'none';
             if (show) visible++;
         });
-        countEl.textContent = val ? `${visible} match${visible !== 1 ? 'es' : ''} found` : `${rows.length} matches total`;
+        countEl.textContent = filtered ? `${visible} match${visible !== 1 ? 'es' : ''} found` : `${rows.length} matches total`;
     }
 
-    filter.addEventListener('change', applyFilter);
+    playerFilter.addEventListener('change', applyFilter);
+    dateFilter.addEventListener('change', applyFilter);
+    clearBtn.addEventListener('click', function () {
+        playerFilter.value = '';
+        dateFilter.value = '';
+        applyFilter();
+    });
     applyFilter();
+})();
+</script>
+
+<script>
+(function () {
+    // Keep the URL in sync with the active tab (e.g. /tournaments/league/2026/Matches)
+    // so a tab can be linked/bookmarked directly, without a full page reload.
+    const PANE_SLUGS = {
+        'standings-pane': 'Standings',
+        'matches-pane': 'Matches',
+        'analytics-pane': 'Analytics',
+        'overall-stats-pane': 'Overall-Stats',
+        'weekly-stats-pane': 'Weekly-Stats',
+        'rules-pane': 'Rules',
+    };
+    const basePath = window.location.pathname.replace(
+        /\/(Standings|Matches|Analytics|Overall-Stats|Weekly-Stats|Rules)\/?$/i, ''
+    );
+    document.querySelectorAll('#leagueTabs button[data-bs-toggle="tab"]').forEach(btn => {
+        btn.addEventListener('shown.bs.tab', function (e) {
+            const paneId = e.target.getAttribute('data-bs-target').slice(1);
+            const slug = PANE_SLUGS[paneId];
+            if (slug) {
+                history.replaceState(null, '', `${basePath}/${slug}`);
+            }
+        });
+    });
 })();
 </script>
 

@@ -139,8 +139,25 @@ def league_index():
                            podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe)
 
 
+# Maps a URL tab slug (case-insensitive) to the tab-pane element id it should
+# activate, so a link like /tournaments/league/2026/Matches opens directly on
+# that tab instead of always landing on the default pane.
+LEAGUE_TAB_SLUGS = {
+    "standings": "standings-pane",
+    "matches": "matches-pane",
+    "analytics": "analytics-pane",
+    "overall-stats": "overall-stats-pane",
+    "overallstats": "overall-stats-pane",
+    "weekly-stats": "weekly-stats-pane",
+    "individual-weekly-stats": "weekly-stats-pane",
+    "weeklystats": "weekly-stats-pane",
+    "rules": "rules-pane",
+}
+
+
 @tournament_bp.route("/tournaments/league/<int:year>")
-def league_detail(year):
+@tournament_bp.route("/tournaments/league/<int:year>/<tab>")
+def league_detail(year, tab=None):
     league = get_league(year)
     if not league:
         return "League not found", 404
@@ -149,11 +166,21 @@ def league_detail(year):
     prev_year = years[idx - 1] if idx > 0 else None
     next_year = years[idx + 1] if idx >= 0 and idx < len(years) - 1 else None
     event_id = f"league_{year}"
+
+    season_not_started = league["status"] == "not_started"
+    default_pane = "rules-pane" if season_not_started else "standings-pane"
+    active_pane = LEAGUE_TAB_SLUGS.get((tab or "").strip().lower(), default_pane)
+
+    # Unique match dates, in the order they already appear in the sheet
+    # (chronological), for the Matches tab's "Filter by date" dropdown.
+    match_dates = list(dict.fromkeys(m["date"] for m in league["matches"]))
+
     return render_template("league_detail.html", league=league,
                            overall_stats=get_overall_stats(year),
                            weekly_stats=get_weekly_stats(year),
                            prev_year=prev_year, next_year=next_year,
                            podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe,
-                           event_id=event_id, has_event_photos=has_event_photos(event_id))
+                           event_id=event_id, has_event_photos=has_event_photos(event_id),
+                           active_pane=active_pane, match_dates=match_dates)
 
 
