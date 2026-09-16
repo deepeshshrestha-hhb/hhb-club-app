@@ -1418,6 +1418,37 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   real 375×812 mobile viewport: picking 10 and submitting from fully
   scrolled-down auto-scrolls back to the top with the PIN confirmation
   immediately visible, no manual scroll needed.
+- **2026-09-16 — Fixed Vote page copy that only made sense on desktop.**
+  "Tap a name on the left to add it" / "Tap a candidate on the left to add
+  them here" referred to the two-column desktop layout (candidates card
+  beside the Top 10 card), meaningless once those columns stack vertically
+  on mobile - reworded to "from the candidates list" / "from the list" in
+  `vote.html`, which holds regardless of screen size.
+- **2026-09-16 — Player Vote leaderboard now ties back to the existing
+  Club Rankings order instead of alphabetically, for candidates the vote
+  itself can't separate.** With 20 candidates and only 10 picks per
+  ballot, it's expected that several candidates end up with zero votes (or
+  tied points otherwise) - previously `compute_rankings()`'s final
+  tie-break was the candidate's own name (A-Z), an arbitrary split with no
+  connection to anything. Since this vote exists specifically to refine
+  the committee's existing Top 20 order (see the 2026-09-15 Club Rankings
+  entries), it's the fairer fallback for anyone still tied after points
+  and the #1/#2/.../#10-place-vote-count vector: `compute_rankings()` now
+  looks up each candidate's index in `get_rankings()["players"][:TOP_N]`
+  (the *rank-ordered* Top 20, not `get_candidates()`'s alphabetical
+  version used for the ballot UI - deliberately two different orderings
+  of the same 20 names for two different purposes) and sorts ties by that
+  index ascending, i.e. a better pre-existing committee position wins a
+  tie. Verified with a synthetic vote set covering exactly 15 of the 20
+  candidates (leaving 5 with genuinely zero points): the zero-point group
+  came back in precisely their original Club Rankings order, not
+  alphabetical - then cross-checked live against `/vote/results`' real
+  data (10 candidates had points from an actual submitted ballot; the
+  remaining 10 zero-point candidates rendered in exact committee order).
+  *Note:* left the live ballot data untouched this session (unlike prior
+  sessions' test-data resets) - its ranking didn't match any test vote
+  this session had submitted, so it looks like the admin's own genuine
+  vote from testing the site, not leftover test data safe to clear.
 
 ---
 
