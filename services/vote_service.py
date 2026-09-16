@@ -198,14 +198,21 @@ def set_results_published(published: bool):
 
 
 def compute_rankings(votes: dict) -> list:
-    """Pure function, no file I/O (easy to unit test/reuse elsewhere):
-    Borda-scores every current Top-20 candidate from a
+    """Borda-scores every current Top-20 candidate from a
     {member_name: {"rankings": [...10 names]}} dict. Rank 1 on a ballot is
     worth 10 points down to rank 10 worth 1; a candidate absent from a
-    given ballot gets 0 from it. Ties break on the vector of
-    (#1-place votes, #2-place votes, ... #10-place votes), most descending,
-    then name."""
+    given ballot gets 0 from it (this is expected to happen a lot - members
+    pick 10 of 20, so several candidates can end up with zero votes at all).
+    Ties break, in order: the vector of (#1-place votes, #2-place votes,
+    ... #10-place votes) most descending, then each candidate's *existing*
+    position on /players/rankings (lower/better position wins) - not
+    alphabetically. That committee-set order is exactly what this vote is
+    meant to refine, so it's the fairer fallback for anyone the vote itself
+    can't separate, rather than an arbitrary A-Z split among e.g. five
+    candidates nobody picked at all."""
     candidates = get_candidates()
+    rank_order = get_rankings()["players"][:TOP_N]
+    original_rank = {name: i for i, name in enumerate(rank_order)}
     points = {name: 0 for name in candidates}
     place_counts = {name: [0] * PICK_N for name in candidates}
     for entry in votes.values():
@@ -215,7 +222,7 @@ def compute_rankings(votes: dict) -> list:
                 place_counts[name][idx] += 1
 
     def sort_key(name):
-        return (-points[name], [-c for c in place_counts[name]], name)
+        return (-points[name], [-c for c in place_counts[name]], original_rank.get(name, len(rank_order)))
 
     ordered = sorted(candidates, key=sort_key)
     return [
