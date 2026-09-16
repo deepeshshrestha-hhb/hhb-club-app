@@ -15,10 +15,32 @@
 {% block content %}
 
 <h1 class="page-title">🗳️ Top 20 Player Vote</h1>
-<p class="text-muted mb-4">
+<p class="text-muted mb-3">
     Pick your Top 10 (in order) from the club's current Top 20. Tap a name from the candidates
     list to add it, drag the number badge in "Your Top 10" to reorder, or tap the &times; to remove it.
 </p>
+
+<div class="card hhb-card mb-4">
+    <div class="card-header p-0">
+        <button class="btn btn-link btn-block text-start p-3 text-decoration-none" type="button"
+                data-bs-toggle="collapse" data-bs-target="#voteMethodology"
+                aria-expanded="false" aria-controls="voteMethodology">
+            <span class="fw-semibold">How the ranking works</span>
+            <i class="bi bi-chevron-down ms-2"></i>
+        </button>
+    </div>
+    <div class="collapse" id="voteMethodology">
+        <div class="card-body pt-0">
+            <p class="mb-0 small">
+                Each vote counts — your #1 pick earns 10 points, your #2 earns 9, down to 1 point for
+                #10. Points are added up across everyone's ballots to produce the final Top 20 order.
+                Because points come from many different ballots at many different ranks, it's very
+                unlikely two players finish with the exact same total once enough votes are in. Anyone
+                who doesn't feature in any member's Top 10 will be ranked by the Committee.
+            </p>
+        </div>
+    </div>
+</div>
 
 {% if not voting_open %}
 <div class="alert alert-warning">
