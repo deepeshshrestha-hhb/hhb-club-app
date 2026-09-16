@@ -26,10 +26,7 @@ DEFAULT_PLAYERS = [
 ]
 
 DISCLAIMER = (
-    "This ranking is based 50% on Annual Players League performance over the last 3 years, "
-    "and 50% on subjective review by the Committee based on current player capabilities. "
-    "It is reviewed and updated twice a year — once in December around the Annual Dinner, "
-    "and once in June after the completion of the Annual Doubles Classic."
+    "This Top 20 Club Ranking is based on members' Top 10 votes, with Committee confirmation."
 )
 
 
