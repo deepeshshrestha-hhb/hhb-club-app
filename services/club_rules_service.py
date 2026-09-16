@@ -156,9 +156,8 @@ DEFAULT_SECTIONS = {
         "player (if any) going to Pool A.</p>"
         "<p class=\"text-muted small mb-0\">Each Sunday's Pool A / Pool B is published in advance at "
         "<a href=\"/sunday-pools\">/sunday-pools</a> &mdash; check there before you arrive. Club "
-        "Rankings are compiled by the committee from the last 3 years of Players League results plus "
-        "the committee's judgement of current playing ability, and are reviewed twice a year &mdash; "
-        "see the <a href=\"/players/rankings\">Club Rankings</a> page for the full methodology.</p>"
+        "Rankings are based on members' Top 10 votes, with Committee confirmation &mdash; "
+        "see the <a href=\"/players/rankings\">Club Rankings</a> page for details.</p>"
     ),
 }
 

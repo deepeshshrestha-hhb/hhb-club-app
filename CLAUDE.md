@@ -1449,6 +1449,26 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   sessions' test-data resets) - its ranking didn't match any test vote
   this session had submitted, so it looks like the admin's own genuine
   vote from testing the site, not leftover test data safe to clear.
+- **2026-09-16 — Updated the Club Rankings disclaimer text now that the
+  ranking is voted on, not committee-computed.**
+  `club_rankings_service.DISCLAIMER` previously described the pre-vote
+  process ("50% Annual Players League performance over the last 3 years,
+  50% subjective committee review, reviewed twice a year..."), no longer
+  accurate now that Top 20 order comes from the Player Vote (see the
+  2026-09-15/16 vote entries above). Replaced with one sentence: "This Top
+  20 Club Ranking is based on members' Top 10 votes, with Committee
+  confirmation." While making this change, initially also went to update
+  the Sunday Pool Play section of Club Rules
+  (`club_rules_service.py`'s `pool_play` `DEFAULT_SECTIONS` text), which
+  restates this same methodology inline while linking to
+  `/players/rankings` - but found the *live* copy (`data/
+  club_rules_content.json`, admin-edited via the inline Rules editor at
+  some earlier point, not this session) already says "Top 20 Club
+  Rankings are as voted by the members," i.e. the admin had already fixed
+  this spot independently. Left that persisted content alone rather than
+  overwrite a deliberate edit; only updated `DEFAULT_SECTIONS`' fallback
+  text in code for consistency, which has no effect unless the content
+  file is ever missing and regenerated from scratch.
 
 ---
 
