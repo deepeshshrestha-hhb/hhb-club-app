@@ -1469,6 +1469,28 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   overwrite a deliberate edit; only updated `DEFAULT_SECTIONS`' fallback
   text in code for consistency, which has no effect unless the content
   file is ever missing and regenerated from scratch.
+- **2026-09-17 — Added an "Apply to Club Rankings" admin button on
+  `/vote/results`**, so once voting finishes the admin doesn't have to
+  hand-reorder ~20 rows on `/players/rankings` with the existing ↑/↓
+  arrows to match the vote's leaderboard. New
+  `club_rankings_service.apply_vote_order(order)` moves the named players
+  to the front of the rankings list in `order`'s order; anyone else
+  already ranked - players 21+, or a Top-20 candidate the vote left tied
+  at zero points - keeps their existing relative order, appended after,
+  so the reorder only ever touches the voted Top 20. Wired to a new
+  admin-only `POST /vote/admin/apply-rankings` (`vote_routes.py`, calls
+  `vote_service.get_leaderboard()` for the current order) and a
+  confirm-gated button on `vote_results.html`, shown to admins whenever a
+  leaderboard is visible (published or the existing admin preview).
+  *Why not just apply it directly from this session?* This sandboxed dev
+  environment has no production R2 credentials (see the Local Tooling
+  Notes / R2 entries elsewhere in this log), so it can't read the real
+  votes or write the real rankings - verified instead with a synthetic
+  Flask test-client run (a 22-player rankings list, a ballot covering 10
+  of the 20 Top-20 candidates, so the other 10 land back in their prior
+  tie-break order per `compute_rankings()`'s own rule) confirming the
+  voted names land up front in leaderboard order and players ranked 21+
+  don't move at all; the admin runs the button itself on the live site.
 
 ---
 
