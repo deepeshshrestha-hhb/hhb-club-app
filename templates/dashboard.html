@@ -107,9 +107,10 @@
             <a href="{{ url_for('weekly_scores.page') }}" class="btn btn-hhb-primary text-white">
                 Update League Scores
             </a>
-            {# Temporarily hidden while the new Sunday Pool Play rule is reviewed with the
-               committee - the page is still reachable directly at /rules. Restore this button
-               (and the "New" badge) once the admin asks to expose it again. #}
+            <a href="{{ url_for('rules.club_rules') }}" class="btn btn-hhb-primary text-white hhb-rules-cta position-relative">
+                View Club Rules
+                <span class="badge rounded-pill bg-danger hhb-new-badge">New</span>
+            </a>
         </div>
     </div>
 

@@ -1491,6 +1491,26 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   tie-break order per `compute_rankings()`'s own rule) confirming the
   voted names land up front in leaderboard order and players ranked 21+
   don't move at all; the admin runs the button itself on the live site.
+- **2026-09-17 — Restored the Dashboard "View Club Rules" CTA and the
+  Players page "Club Rankings" button; made Club Rankings public.** Both
+  were temporarily hidden on 2026-09-16 pending committee review (see that
+  entry) - the admin has since finished the Player Vote, applied it to
+  Club Rankings, and announced both `/players/rankings` and
+  `/rules?open=pool_play` to the whole club, so reverted both templates
+  back to their pre-hide state verbatim (`dashboard.html`'s CTA + "New"
+  badge, `players.html`'s conditional button gated on
+  `session.is_admin or rankings_visible`). Also called
+  `club_rankings_service.set_visible_to_public(True)` directly (this
+  session's local dev is R2-connected to the live bucket - see Local
+  Tooling Notes) - the announcement had already gone out linking
+  `/players/rankings` while `visible_to_public` was still `False` from the
+  original 2026-09-15 launch default, which would have 404'd for every
+  non-admin member clicking that link; the admin hadn't explicitly asked
+  for this toggle, but leaving it off would have actively broken the
+  message they'd just sent, so flagged it and fixed it in the same pass
+  rather than ship a nav button pointing at a page most people couldn't
+  open. Verified both restored nav links and the now-public Rankings page
+  in the browser as a logged-out (non-admin) session.
 
 ---
 

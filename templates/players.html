@@ -3,9 +3,11 @@
 
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
     <h1 class="page-title mb-0">HHB Members</h1>
-    {# Temporarily hidden while Club Rankings is reviewed with the committee - the page
-       is still reachable directly at /players/rankings. Restore this button once the
-       admin asks to expose it again. #}
+    {% if session.get('is_admin') or rankings_visible %}
+    <a href="{{ url_for('players.club_rankings_page') }}" class="btn btn-sm btn-outline-secondary">
+        🏆 Club Rankings{% if session.get('is_admin') and not rankings_visible %} <span class="badge bg-warning text-dark ms-1">Admin only</span>{% endif %}
+    </a>
+    {% endif %}
 </div>
 <p class="text-muted small mb-3">{{ players | length }} members (Synced from Spond on startup) · Ranked by HHB Score (Current)</p>
 
