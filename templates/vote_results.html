@@ -14,6 +14,15 @@
 </div>
 {% endif %}
 
+{% if is_admin and leaderboard %}
+<div class="d-flex justify-content-end mb-2">
+    <form method="POST" action="{{ url_for('vote.admin_apply_rankings') }}"
+          onsubmit="return confirm('Reorder the Club Rankings Top 20 to match this leaderboard? Players ranked 21+ stay where they are.');">
+        <button type="submit" class="btn btn-sm btn-hhb-accent">Apply to Club Rankings</button>
+    </form>
+</div>
+{% endif %}
+
 {% if show_leaderboard %}
 <div class="card hhb-card">
     <div class="card-body p-0">

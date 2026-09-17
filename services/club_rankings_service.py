@@ -90,6 +90,28 @@ def add_player(name: str, position: int) -> bool:
     return True
 
 
+def apply_vote_order(order: list) -> bool:
+    """Reorders the players named in `order` (e.g. the Top 20 Player Vote's
+    finished leaderboard) to the front of the rankings, in that order;
+    everyone else already in the rankings keeps their existing relative
+    order, appended after. Returns False if `order` is empty or names
+    anyone not already in the rankings - a vote's candidates always come
+    from the current Top 20 (see vote_service.get_candidates), so this
+    should only fail if the rankings changed out from under a stale
+    leaderboard between page loads."""
+    order = [n for n in (order or []) if n]
+    if not order:
+        return False
+    data = _load()
+    players = data["players"]
+    if not all(name in players for name in order):
+        return False
+    remaining = [p for p in players if p not in order]
+    data["players"] = list(order) + remaining
+    _save(data)
+    return True
+
+
 def move_player(name: str, direction: str) -> bool:
     """Swap `name` with its neighbour one place up ('up') or down ('down').
     Returns False if the player isn't in the list, an unknown direction was

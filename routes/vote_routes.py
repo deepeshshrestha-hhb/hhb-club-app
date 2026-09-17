@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session, flash
 
 from routes.admin_routes import admin_required
-from services import vote_service
+from services import vote_service, club_rankings_service
 
 vote_bp = Blueprint("vote", __name__)
 
@@ -66,6 +66,21 @@ def results():
         leaderboard=vote_service.get_leaderboard() if show_leaderboard else None,
         all_votes=vote_service.admin_get_all_votes() if is_admin else None,
     )
+
+
+@vote_bp.route("/vote/admin/apply-rankings", methods=["POST"])
+@admin_required
+def admin_apply_rankings():
+    """Reorders the Club Rankings Top 20 to match the vote's current
+    leaderboard - the one-click step for "voting has finished, make it the
+    new Club Rankings order" once the admin is happy with the result."""
+    leaderboard = vote_service.get_leaderboard()
+    order = [r["name"] for r in leaderboard]
+    if club_rankings_service.apply_vote_order(order):
+        flash("Club Rankings Top 20 updated to match the vote results.", "success")
+    else:
+        flash("Could not apply the vote results to Club Rankings.", "danger")
+    return redirect(url_for("vote.results"))
 
 
 @vote_bp.route("/vote/admin/clear-vote", methods=["POST"])
