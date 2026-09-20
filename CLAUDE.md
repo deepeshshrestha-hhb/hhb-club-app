@@ -1511,6 +1511,36 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   rather than ship a nav button pointing at a page most people couldn't
   open. Verified both restored nav links and the now-public Rankings page
   in the browser as a logged-out (non-admin) session.
+- **2026-09-20 — Added a one-off Parklands players/court option to Weekly
+  Score Upload, scoped to 20-Sep-2026 only.** That Sunday's session
+  included 5 players (Thomas, Shreya, Faiyaz, Rafay, Vishal) who played at
+  Parklands - an alternate venue - so they weren't in the normal Spond/
+  signup-history/league-roster data `_player_options()` draws from for
+  that date, and their matches needed a "Parklands" Court No. distinct
+  from the club's usual 4 physical courts. Added two small ISO-date-keyed
+  dicts, `EXTRA_PLAYERS_BY_DATE` / `EXTRA_COURTS_BY_DATE` in
+  `weekly_score_service.py`, merged into `_player_options()` and a new
+  `court_options()` only for their exact date - every other Sunday is
+  unaffected. `get_state()` now also exposes `courts` in its JSON;
+  `weekly_scores.js`'s `populateCourtSelect()` (previously hardcoded 1-4
+  client-side) now builds from `state.courts`, the same pattern the player
+  dropdown already uses for `state.players`. `_validate_match()` takes the
+  session's date so it can accept `"Parklands"` as a valid Court No. value
+  on 20-Sep specifically, alongside the normal 1-4 int range everywhere
+  else - `add_match`/`amend_match` now load the session before validating
+  (previously validated first) so that date is available at validation
+  time. `write_weekly_scores()` already writes `court_no` as a literal
+  Excel cell value with no int assumption (see `get_league()`'s own
+  tolerant `_clean()` read path for non-numeric Court No. cells), so a
+  text court value round-trips into the league workbook with no further
+  changes needed there. Verified: `_player_options`/`court_options` return
+  the extras only for 2026-09-20, not other dates; `add_match()` accepts
+  `court_no='Parklands'` on that date and stores it as-is; a garbage court
+  value is still rejected on 20-Sep, and `'Parklands'` itself is rejected
+  as invalid on any other date. *Intentionally temporary:* both dict
+  entries should be removed once 20-Sep's scores are submitted to the
+  league database - they're a one-off exception, not a general
+  multi-venue feature.
 
 ---
 
