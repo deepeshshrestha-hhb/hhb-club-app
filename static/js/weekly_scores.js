@@ -29,12 +29,15 @@
         placeholder.disabled = true;
         placeholder.selected = true;
         select.appendChild(placeholder);
-        for (var i = 1; i <= 4; i++) {
+        // Usually just the 4 physical courts, but a session date can carry a
+        // one-off extra option (e.g. "Parklands" for an alternate-venue
+        // Sunday) - see weekly_score_service.court_options().
+        (state.courts || ['1', '2', '3', '4']).forEach(function (c) {
             var opt = document.createElement('option');
-            opt.value = i;
-            opt.textContent = i;
+            opt.value = c;
+            opt.textContent = c;
             select.appendChild(opt);
-        }
+        });
     }
 
     // Players a given <select> should offer, kept alongside it so the search

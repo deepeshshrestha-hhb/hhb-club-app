@@ -33,6 +33,19 @@ SESSION_PATH = Path(Config.DATA_DIR) / "WeeklyScoreSession.json"
 VALID_SCORES = set(range(1, 31))
 VALID_COURTS = set(range(1, 5))
 
+# One-off additions to the player / Court No. dropdowns for a specific
+# session date - e.g. a Sunday played at an alternate venue whose players
+# and court(s) aren't in the normal Spond/roster/court-4 data. Scoped
+# strictly by ISO date so they only ever show up for that one session;
+# remove an entry once that date's scores have been submitted rather than
+# leaving it lying around for future Sundays.
+EXTRA_PLAYERS_BY_DATE = {
+    "2026-09-20": ["Thomas", "Shreya", "Faiyaz", "Rafay", "Vishal"],  # played at Parklands
+}
+EXTRA_COURTS_BY_DATE = {
+    "2026-09-20": ["Parklands"],
+}
+
 # Guards every read-modify-write cycle on the session file. Render runs
 # gunicorn with a single worker but 4 threads, all sharing this same process
 # and file - without a lock, two near-simultaneous submissions (very plausible
@@ -247,6 +260,15 @@ def debug_player_sources(target_date):
 
 
 def _player_options(target_date):
+    options = _resolve_player_options(target_date)
+    if target_date is not None:
+        extra = EXTRA_PLAYERS_BY_DATE.get(target_date.isoformat())
+        if extra:
+            options = sorted(set(options) | set(extra), key=str.casefold)
+    return options
+
+
+def _resolve_player_options(target_date):
     if target_date is None:
         return []
     if target_date <= date.today():
@@ -272,6 +294,16 @@ def _player_options(target_date):
     return sorted(get_player_names(), key=str.casefold)
 
 
+def court_options(target_date):
+    """Court No. dropdown values for target_date - the usual 4 physical
+    courts, plus any one-off extra (e.g. a session played at an alternate
+    venue) scoped to that exact date via EXTRA_COURTS_BY_DATE."""
+    options = [str(c) for c in sorted(VALID_COURTS)]
+    if target_date is not None:
+        options += EXTRA_COURTS_BY_DATE.get(target_date.isoformat(), [])
+    return options
+
+
 def get_state():
     with _session_lock:
         data = _load()
@@ -282,6 +314,7 @@ def get_state():
         "date": data["date"],
         "matches": _annotate(matches),
         "players": _player_options(target_date),
+        "courts": court_options(target_date),
     }
 
 
@@ -313,7 +346,7 @@ def close_session():
     return data
 
 
-def _validate_match(fields):
+def _validate_match(fields, session_date=None):
     p1 = (fields.get("p1") or "").strip()
     p2 = (fields.get("p2") or "").strip()
     p3 = (fields.get("p3") or "").strip()
@@ -323,10 +356,22 @@ def _validate_match(fields):
         score2 = int(fields.get("score2"))
     except (TypeError, ValueError):
         raise ValueError("Scores must be numbers.")
-    try:
-        court_no = int(fields.get("court_no"))
-    except (TypeError, ValueError):
-        raise ValueError("Court No. is required.")
+
+    # Court No. is normally one of the 4 physical courts (an int), but a
+    # session date can have a one-off extra option too (e.g. "Parklands" for
+    # an alternate-venue Sunday) - see EXTRA_COURTS_BY_DATE.
+    court_raw = fields.get("court_no")
+    extra_courts = EXTRA_COURTS_BY_DATE.get(session_date, [])
+    if isinstance(court_raw, str) and court_raw.strip() in extra_courts:
+        court_no = court_raw.strip()
+    else:
+        try:
+            court_no = int(court_raw)
+        except (TypeError, ValueError):
+            raise ValueError("Court No. is required.")
+        if court_no not in VALID_COURTS:
+            raise ValueError("Court No. must be between 1 and 4.")
+
     if not all([p1, p2, p3, p4]):
         raise ValueError("All four players are required.")
     if len({p1, p2, p3, p4}) < 4:
@@ -335,8 +380,6 @@ def _validate_match(fields):
         raise ValueError("Scores must be between 1 and 30.")
     if score1 == score2:
         raise ValueError("The two team scores can't be equal (someone has to win the buzzer).")
-    if court_no not in VALID_COURTS:
-        raise ValueError("Court No. must be between 1 and 4.")
     return {
         "court_no": court_no,
         "p1": p1, "p2": p2, "score1": score1,
@@ -345,11 +388,11 @@ def _validate_match(fields):
 
 
 def add_match(fields):
-    match = _validate_match(fields)
     with _session_lock:
         data = _load()
         if data.get("status") != "open":
             raise ValueError("The session isn't open for entries right now.")
+        match = _validate_match(fields, data.get("date"))
 
         # A repeated tap (or retry after a slow/no response) resubmitting the
         # exact same match within RECENT_DUPLICATE_WINDOW is a duplicate, not
@@ -379,11 +422,11 @@ def add_match(fields):
 
 
 def amend_match(match_id, fields):
-    updated = _validate_match(fields)
     with _session_lock:
         data = _load()
         if data.get("status") != "open":
             raise ValueError("The session isn't open for edits right now.")
+        updated = _validate_match(fields, data.get("date"))
         for m in data["matches"]:
             if m["id"] == match_id:
                 updated["id"] = match_id
