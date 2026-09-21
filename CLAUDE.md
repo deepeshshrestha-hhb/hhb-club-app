@@ -1541,6 +1541,26 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   entries should be removed once 20-Sep's scores are submitted to the
   league database - they're a one-off exception, not a general
   multi-venue feature.
+- **2026-09-21 — Added an asterisked Parklands adjustment to the League
+  Overall Stats tab for 20-Sep.** Same underlying event as the Weekly
+  Score Upload entry just above: 5 players played a Parklands court
+  8-10am that Spond/signup-history has no record of, so `get_overall_
+  stats()`'s "Total Players Playing" (9-10 AM / 10-11 AM columns)
+  undercounted that Sunday. New `OVERALL_STATS_EXTRA_PLAYERS_BY_DATE`
+  dict in `league_service.py` (same one-off ISO-date-keyed pattern as
+  `weekly_score_service`'s `EXTRA_PLAYERS_BY_DATE`/`EXTRA_COURTS_BY_DATE`)
+  adds 5 to both columns for 20-Sep only, carrying a footnote string;
+  `get_overall_stats()` surfaces it as `players_adjustment_note` on that
+  row, and `league_detail.html` renders a small superscript asterisk next
+  to both adjusted numbers plus a single deduplicated footnote line below
+  the table ("5 players played at 1 court in Parklands, 8-10am. Ad-hoc
+  instance, not a regular occurrence."). Total Games Recorded is
+  untouched - only the two attendance columns are adjusted, and only for
+  that one row. Verified: the adjustment note appears only on the 20-Sep
+  row; the rendered page shows the asterisk next to both bumped numbers
+  and exactly one footnote paragraph, no duplicates. *Intentionally
+  ad-hoc*, matching the Weekly Score Upload entry - not a general
+  recurring-adjustment mechanism.
 
 ---
 
