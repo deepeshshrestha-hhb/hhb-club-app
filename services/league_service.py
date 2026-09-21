@@ -11,6 +11,21 @@ from services.tournament_service import _clean, _fmt_date
 
 TOURNAMENTS_DIR = Path(Config.BASE_DIR) / "tournaments"
 
+# One-off Total Players Playing adjustment for a specific Overall Stats date -
+# e.g. players who turned up at an alternate venue that Spond/signup-history
+# has no record of for that date, so the normal attendee count understates
+# who actually played. Scoped strictly by ISO date (both the 9-10 and 10-11
+# columns get the same bump - see get_overall_stats) and surfaced with an
+# asterisk + footnote in the template rather than silently folded in;
+# remove the entry once it's no longer relevant, it's not a general
+# multi-venue feature.
+OVERALL_STATS_EXTRA_PLAYERS_BY_DATE = {
+    "2026-09-20": {
+        "count": 5,
+        "note": "5 players played at 1 court in Parklands, 8-10am. Ad-hoc instance, not a regular occurrence.",
+    },
+}
+
 
 def list_league_years():
     years = []
@@ -531,6 +546,13 @@ def get_overall_stats(year):
         if p10 is None:
             p10 = _live_players_playing(live_sessions, d, 10) if d >= today else _historical_players_playing(d, 10)
 
+        adjustment = OVERALL_STATS_EXTRA_PLAYERS_BY_DATE.get(d.isoformat())
+        adjustment_note = None
+        if adjustment:
+            p9 = (p9 or 0) + adjustment["count"]
+            p10 = (p10 or 0) + adjustment["count"]
+            adjustment_note = adjustment["note"]
+
         day_matches = matches_by_date.get(d, [])
         win_counts = Counter()
         for m in day_matches:
@@ -550,6 +572,7 @@ def get_overall_stats(year):
             "is_break": False,
             "players_9_10": p9,
             "players_10_11": p10,
+            "players_adjustment_note": adjustment_note,
             "total_games": len(day_matches),
             "max_wins": max_wins,
             "max_wins_player": " / ".join(max_players),
