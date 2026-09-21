@@ -11,17 +11,22 @@ from services.tournament_service import _clean, _fmt_date
 
 TOURNAMENTS_DIR = Path(Config.BASE_DIR) / "tournaments"
 
-# One-off Total Players Playing adjustment for a specific Overall Stats date -
+# One-off Total Players Playing override for a specific Overall Stats date -
 # e.g. players who turned up at an alternate venue that Spond/signup-history
 # has no record of for that date, so the normal attendee count understates
-# who actually played. Scoped strictly by ISO date (both the 9-10 and 10-11
-# columns get the same bump - see get_overall_stats) and surfaced with an
-# asterisk + footnote in the template rather than silently folded in;
-# remove the entry once it's no longer relevant, it's not a general
-# multi-venue feature.
+# who actually played. A fixed override (not a "+N on top of the live
+# fallback" bump) deliberately, since the live Spond/signup-history fallback
+# for a given date has been observed to drift after a Render cold-start
+# re-pulls an older signups_history.csv from R2 - a fixed number here can't
+# silently change underneath the asterisked figure. Scoped strictly by ISO
+# date (both the 9-10 and 10-11 columns get the same override - see
+# get_overall_stats) and surfaced with an asterisk + footnote in the
+# template rather than silently folded in; remove the entry once it's no
+# longer relevant, it's not a general multi-venue feature.
 OVERALL_STATS_EXTRA_PLAYERS_BY_DATE = {
     "2026-09-20": {
-        "count": 5,
+        "players_9_10": 24,
+        "players_10_11": 25,
         "note": "5 additional players played at 1 court in Parklands, 8-10am.",
     },
 }
@@ -549,8 +554,8 @@ def get_overall_stats(year):
         adjustment = OVERALL_STATS_EXTRA_PLAYERS_BY_DATE.get(d.isoformat())
         adjustment_note = None
         if adjustment:
-            p9 = (p9 or 0) + adjustment["count"]
-            p10 = (p10 or 0) + adjustment["count"]
+            p9 = adjustment["players_9_10"]
+            p10 = adjustment["players_10_11"]
             adjustment_note = adjustment["note"]
 
         day_matches = matches_by_date.get(d, [])
