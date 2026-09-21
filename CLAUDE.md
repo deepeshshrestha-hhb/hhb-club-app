@@ -1563,10 +1563,39 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   recurring-adjustment mechanism. *Follow-up same day:* per feedback,
   simplified the footnote to a single sentence - "5 additional players
   played at 1 court in Parklands, 8-10am." - dropping the "Ad-hoc
-  instance, not a regular occurrence" second sentence entirely; the +5
-  adjustment math itself was already correct (adds on top of whatever
-  Spond/signup-history already reports for 20-Sep, e.g. 19->24 and
-  20->25 live) and needed no change.
+  instance, not a regular occurrence" second sentence entirely. At the
+  time, the +5 adjustment math (added on top of whatever Spond/signup-
+  history reports for 20-Sep) looked correct against the 19/20 base seen
+  earlier that day - **this turned out to be wrong**, see the next
+  entry.
+- **2026-09-21 — Fixed Overall Stats 20-Sep showing "5*/5*" instead of
+  the confirmed "24*/25*".** The additive design from the two entries
+  above assumed the live Spond/signup-history fallback for 20-Sep would
+  keep returning 19/20 as it had when first verified - live-checked
+  again later the same day, it had drifted to `None`/0 (most likely a
+  Render free-tier cold start re-pulling an older `data/
+  signups_history.csv` from R2, reverting a Refresh Signup Analytics
+  update that hadn't made it back into R2 yet - the same class of
+  cold-start/staleness risk called out repeatedly in the Weekly Score
+  Upload saga above), so `(0 or 0) + 5 = 5` - exactly the wrong number
+  reported live, with the footnote text still correct (proving the
+  latest deploy really was live, just computing from a stale base).
+  Since the admin had already confirmed the intended totals directly
+  (19+5=24, 20+5=25), `OVERALL_STATS_EXTRA_PLAYERS_BY_DATE` now stores
+  the **final fixed totals** for 20-Sep (`players_9_10: 24,
+  players_10_11: 25`) instead of a delta added to a live value that can
+  silently drift - `get_overall_stats()` overwrites `players_9_10`/
+  `players_10_11` outright for that date rather than adding to them, so
+  the asterisked numbers can't disagree with what was confirmed
+  regardless of what the live fallback computes on any given page load.
+  Verified: `get_overall_stats(2026)`'s 20-Sep row now returns exactly
+  `(24, 25)`; rendered page shows `24*`/`25*`. *Why not just fix
+  `_historical_players_playing()`'s staleness instead?* That's a
+  pre-existing, general risk (any past date's cache can theoretically
+  be affected by a cold start between a Refresh and the next R2 sync),
+  not specific to this one-off Parklands adjustment - out of scope here;
+  a fixed override was the fastest way to guarantee this one row is
+  right regardless.
 
 ---
 
