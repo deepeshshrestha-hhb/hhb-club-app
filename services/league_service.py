@@ -22,7 +22,7 @@ TOURNAMENTS_DIR = Path(Config.BASE_DIR) / "tournaments"
 OVERALL_STATS_EXTRA_PLAYERS_BY_DATE = {
     "2026-09-20": {
         "count": 5,
-        "note": "5 players played at 1 court in Parklands, 8-10am. Ad-hoc instance, not a regular occurrence.",
+        "note": "5 additional players played at 1 court in Parklands, 8-10am.",
     },
 }
 
