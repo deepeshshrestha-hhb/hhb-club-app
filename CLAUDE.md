@@ -1560,7 +1560,13 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   row; the rendered page shows the asterisk next to both bumped numbers
   and exactly one footnote paragraph, no duplicates. *Intentionally
   ad-hoc*, matching the Weekly Score Upload entry - not a general
-  recurring-adjustment mechanism.
+  recurring-adjustment mechanism. *Follow-up same day:* per feedback,
+  simplified the footnote to a single sentence - "5 additional players
+  played at 1 court in Parklands, 8-10am." - dropping the "Ad-hoc
+  instance, not a regular occurrence" second sentence entirely; the +5
+  adjustment math itself was already correct (adds on top of whatever
+  Spond/signup-history already reports for 20-Sep, e.g. 19->24 and
+  20->25 live) and needed no change.
 
 ---
 
