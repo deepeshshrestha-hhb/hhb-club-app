@@ -450,8 +450,8 @@
                             <tr>
                                 <td>{{ w.week }}</td>
                                 <td style="white-space:nowrap">{{ w.date }}</td>
-                                <td class="text-center">{{ w.players_9_10 if w.players_9_10 is not none else '–' }}</td>
-                                <td class="text-center">{{ w.players_10_11 if w.players_10_11 is not none else '–' }}</td>
+                                <td class="text-center">{{ w.players_9_10 if w.players_9_10 is not none else '–' }}{% if w.players_adjustment_note %}<sup>*</sup>{% endif %}</td>
+                                <td class="text-center">{{ w.players_10_11 if w.players_10_11 is not none else '–' }}{% if w.players_adjustment_note %}<sup>*</sup>{% endif %}</td>
                                 <td class="text-center">{{ w.total_games }}</td>
                                 <td class="text-center">{{ w.max_wins if w.max_wins else '–' }}</td>
                                 <td>{{ w.max_wins_player }}</td>
@@ -469,6 +469,9 @@
             Total Players Playing shows current Spond sign-ups for upcoming Sundays, or actual attendance
             for Sundays that have already happened. Total Games / Max Wins come from the reported match scores.
         </p>
+        {% for note in overall_stats | selectattr('players_adjustment_note') | map(attribute='players_adjustment_note') | unique | list %}
+        <p class="text-muted small mb-0">* {{ note }}</p>
+        {% endfor %}
     </div>
 
     <!-- Individual Weekly Stats -->
