@@ -1596,6 +1596,32 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   not specific to this one-off Parklands adjustment - out of scope here;
   a fixed override was the fastest way to guarantee this one row is
   right regardless.
+- **2026-09-22 — Rewrote the Sunday Pool Play "Sitting Out" rule to two
+  separate queues, replacing the single-queue/skip mechanism.** The
+  committee changed how it works on the ground: instead of one shared
+  9am sign-in queue with a "skip whichever pool already has its 2" rule
+  during 10-11am (the original 2026-09-16 design), each pool now gets
+  its own sign-up table on the board, filled in arrival order
+  independently - no cross-pool skipping logic needed at all, each
+  pool's rotation just runs off its own queue. Rewrote
+  `club_rules_service.py`'s `DEFAULT_SECTIONS["pool_play"]` "Sitting
+  Out" copy accordingly, covering the two turnout cases specified: an
+  **even split** (e.g. 20 signed up, 10 per pool) sits out 2 from each
+  pool every round - same outcome as before, simpler mechanism; an
+  **uneven split** (e.g. 19, 10/9) alternates which pool contributes
+  the 2 sitting out each round instead of always drawing 2 from both.
+  Dropped the old single-queue "skip" worked example (now obsolete) and
+  widened the comparison table to show both cases side by side.
+  *Sandbox limitation, same as the 2026-09-16 Club Rankings disclaimer
+  precedent:* this only updates the git-tracked `DEFAULT_SECTIONS`
+  fallback - this session has no production R2 access, so it can't
+  touch the live `data/club_rules_content.json` the admin has
+  previously hand-edited; per the admin's own instruction this round,
+  they'll apply the equivalent edit on the production copy themselves
+  from their own PC session (which is also where they said they'd
+  separately pursue the broader "freeze historic Overall Stats instead
+  of live-recomputing" idea floated in the entry above, once they have
+  full prod data access).
 
 ---
 
