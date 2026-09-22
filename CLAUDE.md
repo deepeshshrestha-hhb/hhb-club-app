@@ -106,6 +106,8 @@ services/               # Business logic + data parsing (the heart of the app)
   championship_service.py
   league_service.py     # Also: get_league_roster/resolve_attendee_names + write_weekly_scores()
                         #   (writes Weekly Score Upload matches into the live season's .xlsm)
+  league_analytics_service.py # All-time cross-season League analytics (/tournaments/league/analytics):
+                        #   leaderboards, pairs, records, rivalries, milestones; mtime-keyed cache
   weekly_score_service.py # Weekly Score Upload session (data/WeeklyScoreSession.json): open/close/
                         #   add/amend/delete/submit-to-database, duplicate-row detection
   player_service.py     # Reads hhb_members.csv, merges stats + signup hours, ranks players
@@ -1622,6 +1624,30 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   separately pursue the broader "freeze historic Overall Stats instead
   of live-recomputing" idea floated in the entry above, once they have
   full prod data access).
+
+- **2026-09-22 — Added All-Time League Analytics** (`/tournaments/league/
+  analytics`, `league_analytics_service.py`, `templates/league_analytics.html`,
+  linked from a banner card on `/tournaments/league`). Combines every season's
+  counted matches (2022/23/24/26; Rule 6 struck-off repeats excluded, same as
+  standings) into: headline totals, season-by-season table, Top 5 players by
+  matches/wins/win % (min 50), Top 5 pairs by matches/wins/win % (min 10),
+  unbeaten and winless pairs (min 3 matches, "Active" if both play this
+  season), records (biggest margins, longest player/pair win streaks across
+  seasons, most wins in one Sunday, common scorelines), rivalries with
+  head-to-head, most different partners, ever-present players, and
+  milestones - league total to next 100, season total to next 50, and
+  players active this season within 15 matches / 10 wins of their next 50
+  (ETA from their own per-Sunday pace), plus milestones already crossed
+  this season. Pure computation over `get_league()`, cached in-process keyed
+  on each league file's mtime so a Weekly Score submit or R2 refresh
+  invalidates it automatically. Two data decisions: 2026's plain "Rahul" is
+  merged into "Rahul J" (`NAME_MERGE` - Rahul Jagdale is the only Rahul in
+  the club; don't add merges unless confirmed the same person), and a
+  level-score match (2024's 0-0 Thomas/Waqas v Faiyaz/Vasu, a walkover) uses
+  the sheet's own Winner columns. *Note:* `get_league()`'s own standings
+  still decide that 0-0 by margin (`margin > 0 else team 2`), crediting
+  Faiyaz/Vasu instead of the sheet's recorded winners - left untouched here
+  since it changes completed 2024 standings; flagged to the admin.
 
 ---
 
