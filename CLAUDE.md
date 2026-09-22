@@ -1631,8 +1631,8 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   counted matches (2022/23/24/26; Rule 6 struck-off repeats excluded, same as
   standings) into: headline totals, season-by-season table, Top 5 players by
   matches/wins/win % (min 50), Top 5 pairs by matches/wins/win % (min 10),
-  unbeaten and winless pairs (min 3 matches, "Active" if both play this
-  season), records (biggest margins, longest player/pair win streaks across
+  unbeaten pairs (min 5 matches, or 3 if "Active" - both playing this
+  season - per admin request) and winless pairs (min 3 matches), records (biggest margins, longest player/pair win streaks across
   seasons, most wins in one Sunday, common scorelines), rivalries with
   head-to-head, most different partners, ever-present players, and
   milestones - league total to next 100, season total to next 50, and
