@@ -1644,10 +1644,19 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   merged into "Rahul J" (`NAME_MERGE` - Rahul Jagdale is the only Rahul in
   the club; don't add merges unless confirmed the same person), and a
   level-score match (2024's 0-0 Thomas/Waqas v Faiyaz/Vasu, a walkover) uses
-  the sheet's own Winner columns. *Note:* `get_league()`'s own standings
-  still decide that 0-0 by margin (`margin > 0 else team 2`), crediting
-  Faiyaz/Vasu instead of the sheet's recorded winners - left untouched here
-  since it changes completed 2024 standings; flagged to the admin.
+  the sheet's own Winner columns (see the fix just below).
+- **2026-09-22 — Fixed a level-score match being credited to the wrong
+  pair in League standings.** 2024 match #187 (9 Jun, Thomas & Waqas v
+  Faiyaz & Vasu) is recorded 0-0 with the sheet's Winner columns giving it
+  to Thomas & Waqas, but `get_league()` decided winners purely by margin
+  (`margin > 0 else team 2`), so a 0-0 silently went to Team 2. New
+  `league_service._team1_won()` uses the score when it differs and the
+  sheet's Winner columns only on a level score; used for standings, the
+  Rule 6 repeat-win check and `get_weekly_stats()`. Admin-approved change to
+  completed 2024 standings: Thomas 31->32 wins, Waqas 27->28 (moves 6th ->
+  5th above Farooq), Vasu 20->19, Faiyaz 6->5 (drops below Deepesh); top 3
+  and champion unchanged. No other season has a level score. Admin is
+  checking WhatsApp to confirm the real result of that match.
 
 ---
 

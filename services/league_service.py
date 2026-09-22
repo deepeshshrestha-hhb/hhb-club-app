@@ -43,6 +43,16 @@ def list_league_years():
     return sorted(years, reverse=True)
 
 
+def _team1_won(m):
+    """Whether Team 1 (p1/p2) won a parsed match. Decided by score, except a
+    level score (e.g. 2024's 0-0 walkover, match 187 on 9 Jun) where the
+    margin says nothing - there the sheet's own Winner columns are the
+    record of who was given the match."""
+    if m["score1"] != m["score2"]:
+        return m["score1"] > m["score2"]
+    return m["winner"] == f"{m['p1']} & {m['p2']}"
+
+
 def get_league(year):
     path = TOURNAMENTS_DIR / f"HHB Annual Players League - {year}.xlsm"
     if not path.exists():
@@ -153,8 +163,7 @@ def get_league(year):
     # flags the later occurrence(s) as struck off.
     seen_winning_pairs = set()
     for m in matches:
-        margin = m["score1"] - m["score2"]
-        winning_pair = frozenset({m["p1"], m["p2"]}) if margin > 0 else frozenset({m["p3"], m["p4"]})
+        winning_pair = frozenset({m["p1"], m["p2"]}) if _team1_won(m) else frozenset({m["p3"], m["p4"]})
         key = (m["date_raw"], winning_pair)
         m["is_struck_off"] = key in seen_winning_pairs
         seen_winning_pairs.add(key)
@@ -194,7 +203,7 @@ def get_league(year):
         point_diff[m["p2"]] += margin
         point_diff[m["p3"]] -= margin
         point_diff[m["p4"]] -= margin
-        winner1, winner2 = (m["p1"], m["p2"]) if margin > 0 else (m["p3"], m["p4"])
+        winner1, winner2 = (m["p1"], m["p2"]) if _team1_won(m) else (m["p3"], m["p4"])
         won[winner1] += 1
         won[winner2] += 1
 
@@ -611,8 +620,7 @@ def get_weekly_stats(year):
     players = set()
     for m in matches:
         key = m["date_raw"].isoformat()
-        margin = m["score1"] - m["score2"]
-        winners = {m["p1"], m["p2"]} if margin > 0 else {m["p3"], m["p4"]}
+        winners = {m["p1"], m["p2"]} if _team1_won(m) else {m["p3"], m["p4"]}
         for p in (m["p1"], m["p2"], m["p3"], m["p4"]):
             players.add(p)
             stats[p][key]["played"] += 1
