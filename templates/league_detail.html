@@ -193,7 +193,7 @@
                                 <td class="text-center fw-semibold">{{ m.score1 }}</td>
                                 <td class="{{ 'fw-bold' if m.winner == (m.p3 ~ ' & ' ~ m.p4) }}" style="white-space:nowrap">{{ m.p3 }}/{{ m.p4 }}</td>
                                 <td class="text-center fw-semibold">{{ m.score2 }}</td>
-                                <td class="text-muted small text-center">{{ m.diff }}{% if m.is_deuce %} <span class="badge bg-warning text-dark" style="font-size:0.65rem">D</span>{% endif %}{% if m.is_struck_off %} <span class="badge bg-secondary" style="font-size:0.65rem">Struck off</span>{% endif %}</td>
+                                <td class="text-muted small text-center">{{ m.diff }}{% if m.is_deuce %} <span class="badge bg-warning text-dark" style="font-size:0.65rem">D</span>{% endif %}{% if m.is_struck_off %} <span class="badge bg-secondary" style="font-size:0.65rem">Struck off</span>{% endif %}{% if m.is_awarded %} <span class="badge bg-info text-dark" style="font-size:0.65rem" title="Match awarded without a score - counts as a win, no point-difference benefit">Awarded</span>{% endif %}</td>
                                 {% if league.analytics.has_court_data %}<td class="text-muted small text-center">{{ m.court_no }}</td>{% endif %}
                             </tr>
                             {% endfor %}

@@ -69,7 +69,7 @@ def _collect_matches(leagues):
             if m["score1"] != m["score2"]:
                 team1_won = m["score1"] > m["score2"]
             else:
-                # Level score (e.g. a 0-0 walkover) - trust the sheet's own
+                # Genuinely level score - trust the sheet's own
                 # Winner columns rather than guessing from the margin.
                 if m["winner"] == f"{m['p1']} & {m['p2']}":
                     team1_won = True
@@ -89,6 +89,7 @@ def _collect_matches(leagues):
                 "lose_score": min(m["score1"], m["score2"]),
                 "diff": abs(m["score1"] - m["score2"]),
                 "court_no": m.get("court_no"),
+                "is_awarded": m.get("is_awarded", False),
             })
         # Sheet row order is submission order within a Sunday; sort by date
         # first so streaks follow real chronology even if rows were pasted
@@ -162,8 +163,9 @@ def _compute(years):
 
     for m in matches:
         by_date[m["date_raw"]] += 1
-        score_counter[(m["win_score"], m["lose_score"])] += 1
-        points_scored += m["win_score"] + m["lose_score"]
+        if not m["is_awarded"]:  # awarded 1-0 isn't a real scoreline
+            score_counter[(m["win_score"], m["lose_score"])] += 1
+            points_scored += m["win_score"] + m["lose_score"]
         wp = tuple(sorted(m["win"]))
         lp = tuple(sorted(m["lose"]))
         pair_played[wp] += 1
