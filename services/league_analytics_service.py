@@ -26,7 +26,8 @@ NAME_MERGE = {
 TOP_N = 5
 MIN_PLAYER_MATCHES_FOR_PCT = 50   # Best Win % needs a meaningful sample
 MIN_PAIR_MATCHES_FOR_PCT = 10
-MIN_PAIR_MATCHES_FOR_STREAK_LISTS = 3  # unbeaten / winless pairs
+MIN_PAIR_MATCHES_FOR_STREAK_LISTS = 3  # winless pairs; unbeaten pairs if both still active
+MIN_UNBEATEN_PAIR_MATCHES = 5  # unbeaten pairs not both playing this season
 MATCH_MILESTONE_STEP = 50
 WIN_MILESTONE_STEP = 50
 MATCH_MILESTONE_WINDOW = 15   # "about to reach" = within this many matches
@@ -220,8 +221,15 @@ def _compute(years):
     top_pairs_pct = [pair_row(x) for x in sorted(
         pair_pct_pool, key=lambda x: (-pair_wins[x] / pair_played[x], -pair_played[x], x))[:TOP_N]]
 
+    # Unbeaten: 5+ matches, or 3+ if both players are still active this
+    # season (a live unbeaten run worth watching even while it's short).
+    def _unbeaten_qualifies(x):
+        needed = (MIN_PAIR_MATCHES_FOR_STREAK_LISTS
+                  if all(p in current_played for p in x) else MIN_UNBEATEN_PAIR_MATCHES)
+        return pair_played[x] >= needed
+
     unbeaten = sorted(
-        (x for x in pairs if pair_wins[x] == pair_played[x] and pair_played[x] >= MIN_PAIR_MATCHES_FOR_STREAK_LISTS),
+        (x for x in pairs if pair_wins[x] == pair_played[x] and _unbeaten_qualifies(x)),
         key=lambda x: (-pair_played[x], x))
     winless = sorted(
         (x for x in pairs if pair_wins[x] == 0 and pair_played[x] >= MIN_PAIR_MATCHES_FOR_STREAK_LISTS),
@@ -372,5 +380,6 @@ def _compute(years):
             "min_player_pct": MIN_PLAYER_MATCHES_FOR_PCT,
             "min_pair_pct": MIN_PAIR_MATCHES_FOR_PCT,
             "min_pair_lists": MIN_PAIR_MATCHES_FOR_STREAK_LISTS,
+            "min_unbeaten": MIN_UNBEATEN_PAIR_MATCHES,
         },
     }

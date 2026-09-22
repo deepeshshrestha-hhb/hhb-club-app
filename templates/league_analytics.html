@@ -230,8 +230,8 @@
         <div class="card hhb-card h-100">
             <div class="card-body">
                 <h6 class="fw-bold mb-1">💪 Unbeaten Pairs</h6>
-                <p class="small text-muted mb-2">Never lost a league match together (min {{ a.constants.min_pair_lists }} matches).
-                    <span class="badge bg-success">Active</span> = both playing in {{ a.current_year }}.</p>
+                <p class="small text-muted mb-2">Never lost a league match together &mdash; min {{ a.constants.min_unbeaten }} matches, or {{ a.constants.min_pair_lists }}
+                    if <span class="badge bg-success">Active</span> (both playing in {{ a.current_year }}).</p>
                 {% if a.unbeaten_pairs %}
                 <ul class="list-group list-group-flush small">
                     {% for p in a.unbeaten_pairs %}
@@ -241,7 +241,7 @@
                     </li>
                     {% endfor %}
                 </ul>
-                {% else %}<p class="small text-muted mb-0">No pair has stayed unbeaten over {{ a.constants.min_pair_lists }}+ matches.</p>{% endif %}
+                {% else %}<p class="small text-muted mb-0">No pair currently qualifies.</p>{% endif %}
             </div>
         </div>
     </div>
