@@ -8,6 +8,7 @@ from services.tournament_service import (
 )
 from services.championship_service import list_championship_years, get_championship
 from services.league_service import list_league_years, get_league, get_overall_stats, get_weekly_stats
+from services.league_analytics_service import get_all_time_analytics
 from services.podium_service import get_podium_photos, get_podium_photo_pipe
 from services.photos_service import has_event_photos
 
@@ -137,6 +138,14 @@ def league_index():
         })
     return render_template("league_index.html", leagues=leagues,
                            podium_photos=get_podium_photos(), photo_urls=get_podium_photo_pipe)
+
+
+@tournament_bp.route("/tournaments/league/analytics")
+def league_all_time_analytics():
+    data = get_all_time_analytics()
+    if not data:
+        return "League not found", 404
+    return render_template("league_analytics.html", a=data)
 
 
 # Maps a URL tab slug (case-insensitive) to the tab-pane element id it should

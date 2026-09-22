@@ -1,0 +1,378 @@
+{% extends "base.html" %}
+{% block content %}
+{% set t = a.totals %}
+
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+    <div>
+        <h1 class="page-title mb-1">All-Time League Analytics</h1>
+        <p class="text-muted mb-0">Every Annual Players League match across
+            {{ a.years[:-1] | join(', ') }}{% if a.years | length > 1 %} and {% endif %}{{ a.years[-1] }}{% if a.current_in_progress %} (in progress){% endif %}.</p>
+    </div>
+    <a href="{{ url_for('tournaments.league_index') }}" class="btn btn-sm btn-outline-secondary">&larr; All Seasons</a>
+</div>
+
+{# ---------- Headline tiles ---------- #}
+<div class="row g-3 mb-3">
+    {% for value, label, sub in [
+        (t.matches, 'Total Matches', t.avg_per_sunday ~ ' per Sunday'),
+        (t.sundays, 'Sundays Played', t.seasons ~ ' seasons'),
+        (t.players, 'Players', t.pairs ~ ' different pairs'),
+        ('{:,}'.format(t.points), 'Points Scored', 'avg winning margin ' ~ t.avg_margin),
+    ] %}
+    <div class="col-6 col-md-3">
+        <div class="card hhb-card text-center p-3 h-100">
+            <div class="h3 fw-bold mb-0" style="color:var(--hhb-primary)">{{ value }}</div>
+            <div class="small fw-semibold">{{ label }}</div>
+            <div class="small text-muted">{{ sub }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<div class="row g-3 mb-4">
+    {% set bw = a.biggest_wins[0] if a.biggest_wins else None %}
+    {% for value, label, sub in [
+        (bw.score if bw else '–', 'Biggest Win', (bw.win ~ ' · ' ~ bw.date) if bw else ''),
+        (t.deuce, 'Deuce Thrillers (21–20)', t.deuce_pct ~ '% of all matches'),
+        (t.one_point, '1-Point Wins', 'margin of a single point'),
+        (a.busiest_sunday.matches if a.busiest_sunday else '–', 'Busiest Sunday', a.busiest_sunday.date if a.busiest_sunday else ''),
+    ] %}
+    <div class="col-6 col-md-3">
+        <div class="card hhb-card text-center p-3 h-100">
+            <div class="h3 fw-bold mb-0" style="color:var(--hhb-accent)">{{ value }}</div>
+            <div class="small fw-semibold">{{ label }}</div>
+            <div class="small text-muted">{{ sub }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{# ---------- Milestones ---------- #}
+<h4 class="mb-3">🎯 Milestones</h4>
+<div class="row g-3 mb-4">
+    <div class="col-lg-4">
+        <div class="card hhb-card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">League totals</h6>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>All-time matches</span>
+                        <span class="fw-semibold">{{ t.matches }} / {{ a.club_milestone.target }}</span>
+                    </div>
+                    <div class="progress" style="height:10px;" role="progressbar"
+                         aria-valuenow="{{ 100 - a.club_milestone.to_go }}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar" style="width:{{ 100 - a.club_milestone.to_go }}%; background:var(--hhb-primary);"></div>
+                    </div>
+                    <div class="small text-muted mt-1">
+                        <strong>{{ a.club_milestone.to_go }}</strong> more to reach {{ a.club_milestone.target }}
+                        {%- if a.club_milestone.sundays_away %} &mdash; about {{ a.club_milestone.sundays_away }} Sunday{{ 's' if a.club_milestone.sundays_away != 1 }} at the current pace{% endif %}.
+                    </div>
+                </div>
+                {% if a.season_milestone %}
+                {% set sm = a.season_milestone %}
+                <div>
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>{{ sm.year }} season matches</span>
+                        <span class="fw-semibold">{{ sm.target - sm.to_go }} / {{ sm.target }}</span>
+                    </div>
+                    <div class="progress" style="height:10px;" role="progressbar"
+                         aria-valuenow="{{ ((sm.target - sm.to_go) / sm.target * 100) | round }}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar" style="width:{{ ((sm.target - sm.to_go) / sm.target * 100) | round }}%; background:var(--hhb-accent);"></div>
+                    </div>
+                    <div class="small text-muted mt-1"><strong>{{ sm.to_go }}</strong> more to reach {{ sm.target }} this season.</div>
+                </div>
+                {% endif %}
+                {% if a.reached_milestones %}
+                <h6 class="fw-bold mt-4 mb-2">🎉 Reached in {{ a.current_year }}</h6>
+                <ul class="list-unstyled small mb-0">
+                    {% for r in a.reached_milestones %}
+                    <li class="mb-1"><strong>{{ r.player }}</strong> &mdash; {{ r.target }} {{ r.kind }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card hhb-card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-1">Coming up</h6>
+                <p class="small text-muted mb-3">Players active in {{ a.current_year }} who are close to their next 50 matches or 50 wins.
+                    &ldquo;Sundays away&rdquo; is based on each player's own pace this season.</p>
+                {% if a.upcoming_milestones %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr><th>Player</th><th>Milestone</th><th class="text-end">Now</th><th class="text-end">To go</th><th class="text-end">ETA</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for u in a.upcoming_milestones %}
+                            <tr>
+                                <td class="fw-semibold">{{ u.player }}</td>
+                                <td>{{ u.target }} {{ u.kind }}</td>
+                                <td class="text-end">{{ u.current }}</td>
+                                <td class="text-end"><span class="badge {{ 'bg-success' if u.to_go <= 5 else 'bg-secondary' }}">{{ u.to_go }}</span></td>
+                                <td class="text-end small text-muted text-nowrap">
+                                    {% if u.sundays_away %}~{{ u.sundays_away }} Sunday{{ 's' if u.sundays_away != 1 }}{% else %}&ndash;{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted small mb-0">No player milestones in sight right now.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ---------- Season by season ---------- #}
+<h4 class="mb-3">📅 Season by Season</h4>
+<div class="card hhb-card mb-4">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle mb-0">
+                <thead class="table-dark">
+                    <tr><th>Season</th><th class="text-end">Sundays</th><th class="text-end">Matches</th><th class="text-end">Per Sunday</th>
+                        <th class="text-end">Players</th><th class="text-end">Avg margin</th><th>Champion</th></tr>
+                </thead>
+                <tbody>
+                    {% for s in a.seasons %}
+                    <tr>
+                        <td><a href="{{ url_for('tournaments.league_detail', year=s.year) }}" class="fw-semibold">{{ s.year }}</a></td>
+                        <td class="text-end">{{ s.sundays }}</td>
+                        <td class="text-end">{{ s.matches }}</td>
+                        <td class="text-end">{{ s.per_sunday }}</td>
+                        <td class="text-end">{{ s.players }}</td>
+                        <td class="text-end">{{ s.avg_margin }}</td>
+                        <td class="text-nowrap">
+                            {% if s.champion %}🏆 {{ s.champion }}
+                            {% elif s.status == 'in_progress' and s.leader %}<span class="badge bg-warning text-dark">In progress</span> <span class="small text-muted">leader: {{ s.leader }}</span>
+                            {% else %}&ndash;{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{# ---------- Player leaderboards ---------- #}
+{% macro player_table(title, rows, highlight, note='') %}
+<div class="col-md-6 col-lg-4">
+    <div class="card hhb-card h-100">
+        <div class="card-body">
+            <h6 class="fw-bold mb-2">{{ title }}</h6>
+            <table class="table table-sm align-middle mb-0">
+                <thead class="table-light"><tr><th>#</th><th>Player</th><th class="text-end">P</th><th class="text-end">W</th><th class="text-end">Win %</th></tr></thead>
+                <tbody>
+                    {% for r in rows %}
+                    <tr>
+                        <td>{% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}</td>
+                        <td>{{ r.player }}</td>
+                        <td class="text-end {{ 'fw-bold' if highlight == 'played' }}">{{ r.played }}</td>
+                        <td class="text-end {{ 'fw-bold' if highlight == 'wins' }}">{{ r.wins }}</td>
+                        <td class="text-end {{ 'fw-bold' if highlight == 'pct' }}">{{ r.win_pct }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% if note %}<p class="small text-muted mt-2 mb-0">{{ note }}</p>{% endif %}
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro pair_table(title, rows, highlight, note='') %}
+<div class="col-md-6 col-lg-4">
+    <div class="card hhb-card h-100">
+        <div class="card-body">
+            <h6 class="fw-bold mb-2">{{ title }}</h6>
+            <table class="table table-sm align-middle mb-0">
+                <thead class="table-light"><tr><th>#</th><th>Pair</th><th class="text-end">P</th><th class="text-end">W</th><th class="text-end">%</th></tr></thead>
+                <tbody>
+                    {% for r in rows %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ r.pair }}</td>
+                        <td class="text-end {{ 'fw-bold' if highlight == 'played' }}">{{ r.played }}</td>
+                        <td class="text-end {{ 'fw-bold' if highlight == 'wins' }}">{{ r.wins }}</td>
+                        <td class="text-end {{ 'fw-bold' if highlight == 'pct' }}">{{ r.win_pct }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% if note %}<p class="small text-muted mt-2 mb-0">{{ note }}</p>{% endif %}
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+<h4 class="mb-3">🏸 Players &mdash; Top {{ a.top_played | length }}</h4>
+<div class="row g-3 mb-4">
+    {{ player_table('Most Matches Played', a.top_played, 'played') }}
+    {{ player_table('Most Wins', a.top_wins, 'wins') }}
+    {{ player_table('Best Win %', a.top_win_pct, 'pct', 'Minimum ' ~ a.constants.min_player_pct ~ ' matches.') }}
+</div>
+
+<h4 class="mb-3">🤝 Pairs &mdash; Top {{ a.top_pairs_played | length }}</h4>
+<div class="row g-3 mb-4">
+    {{ pair_table('Most Matches Together', a.top_pairs_played, 'played') }}
+    {{ pair_table('Most Wins Together', a.top_pairs_wins, 'wins') }}
+    {{ pair_table('Best Pair Win %', a.top_pairs_pct, 'pct', 'Minimum ' ~ a.constants.min_pair_pct ~ ' matches together.') }}
+</div>
+
+{# ---------- Unbeaten / winless ---------- #}
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card hhb-card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-1">💪 Unbeaten Pairs</h6>
+                <p class="small text-muted mb-2">Never lost a league match together (min {{ a.constants.min_pair_lists }} matches).
+                    <span class="badge bg-success">Active</span> = both playing in {{ a.current_year }}.</p>
+                {% if a.unbeaten_pairs %}
+                <ul class="list-group list-group-flush small">
+                    {% for p in a.unbeaten_pairs %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>{{ p.pair }} {% if p.active %}<span class="badge bg-success ms-1">Active</span>{% endif %}</span>
+                        <span class="fw-semibold text-success">{{ p.wins }}–0</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}<p class="small text-muted mb-0">No pair has stayed unbeaten over {{ a.constants.min_pair_lists }}+ matches.</p>{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card hhb-card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-1">🙈 Still Looking for a First Win</h6>
+                <p class="small text-muted mb-2">Pairs with only losses together (min {{ a.constants.min_pair_lists }} matches) &mdash; all in good fun!</p>
+                {% if a.winless_pairs %}
+                <div style="max-height:22rem; overflow-y:auto;">
+                <ul class="list-group list-group-flush small">
+                    {% for p in a.winless_pairs %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>{{ p.pair }} {% if p.active %}<span class="badge bg-success ms-1">Active</span>{% endif %}</span>
+                        <span class="fw-semibold text-danger">0–{{ p.losses }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                </div>
+                {% else %}<p class="small text-muted mb-0">Every regular pair has at least one win.</p>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ---------- Records ---------- #}
+<h4 class="mb-3">📜 Records</h4>
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card hhb-card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-2">Biggest Winning Margins</h6>
+                <ul class="list-unstyled small mb-0">
+                    {% for b in a.biggest_wins %}
+                    <li class="mb-2">
+                        <span class="badge bg-dark me-1">{{ b.score }}</span>
+                        <strong>{{ b.win }}</strong> beat {{ b.lose }}
+                        <div class="text-muted">{{ b.date }}</div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card hhb-card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-2">Longest Winning Streaks</h6>
+                <p class="small text-muted mb-2">Consecutive league matches won, carried across Sundays and seasons.</p>
+                <div class="small fw-semibold text-uppercase text-muted mb-1">Players</div>
+                <ul class="list-unstyled small mb-3">
+                    {% for s in a.longest_player_streaks %}
+                    <li class="mb-1"><span class="badge bg-success me-1">{{ s.length }}</span><strong>{{ s.name }}</strong>
+                        <span class="text-muted">{{ s.from }} &rarr; {{ s.to }}</span></li>
+                    {% endfor %}
+                </ul>
+                <div class="small fw-semibold text-uppercase text-muted mb-1">Pairs</div>
+                <ul class="list-unstyled small mb-0">
+                    {% for s in a.longest_pair_streaks %}
+                    <li class="mb-1"><span class="badge bg-success me-1">{{ s.length }}</span><strong>{{ s.name }}</strong>
+                        <span class="text-muted">{{ s.from }} &rarr; {{ s.to }}</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card hhb-card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-2">Most Wins on a Single Sunday</h6>
+                <ul class="list-unstyled small mb-3">
+                    {% for d in a.most_wins_one_sunday %}
+                    <li class="mb-1"><span class="badge bg-primary me-1">{{ d.wins }}</span><strong>{{ d.player }}</strong>
+                        <span class="text-muted">{{ d.date }}</span></li>
+                    {% endfor %}
+                </ul>
+                <h6 class="fw-bold mb-2">Most Common Scorelines</h6>
+                <ul class="list-unstyled small mb-0">
+                    {% for s in a.common_scores %}
+                    <li class="mb-1"><span class="badge bg-secondary me-1">{{ s.score }}</span>{{ s.count }} matches</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ---------- Rivalries & social ---------- #}
+<h4 class="mb-3">⚔️ Rivalries &amp; Partnerships</h4>
+<div class="row g-3 mb-4">
+    <div class="col-lg-6">
+        <div class="card hhb-card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-1">Biggest Rivalries</h6>
+                <p class="small text-muted mb-2">Players who've faced each other most (on opposite sides of the net), with head-to-head wins.</p>
+                <table class="table table-sm align-middle mb-0">
+                    <tbody>
+                        {% for r in a.rivalries %}
+                        <tr>
+                            <td class="text-end {{ 'fw-bold' if r.a_wins > r.b_wins }}">{{ r.a }} <span class="badge bg-light text-dark border">{{ r.a_wins }}</span></td>
+                            <td class="text-center text-muted small">v</td>
+                            <td class="{{ 'fw-bold' if r.b_wins > r.a_wins }}"><span class="badge bg-light text-dark border">{{ r.b_wins }}</span> {{ r.b }}</td>
+                            <td class="text-end small text-muted text-nowrap">{{ r.meetings }} meetings</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card hhb-card h-100">
+            <div class="card-body">
+                <h6 class="fw-bold mb-1">Most Different Partners</h6>
+                <p class="small text-muted mb-2">The club's great mixers &mdash; number of different people partnered in the league.</p>
+                <ul class="list-unstyled small mb-3">
+                    {% for p in a.most_partners %}
+                    <li class="mb-1"><span class="badge bg-info text-dark me-1">{{ p.partners }}</span><strong>{{ p.player }}</strong></li>
+                    {% endfor %}
+                </ul>
+                {% if a.ever_present %}
+                <h6 class="fw-bold mb-1">Ever-Present ({{ a.ever_present | length }})</h6>
+                <p class="small text-muted mb-1">Played in all {{ t.seasons }} league seasons:</p>
+                <p class="small mb-0">{{ a.ever_present | join(', ') }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="text-muted small">Counts every completed league match; repeat wins struck off under League Rule 6 are excluded,
+    same as the season standings. Updates automatically as new Sunday scores are submitted.</p>
+
+{% endblock %}
