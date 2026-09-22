@@ -1655,8 +1655,21 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   Rule 6 repeat-win check and `get_weekly_stats()`. Admin-approved change to
   completed 2024 standings: Thomas 31->32 wins, Waqas 27->28 (moves 6th ->
   5th above Farooq), Vasu 20->19, Faiyaz 6->5 (drops below Deepesh); top 3
-  and champion unchanged. No other season has a level score. Admin is
-  checking WhatsApp to confirm the real result of that match.
+  and champion unchanged. No other season has a level score.
+- **2026-09-22 — "Awarded" league matches (fractional-score convention).**
+  Admin confirmed 2024 #187 was stopped for Faiyaz's injury and awarded to
+  Thomas & Waqas with no score. The sheet had in fact always recorded it as
+  **0.0001 v 0** (so Excel's Winner formulas pick the awarded pair with ~0
+  Difference) - the website's `int()` truncation was what turned it into a
+  0-0. `get_league()` now detects that convention (`is_awarded`: scores equal
+  as ints but not as floats), shows it as **1-0** to the awarded pair with an
+  "Awarded" badge on the Matches tab, and gives it **0** point difference
+  (standings NPD, `diff`) per the rules - a real 1-0 would have given +1.
+  Also excluded from scoreline/points-scored stats. *Deliberately no
+  workbook edit:* an openpyxl save would wipe the cached results of ~8,000
+  formulas in the 2024 file (incl. every row's Winner columns, which
+  `get_league()` reads). To award a future match the same way, enter a tiny
+  fraction (e.g. 0.0001) for the awarded pair and 0 for the other.
 
 ---
 

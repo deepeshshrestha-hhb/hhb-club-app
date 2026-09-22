@@ -45,9 +45,10 @@ def list_league_years():
 
 def _team1_won(m):
     """Whether Team 1 (p1/p2) won a parsed match. Decided by score, except a
-    level score (e.g. 2024's 0-0 walkover, match 187 on 9 Jun) where the
-    margin says nothing - there the sheet's own Winner columns are the
-    record of who was given the match."""
+    genuinely level score, where the margin says nothing - there the sheet's
+    own Winner columns are the record of who was given the match. (An
+    awarded match marked with a fractional score, like 2024 #187, is already
+    turned into a 1-0 by get_league() - see is_awarded.)"""
     if m["score1"] != m["score2"]:
         return m["score1"] > m["score2"]
     return m["winner"] == f"{m['p1']} & {m['p2']}"
@@ -130,6 +131,17 @@ def get_league(year):
         else:
             court_no = _clean(court_no_raw)
 
+        # Awarded match: the sheet marks a match awarded without a real score
+        # (e.g. 2024 #187, stopped for injury and given to Thomas & Waqas) by
+        # entering a tiny fraction like 0.0001 v 0 - Excel's own Winner
+        # formulas then pick the right pair while the Difference stays ~0.
+        # int() would read that back as a 0-0 tie, so detect it: show it as
+        # 1-0 to the awarded pair, but with no point-difference benefit.
+        is_awarded = int(s1) == int(s2) and float(s1) != float(s2)
+        score1, score2 = int(s1), int(s2)
+        if is_awarded:
+            score1, score2 = (1, 0) if float(s1) > float(s2) else (0, 1)
+
         matches.append({
             "no": no,
             "date": _fmt_date(date_val),
@@ -143,13 +155,14 @@ def get_league(year):
             "date_short": date_val.strftime("%d-%b").lstrip("0"),
             "date_raw": date_val,
             "p1": p1, "p2": p2,
-            "score1": int(s1),
+            "score1": score1,
             "p3": p3, "p4": p4,
-            "score2": int(s2),
+            "score2": score2,
             "winner": f"{w1} & {w2}" if w1 and w2 else w1 or w2,
             "court_no": court_no,
-            "diff": abs(int(diff)) if diff is not None else abs(int(s1) - int(s2)),
+            "diff": 0 if is_awarded else (abs(int(diff)) if diff is not None else abs(int(s1) - int(s2))),
             "is_deuce": is_deuce,
+            "is_awarded": is_awarded,
             "players": f"{p1}|{p2}|{p3}|{p4}",
         })
 
@@ -194,7 +207,9 @@ def get_league(year):
     won = Counter()
     point_diff = defaultdict(int)
     for m in counted_matches:
-        margin = m["score1"] - m["score2"]
+        # An awarded match (see is_awarded above) is a win with no
+        # point-difference benefit, per the league rules.
+        margin = 0 if m["is_awarded"] else m["score1"] - m["score2"]
         played[m["p1"]] += 1
         played[m["p2"]] += 1
         played[m["p3"]] += 1
@@ -290,6 +305,8 @@ def get_league(year):
     # Score frequency
     score_counter = Counter()
     for m in counted_matches:
+        if m["is_awarded"]:
+            continue
         hi, lo = max(m["score1"], m["score2"]), min(m["score1"], m["score2"])
         score_counter[(hi, lo)] += 1
     top_scores = [(f"{h}-{l}", c) for (h, l), c in score_counter.most_common(5)]
