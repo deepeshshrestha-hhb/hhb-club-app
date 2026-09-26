@@ -1670,6 +1670,37 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   formulas in the 2024 file (incl. every row's Winner columns, which
   `get_league()` reads). To award a future match the same way, enter a tiny
   fraction (e.g. 0.0001) for the awarded pair and 0 for the other.
+- **2026-09-26 — Sunday Pool Play's Pool A/B court assignment now alternates
+  weekly instead of Pool A always getting Courts 1-2.** The committee
+  decided Courts 1-2 have slightly better lighting, so both pools should
+  get equal time there. Starting **27-Sep-2026**, Pool A plays Courts 3-4
+  and Pool B plays Courts 1-2 for that Sunday, then it swaps back the
+  following week, and so on. New `sunday_pools_service.court_assignment
+  (target_date)` decides this from the ISO week number (odd -> swapped,
+  even -> the original default) rather than a generation counter, so it
+  can't drift if a Sunday is skipped (e.g. the Oct half-term break) or a
+  week's pools get regenerated - seeded so 27-Sep-2026 (week 39, odd) lands
+  on the swapped case. `generate_pools()` now freezes the computed
+  `pool_a_courts`/`pool_b_courts` into that date's stored record at
+  generation time rather than the template hardcoding "Courts 1 & 2" /
+  "Courts 3 & 4" - same reasoning as the Overall Stats fixed-totals
+  entries above: a past week's published court assignment shouldn't be
+  able to retroactively change if this alternation logic is ever
+  revisited. `sunday_pools.html` reads the stored per-week fields (falling
+  back to the original default for any already-generated week that
+  predates this field) instead of hardcoded badges; the intro paragraph no
+  longer claims a fixed Pool A = Courts 1&2 mapping. Verified:
+  `court_assignment()` gives the swapped pairing for 27-Sep-2026 and
+  alternates correctly across following weeks including the Oct break
+  weeks; `generate_pools('2026-09-27')` stores the swapped courts; the
+  rendered page shows the correct badges for that date. *Scope note:* this
+  only covers `/sunday-pools` as asked - the Club Rules page's Sunday Pool
+  Play section still states a fixed Pool A = Courts 1&2 mapping in its
+  live copy (`data/club_rules_content.json`, admin-edited, outside this
+  sandboxed session's reach - see the 2026-09-22 Pool Play rewrite entry
+  for the same caveat) and in `club_rules_service.py`'s `DEFAULT_SECTIONS`
+  fallback; neither was touched this round since the request was scoped to
+  the Sunday pools page specifically.
 
 ---
 
