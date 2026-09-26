@@ -11,8 +11,9 @@
         </div>
 
         <p class="text-muted small text-center mb-4">
-            Pool A plays Courts 1 &amp; 2, Pool B plays Courts 3 &amp; 4, for the 10&ndash;11am half of the
-            session &mdash; see the full
+            Pool A and Pool B split the 10&ndash;11am half of the session across all 4 courts &mdash;
+            which pool plays Courts 1 &amp; 2 vs. Courts 3 &amp; 4 alternates week to week (see below
+            for this week's split) &mdash; see the full
             <a href="{{ url_for('rules.club_rules') }}?open=pool_play">Sunday Pool Play rule</a> for how this works.
         </p>
 
@@ -65,7 +66,7 @@
                     <div class="card-body">
                         <h5 class="card-title d-flex justify-content-between align-items-center">
                             <span>🅰️ Pool A</span>
-                            <span class="badge bg-hhb-primary text-white">Courts 1 &amp; 2</span>
+                            <span class="badge bg-hhb-primary text-white">{{ pools.pool_a_courts or 'Courts 1 & 2' }}</span>
                         </h5>
                         <ol class="mb-0 ps-3">
                             {% for p in pools.pool_a %}
@@ -83,7 +84,7 @@
                     <div class="card-body">
                         <h5 class="card-title d-flex justify-content-between align-items-center">
                             <span>🅱️ Pool B</span>
-                            <span class="badge bg-secondary">Courts 3 &amp; 4</span>
+                            <span class="badge bg-secondary">{{ pools.pool_b_courts or 'Courts 3 & 4' }}</span>
                         </h5>
                         <ol class="mb-0 ps-3">
                             {% for p in pools.pool_b %}
