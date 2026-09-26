@@ -27,10 +27,21 @@ def sunday_pools_page():
         shown_date = requested if pools else None
     else:
         shown_date, pools = sunday_pools_service.get_latest_pools()
+
+    # Computed fresh from the date rather than read from the stored record -
+    # court_assignment() is a pure function of the date with no external data
+    # dependency (unlike Spond/signup-history attendance), so there's no
+    # staleness risk in recomputing it live. That also means a week whose
+    # pools were generated before this alternation feature shipped (and so
+    # has no pool_a_courts/pool_b_courts in its stored JSON) still displays
+    # the correct courts, with no need to regenerate that week's pools.
+    court_labels = sunday_pools_service.court_assignment(date.fromisoformat(shown_date)) if shown_date else None
+
     return render_template(
         "sunday_pools.html",
         shown_date=shown_date,
         pools=pools,
+        court_labels=court_labels,
         generated_dates=sunday_pools_service.list_generated_dates(),
         default_date=_default_date().isoformat(),
     )
