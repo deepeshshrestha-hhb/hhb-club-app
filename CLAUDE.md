@@ -1701,6 +1701,39 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   for the same caveat) and in `club_rules_service.py`'s `DEFAULT_SECTIONS`
   fallback; neither was touched this round since the request was scoped to
   the Sunday pools page specifically.
+- **2026-09-26 — Fixed Sunday Pools court badges not reflecting the new
+  alternation** (reported live: 27-Sep's page still showed the old fixed
+  "Pool A = Courts 1 & 2" mapping right after the alternating-courts PR
+  deployed). Root cause: that Sunday's pools had already been generated
+  under the old code *before* the fix shipped, so the stored `data/
+  sunday_pools.json` record for 2026-09-27 had no `pool_a_courts`/
+  `pool_b_courts` keys at all - the template's `pools.pool_a_courts or
+  'Courts 1 & 2'` fallback was landing on the old hardcoded default
+  exactly as designed, meaning any already-generated week needed a manual
+  regenerate to pick up the new fields, which hadn't happened for 27-Sep
+  yet. Fixed by decoupling display from the stored fields entirely:
+  unlike Spond/signup-history attendance (where freezing values at
+  generation time was the right call to guard against real cache drift -
+  see the Overall Stats fixed-totals entries above), `court_assignment()`
+  is a pure function of the date with no external data dependency, so
+  there's no staleness risk in computing it fresh on every page load
+  instead. `sunday_pools_page()` now computes `court_labels =
+  court_assignment(shown_date)` directly and passes it to the template,
+  which reads `court_labels.pool_a`/`pool_b` instead of
+  `pools.pool_a_courts`/`pool_b_courts`; `generate_pools()` still writes
+  those fields into the stored record as an informational audit trail,
+  but nothing reads them for display anymore, so no week - past, present
+  or future - can show a stale court assignment regardless of when it
+  was generated. Verified against a synthetic record with no court
+  fields at all (reproducing the exact live scenario): 27-Sep now
+  correctly renders "Courts 3 & 4" for Pool A / "Courts 1 & 2" for Pool
+  B with no regenerate needed. *Lesson vs. the Overall Stats entries
+  above:* "freeze at generation time to avoid drift" is the right call
+  only when the underlying value depends on volatile external data (a
+  live Spond/CSV fallback); for a value that's a pure function of
+  already-known data (here, just the date), computing it live is both
+  simpler and strictly safer, since it can't be caught out by shipping a
+  fix after some records already exist.
 
 ---
 
