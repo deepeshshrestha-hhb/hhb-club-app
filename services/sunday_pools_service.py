@@ -3,17 +3,22 @@ Sunday Pool Play: data/sunday_pools.json
 
 Per the committee's new 10-11am format, the second half of the Sunday
 session is split into two pools by the current Club Rankings
-(club_rankings_service): Pool A (top half, Courts 1-2) and Pool B (bottom
-half, Courts 3-4). An admin picks a date and generates that Sunday's pools
-from whoever's actually confirmed for the 10-11am session, publishing the
-result to /sunday-pools for everyone to check before turning up. The 9-10am
-half of the session is unaffected and continues as normal open play.
+(club_rankings_service): Pool A (top half by rank) and Pool B (bottom
+half). Which physical courts each pool plays on alternates week to week -
+see court_assignment() - rather than Pool A always getting Courts 1-2. An
+admin picks a date and generates that Sunday's pools from whoever's
+actually confirmed for the 10-11am session, publishing the result to
+/sunday-pools for everyone to check before turning up. The 9-10am half of
+the session is unaffected and continues as normal open play.
 
 Storage: {"pools": {"<YYYY-MM-DD>": {"pool_a": [...], "pool_b": [...],
-"unranked": [...], "generated_at": iso}}}, keyed by ISO date so a past
-week's pools stay available (re-generating the same date overwrites it).
-The public page shows the most recently generated date unless a specific
-one is requested.
+"unranked": [...], "pool_a_courts": "Courts 1 & 2", "pool_b_courts":
+"Courts 3 & 4", "generated_at": iso}}}, keyed by ISO date so a past week's
+pools stay available (re-generating the same date overwrites it). The
+court fields are frozen at generation time rather than recomputed on every
+read, so a past week's published courts can't retroactively change if the
+alternation logic here is ever revisited. The public page shows the most
+recently generated date unless a specific one is requested.
 """
 import csv
 import json
@@ -31,6 +36,22 @@ POOLS_PATH = Path(Config.DATA_DIR) / "sunday_pools.json"
 # (see the "Sunday Pool Play" Club Rules section for the full write-up) -
 # 9-10am continues as normal open play, unaffected.
 POOL_HOUR = 10
+
+# Which physical courts each pool plays on alternates week to week - Courts
+# 1-2 have slightly better lighting, so the committee wants both pools to
+# get equal time there rather than Pool A always getting them. Keyed off the
+# ISO week number (a pure function of the date, not a generation counter, so
+# it can't drift if a Sunday is skipped - e.g. the Oct half-term break - or
+# a week's pools get regenerated) - odd weeks swap Pool A onto Courts 3-4 and
+# Pool B onto Courts 1-2; even weeks are the original default (Pool A on
+# 1-2, Pool B on 3-4). Seeded so 27-Sep-2026 (ISO week 39, odd) - the first
+# Sunday the committee wants swapped - lands on the swapped case.
+def court_assignment(target_date) -> dict:
+    """{"pool_a": "Courts 3 & 4", "pool_b": "Courts 1 & 2"} (or the reverse)
+    for target_date's Pool Play hour."""
+    if target_date.isocalendar()[1] % 2 == 1:
+        return {"pool_a": "Courts 3 & 4", "pool_b": "Courts 1 & 2"}
+    return {"pool_a": "Courts 1 & 2", "pool_b": "Courts 3 & 4"}
 
 
 def _load() -> dict:
@@ -129,11 +150,14 @@ def generate_pools(date_str: str) -> dict:
     pool_a = ordered[:half]
     pool_b = ordered[half:]
 
+    courts = court_assignment(target_date)
     data = _load()
     data["pools"][date_str] = {
         "pool_a": pool_a,
         "pool_b": pool_b,
         "unranked": unranked_attendees,
+        "pool_a_courts": courts["pool_a"],
+        "pool_b_courts": courts["pool_b"],
         "generated_at": datetime.now().isoformat(),
     }
     _save(data)
