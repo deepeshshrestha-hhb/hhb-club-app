@@ -1734,6 +1734,29 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   already-known data (here, just the date), computing it live is both
   simpler and strictly safer, since it can't be caught out by shipping a
   fix after some records already exist.
+- **2026-09-26 — Updated Club Rules Pool Play text for alternating courts.**
+  Follow-up to the two entries above: the Club Rules "Pool Play" section
+  still described the old fixed Pool A = Courts 1&2 / Pool B = Courts 3&4
+  mapping, no longer accurate now that `/sunday-pools` alternates it
+  weekly. `club_rules_service.py`'s `DEFAULT_SECTIONS["pool_play"]` now
+  describes the alternation directly (one pool plays Courts 1&2, the
+  other 3&4, swapping every Sunday from 27-Sep-2026) and points to
+  `/sunday-pools` for that week's specific assignment instead of a fixed
+  bullet list. Also added an explicit line: Pool Play - and its court
+  alternation - runs every Sunday on its own schedule regardless of
+  whether the Annual Players League season is currently active, since
+  `sunday_pools_service.generate_pools()` has never depended on League
+  season state (it's driven by Club Rankings + that Sunday's Spond
+  10-11am sign-ups only) but the rule text never said so explicitly. The
+  Sitting Out comparison table's column headers ("Pool A (Courts 1-2)" /
+  "Pool B (Courts 3-4)") are now just "Pool A" / "Pool B" - that table is
+  about sit-out queue counts, not which courts a pool plays on, and the
+  old headers repeated the now-inaccurate fixed mapping. Verified
+  `/rules?open=pool_play` renders cleanly with the new copy, no leftover
+  fixed-mapping wording anywhere in the section. *Same sandbox
+  limitation as the other `DEFAULT_SECTIONS` entries above:* this only
+  updates the code fallback - the admin applies the equivalent edit to
+  the live `data/club_rules_content.json` from their own PC session.
 
 ---
 
