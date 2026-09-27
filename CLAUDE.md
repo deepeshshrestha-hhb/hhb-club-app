@@ -1757,6 +1757,20 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   limitation as the other `DEFAULT_SECTIONS` entries above:* this only
   updates the code fallback - the admin applies the equivalent edit to
   the live `data/club_rules_content.json` from their own PC session.
+- **2026-09-27 — Added a repeatable weekly League WhatsApp round-up.** After
+  each Sunday's Weekly Score Upload submit, the admin invokes the
+  `league-weekly-update` project skill (`.claude/skills/league-weekly-update/
+  SKILL.md`), which runs `scripts/league_weekly_update.py [YYYY-MM-DD]`. That
+  read-only script downloads the League workbooks from production R2 into a
+  temp dir (never uploads) and prints a JSON fact sheet: standings with
+  previous-week rank, the day's per-player records and perfect days, debuts,
+  milestones reached (with a "first ever" count) and upcoming, and any
+  changes to the all-time record tables. The "before" picture reuses
+  `league_analytics_service._compute()` with the season's matches cut off
+  before that Sunday, so it needs no pre-submit copy of the workbook. The
+  skill fixes the message format, based on the admin's Week 3 post. All
+  counts exclude struck-off matches, so season totals can sit slightly below
+  the raw row count (e.g. 144 vs 146 after 27-Sep).
 
 ---
 
