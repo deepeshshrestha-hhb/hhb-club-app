@@ -177,8 +177,7 @@ def main():
             x["players_at_or_above"] = sum(1 for v in totals[x["kind"]].values() if v >= x["target"])
 
         # Changes to all-time record tables
-        record_keys = ["top_played", "top_wins", "top_win_pct", "top_pairs_played", "top_pairs_wins",
-                       "longest_player_streaks", "longest_pair_streaks", "most_wins_one_sunday",
+        record_keys = ["top_played", "top_wins", "top_win_pct", "top_pairs_played", "top_pairs_wins", "most_wins_one_sunday",
                        "busiest_sunday", "unbeaten_pairs", "biggest_wins"]
         record_changes = {k: {"before": a_before[k], "after": a_after[k]}
                           for k in record_keys if a_before[k] != a_after[k]}

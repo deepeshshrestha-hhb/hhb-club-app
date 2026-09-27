@@ -1771,6 +1771,17 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   skill fixes the message format, based on the admin's Week 3 post. All
   counts exclude struck-off matches, so season totals can sit slightly below
   the raw row count (e.g. 144 vs 146 after 27-Sep).
+- **2026-09-27 — Dropped "Longest Winning Streaks" from All-Time League
+  Analytics** (players and pairs). The admin pointed out that a Sunday's
+  match rows are in *submission* order, not play order, so any streak that
+  starts or ends on a day with a loss depends on where that loss happens to
+  sit in the sheet. E.g. Farooq's "16" (26-Feb to 12-Mar-2023) was 2 + 7 + 7,
+  and only 5-Mar (7-0) was order-independent. Order-independent alternatives
+  were offered (a streak over perfect Sundays only, or a streak counted in
+  Sundays), but the admin chose to remove the section for now. Also removed
+  from `scripts/league_weekly_update.py`'s record-change keys and the
+  `league-weekly-update` skill text. Don't reintroduce any stat that depends
+  on the order of matches within a day.
 
 ---
 

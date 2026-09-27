@@ -270,7 +270,7 @@
 {# ---------- Records ---------- #}
 <h4 class="mb-3">📜 Records</h4>
 <div class="row g-3 mb-4">
-    <div class="col-md-6 col-lg-4">
+    <div class="col-md-6">
         <div class="card hhb-card h-100">
             <div class="card-body">
                 <h6 class="fw-bold mb-2">Biggest Winning Margins</h6>
@@ -286,29 +286,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-6 col-lg-4">
-        <div class="card hhb-card h-100">
-            <div class="card-body">
-                <h6 class="fw-bold mb-2">Longest Winning Streaks</h6>
-                <p class="small text-muted mb-2">Consecutive league matches won, carried across Sundays and seasons.</p>
-                <div class="small fw-semibold text-uppercase text-muted mb-1">Players</div>
-                <ul class="list-unstyled small mb-3">
-                    {% for s in a.longest_player_streaks %}
-                    <li class="mb-1"><span class="badge bg-success me-1">{{ s.length }}</span><strong>{{ s.name }}</strong>
-                        <span class="text-muted">{{ s.from }} &rarr; {{ s.to }}</span></li>
-                    {% endfor %}
-                </ul>
-                <div class="small fw-semibold text-uppercase text-muted mb-1">Pairs</div>
-                <ul class="list-unstyled small mb-0">
-                    {% for s in a.longest_pair_streaks %}
-                    <li class="mb-1"><span class="badge bg-success me-1">{{ s.length }}</span><strong>{{ s.name }}</strong>
-                        <span class="text-muted">{{ s.from }} &rarr; {{ s.to }}</span></li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6 col-lg-4">
+    <div class="col-md-6">
         <div class="card hhb-card h-100">
             <div class="card-body">
                 <h6 class="fw-bold mb-2">Most Wins on a Single Sunday</h6>

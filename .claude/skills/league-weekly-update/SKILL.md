@@ -51,7 +51,7 @@ cleanly, and keep it phone-length.
 
 🏆 *Milestones this week*
 • <milestones_reached_today; players_at_or_above == 1 means "the first player ever to reach …">
-• <any notable all_time_record_changes, e.g. a new longest streak, a new most-wins-in-one-Sunday, or someone climbing the all-time top 5>
+• <any notable all_time_record_changes, e.g. a new most-wins-in-one-Sunday, or someone climbing the all-time top 5>
 
 👀 *Coming up next week*
 • <upcoming_milestones with to_go <= ~3, plus club_milestone / season_milestone if within reach>
