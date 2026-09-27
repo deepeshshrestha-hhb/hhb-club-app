@@ -92,9 +92,8 @@ def _collect_matches(leagues):
                 "court_no": m.get("court_no"),
                 "is_awarded": m.get("is_awarded", False),
             })
-        # Sheet row order is submission order within a Sunday; sort by date
-        # first so streaks follow real chronology even if rows were pasted
-        # out of date order in an older sheet.
+        # Sheet row order is submission order within a Sunday, not play
+        # order - so nothing here should depend on order within a day.
         season.sort(key=lambda x: (x["date_raw"], x["idx"]))
         out.extend(season)
     return out
@@ -102,25 +101,6 @@ def _collect_matches(leagues):
 
 def _next_milestone(value, step):
     return (value // step + 1) * step
-
-
-def _longest_streak(matches, key_fn_win, key_fn_lose):
-    """Longest run of consecutive wins per entity (player or pair), in
-    chronological order across all seasons. Returns (entity, length, start, end)."""
-    current = defaultdict(int)
-    start = {}
-    best = {}
-    for m in matches:
-        for e in key_fn_win(m):
-            if current[e] == 0:
-                start[e] = m
-            current[e] += 1
-            if current[e] > best.get(e, (0,))[0]:
-                best[e] = (current[e], start[e], m)
-        for e in key_fn_lose(m):
-            current[e] = 0
-    ranked = sorted(best.items(), key=lambda kv: (-kv[1][0], kv[1][2]["date_raw"]))
-    return ranked
 
 
 def get_all_time_analytics():
@@ -247,15 +227,6 @@ def _compute(years):
     busiest = sorted(by_date.items(), key=lambda kv: (-kv[1], kv[0]))[:1]
     busiest_sunday = {"date": _fmt_date(busiest[0][0]), "matches": busiest[0][1]} if busiest else None
 
-    player_streaks = _longest_streak(matches, lambda m: m["win"], lambda m: m["lose"])[:3]
-    longest_player_streaks = [{
-        "name": p, "length": n, "from": s["date"], "to": e["date"],
-    } for p, (n, s, e) in player_streaks]
-    pair_streaks = _longest_streak(
-        matches, lambda m: [tuple(sorted(m["win"]))], lambda m: [tuple(sorted(m["lose"]))])[:3]
-    longest_pair_streaks = [{
-        "name": _pair_label(p), "length": n, "from": s["date"], "to": e["date"],
-    } for p, (n, s, e) in pair_streaks]
 
     deuce = sum(c for (h, l), c in score_counter.items() if (h, l) == (21, 20))
     one_point = sum(1 for m in matches if m["diff"] == 1)
@@ -366,8 +337,6 @@ def _compute(years):
         "biggest_wins": biggest_wins,
         "most_wins_one_sunday": most_wins_one_sunday,
         "busiest_sunday": busiest_sunday,
-        "longest_player_streaks": longest_player_streaks,
-        "longest_pair_streaks": longest_pair_streaks,
         "common_scores": common_scores,
         "rivalries": rivalries,
         "most_partners": most_partners,
