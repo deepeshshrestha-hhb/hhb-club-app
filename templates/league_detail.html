@@ -495,8 +495,10 @@
                             <tr>
                                 <td>{{ p.player }}</td>
                                 {% for d in weekly_stats.dates %}
-                                <td class="text-center">{{ p.weeks[d.key].played }}</td>
-                                <td class="text-center">{{ p.weeks[d.key].won }}</td>
+                                {% set wk = p.weeks[d.key] %}
+                                {% set perfect = wk.played and wk.won == wk.played %}
+                                <td class="text-center {{ 'table-success fw-bold' if perfect }}"{% if perfect %} title="Won every match on {{ d.label }}"{% endif %}>{{ wk.played }}</td>
+                                <td class="text-center {{ 'table-success fw-bold' if perfect }}"{% if perfect %} title="Won every match on {{ d.label }}"{% endif %}>{{ wk.won }}</td>
                                 {% endfor %}
                             </tr>
                             {% endfor %}
@@ -511,6 +513,7 @@
         <p class="text-muted small mt-2 mb-0">
             Played (P) and Won (W) per Sunday, for every player who's played this season, A-Z. A new pair of
             columns appears each week once that Sunday's scores are submitted.
+            <span class="badge text-bg-success ms-1">Green</span> = won 100% of their matches that Sunday.
         </p>
     </div>
 
