@@ -592,3 +592,15 @@ h1, h2, h3 {
 .committee-card.founder .committee-badge {
     color: #b4832b;
 }
+
+/* League "Individual Weekly Stats": most wins on a given Sunday.
+   Bootstrap 5.3 table cells paint via --bs-table-bg-state, not background-color. */
+.table > tbody > tr > td.weekly-max-wins {
+    --bs-table-bg-state: #0f5132;
+    --bs-table-color-state: #fff;
+    font-weight: 700;
+}
+.weekly-max-wins-badge {
+    background-color: #0f5132;
+    color: #fff;
+}

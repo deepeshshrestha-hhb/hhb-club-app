@@ -498,7 +498,8 @@
                                 {% set wk = p.weeks[d.key] %}
                                 {% set perfect = wk.played and wk.won == wk.played %}
                                 <td class="text-center {{ 'table-success fw-bold' if perfect }}"{% if perfect %} title="Won every match on {{ d.label }}"{% endif %}>{{ wk.played }}</td>
-                                <td class="text-center {{ 'table-success fw-bold' if perfect }}"{% if perfect %} title="Won every match on {{ d.label }}"{% endif %}>{{ wk.won }}</td>
+                                {% set top = wk.won and wk.won == d.max_won %}
+                                <td class="text-center {{ 'weekly-max-wins' if top else ('table-success fw-bold' if perfect) }}"{% if top or perfect %} title="{{ 'Most wins on ' ~ d.label if top }}{{ ' · ' if top and perfect }}{{ 'Won every match on ' ~ d.label if perfect }}"{% endif %}>{{ wk.won }}</td>
                                 {% endfor %}
                             </tr>
                             {% endfor %}
@@ -514,6 +515,7 @@
             Played (P) and Won (W) per Sunday, for every player who's played this season, A-Z. A new pair of
             columns appears each week once that Sunday's scores are submitted.
             <span class="badge text-bg-success ms-1">Green</span> = won 100% of their matches that Sunday.
+            <span class="badge weekly-max-wins-badge ms-1">Dark green</span> = most wins that Sunday.
         </p>
     </div>
 
