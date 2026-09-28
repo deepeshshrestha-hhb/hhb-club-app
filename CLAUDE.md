@@ -1787,6 +1787,13 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   under Sunday Pool Play, where the stronger pool plays Courts 3-4 in the
   second hour on alternate Sundays. The table itself is unchanged and is now
   purely descriptive.
+- **2026-09-28 — League "Individual Weekly Stats" tab now highlights perfect
+  Sundays.** Any player-week where Won == Played (and Played > 0) gets both
+  its P and W cells shaded green (`table-success`, bold, with a "Won every
+  match on <date>" tooltip), plus a legend line under the table. This is
+  template-only, computed in `league_detail.html` from the existing
+  `get_weekly_stats()` data, so struck-off matches are already excluded.
+  2026 so far: Waqas 7/7 (6-Sep), Nawaz 5/5 and Mehtab 4/4 (20-Sep).
 
 ---
 
