@@ -651,6 +651,9 @@ def get_weekly_stats(year):
         }
         for p in sorted(players, key=str.casefold)
     ]
+    # Most wins by any one player that Sunday, so the tab can highlight it.
+    for c in date_cols:
+        c["max_won"] = max(stats[p][c["key"]]["won"] for p in players)
 
     return {"dates": date_cols, "players": rows}
 

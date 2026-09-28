@@ -1794,6 +1794,13 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   template-only, computed in `league_detail.html` from the existing
   `get_weekly_stats()` data, so struck-off matches are already excluded.
   2026 so far: Waqas 7/7 (6-Sep), Nawaz 5/5 and Mehtab 4/4 (20-Sep).
+- **2026-09-28 — Weekly Stats tab also highlights the day's most wins.** The
+  W cell of whoever had the most wins on each Sunday (ties included) is
+  white-on-dark-green and bold (`.weekly-max-wins` in `styles.css`). It sets
+  `--bs-table-bg-state` rather than `background-color`, because Bootstrap 5.3
+  table cells paint through that variable. `get_weekly_stats()` now adds
+  `max_won` to each date column. A perfect day that is also the day's max
+  (e.g. Waqas 7/7 on 6-Sep) shows a light-green P and a dark-green W.
 
 ---
 
