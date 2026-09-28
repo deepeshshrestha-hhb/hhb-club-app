@@ -370,9 +370,9 @@ def get_league(year):
                 player_set.add(p)
     all_players = sorted(player_set)
 
-    # Court usage for the top 5 standings players (added 2026 season) — lets us
-    # see whether stronger players are actually spending more time on the top
-    # courts, per the rotation rules.
+    # Court usage for the top 5 standings players (added 2026 season). No court
+    # is "the top court" any more - Sunday Pool Play alternates which pool gets
+    # Courts 1-2 each week - so this is descriptive only.
     has_court_data = any(m["court_no"] for m in counted_matches)
     court_columns = sorted(
         {m["court_no"] for m in counted_matches if m["court_no"]},
