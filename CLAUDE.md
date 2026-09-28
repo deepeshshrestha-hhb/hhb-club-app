@@ -1782,6 +1782,11 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   from `scripts/league_weekly_update.py`'s record-change keys and the
   `league-weekly-update` skill text. Don't reintroduce any stat that depends
   on the order of matches within a day.
+- **2026-09-28 — Removed the "Court 1 is the top court" note from the League
+  Analytics "Top 5 Players — Matches per Court" card.** It no longer holds
+  under Sunday Pool Play, where the stronger pool plays Courts 3-4 in the
+  second hour on alternate Sundays. The table itself is unchanged and is now
+  purely descriptive.
 
 ---
 
