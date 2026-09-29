@@ -95,6 +95,10 @@ def _format_event(ev, member_names):
     accepted = responses.get("acceptedIds") or []
     names = [member_names.get(uid, "") for uid in accepted]
     names = [n for n in names if n]
+    # Spond keeps the waiting list in queue order, so the numbering shown on
+    # the calendar matches who's next in line for a spot.
+    waitlisted = [member_names.get(uid, "") for uid in (responses.get("waitinglistIds") or [])]
+    waitlisted = [n for n in waitlisted if n]
 
     return {
         "date": start.strftime("%d-%b") if start else "TBC",
@@ -104,6 +108,7 @@ def _format_event(ev, member_names):
         "session": ev.get("heading", "Session"),
         "confirmed": len(accepted),
         "names": names,
+        "waitlisted": waitlisted,
     }
 
 
@@ -321,7 +326,7 @@ def get_confirmed_attendees(target_date):
 def get_weekly_sessions(weeks_ahead=8):
     """
     Synchronous wrapper that fetches live Spond events (today onwards) and returns
-    them in the {date, day, start_time, session, confirmed, names} shape expected
+    them in the {date, day, start_time, session, confirmed, names, waitlisted} shape expected
     by calendar.html's weekly table. Returns an empty list (rather than raising) if
     Spond is unreachable, so the page still renders.
     """
