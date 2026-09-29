@@ -410,6 +410,19 @@ h1, h2, h3 {
     text-align: center;
 }
 
+/* Calendar Weekly Sessions: keep Start Time and Session content-sized so
+   the spare width goes to Names/Waitlisted instead of opening a big gap
+   between Session and the confirmed count. */
+#weeklySessionsTable th:nth-child(3),
+#weeklySessionsTable td:nth-child(3),
+#weeklySessionsTable th:nth-child(4),
+#weeklySessionsTable td:nth-child(4),
+#weeklySessionsTable th:nth-child(7),
+#weeklySessionsTable td:nth-child(7) {
+    width: 1%;
+    white-space: nowrap;
+}
+
 /* Top-left frozen header cells need to sit above both header and column layers */
 .sticky-table-wrapper thead th:nth-child(1),
 .sticky-table-wrapper thead th:nth-child(2) {

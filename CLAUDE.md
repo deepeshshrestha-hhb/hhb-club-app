@@ -1802,6 +1802,14 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   `max_won` to each date column. A perfect day that is also the day's max
   (e.g. Waqas 7/7 on 6-Sep) shows a light-green P and a dark-green W.
 
+- **2026-09-29 — Calendar Weekly Sessions: added a "Waitlisted" column and
+  closed the gap after Session.** `spond_service._format_event()` now also
+  returns `waitlisted` from Spond's `responses.waitinglistIds` (kept in
+  Spond's queue order, so the numbering shows who's next for a spot). The
+  gap came from the Session column soaking up the table's spare width;
+  `#weeklySessionsTable` now sizes Start Time, Session and Waitlisted to
+  their content, so the spare width goes to Names instead.
+
 ---
 
 ## Next Steps / TODO
