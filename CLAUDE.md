@@ -1821,6 +1821,20 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   "Edit" (Amend) feature on `/weekly-scores` once this deploys, not by this
   session directly. *Intentionally temporary*, same as the Parklands entry:
   remove once 04-Oct's scores are submitted to the league database.
+- **2026-10-04 — Swapped "Nadim" to "Hasan" in the live 04-Oct session.**
+  Follow-up to the entry above. 7 matches had Nadim (#1, #2, #5, #11, #15,
+  #29, #30), one slot each. Each was amended through the live site's own
+  `POST /weekly-scores/api/matches/<id>/amend`, changing only that slot.
+  Court, scores, the other players, `submitted_at` and match number were
+  all checked unchanged, and no "Nadim" was left out of 35 matches.
+  *Why not call `amend_match()` from a local shell with R2 creds?* During a
+  session the live Render process reads `WeeklyScoreSession.json` only
+  from its own disk (`_load()`), never back from R2. A local edit pushed
+  to R2 would not show on the live page, and the next live add/amend
+  would upload the server's copy and silently undo it. **Any fix to an
+  open session must go through the live endpoints.** Cloudflare returns
+  403 to Python's default `urllib` user-agent, so scripted calls need a
+  normal `User-Agent` header (curl's works).
 
 ---
 
