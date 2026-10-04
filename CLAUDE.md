@@ -1821,6 +1821,12 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   "Edit" (Amend) feature on `/weekly-scores` once this deploys, not by this
   session directly. *Intentionally temporary*, same as the Parklands entry:
   remove once 04-Oct's scores are submitted to the league database.
+  *Closed out same day:* the swap was done through the live amend
+  endpoint (see the next entry) and no "Nadim" rows remained for 04-Oct, so the
+  `EXTRA_PLAYERS_BY_DATE["2026-10-04"]` dropdown override is removed here -
+  it was only ever a UI combobox convenience, not something the amend
+  itself depended on (`_validate_match()` doesn't check names against the
+  dropdown list).
 - **2026-10-04 — Swapped "Nadim" to "Hasan" in the live 04-Oct session.**
   Follow-up to the entry above. 7 matches had Nadim (#1, #2, #5, #11, #15,
   #29, #30), one slot each. Each was amended through the live site's own
