@@ -1809,6 +1809,18 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   gap came from the Session column soaking up the table's spare width;
   `#weeklySessionsTable` now sizes Start Time, Session and Waitlisted to
   their content, so the spare width goes to Names instead.
+- **2026-10-04 — Added a one-off Weekly Score Upload player option for
+  Hasan (04-Oct).** Nadim (the dad) booked that Sunday's slot via Spond,
+  but Hasan (his son) actually played - the dropdown is built from Spond/
+  signup-history attendees for the date, which only has Nadim's RSVP, so
+  Hasan couldn't be picked without a code change. Added `"2026-10-04":
+  ["Hasan"]` to `weekly_score_service.EXTRA_PLAYERS_BY_DATE`, the same
+  one-off override already used for the 20-Sep Parklands players - this
+  session has no production R2 access, so swapping any already-entered
+  "Nadim" rows to "Hasan" is done by the admin via the existing public
+  "Edit" (Amend) feature on `/weekly-scores` once this deploys, not by this
+  session directly. *Intentionally temporary*, same as the Parklands entry:
+  remove once 04-Oct's scores are submitted to the league database.
 
 ---
 
