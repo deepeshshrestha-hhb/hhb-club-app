@@ -1841,6 +1841,15 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   open session must go through the live endpoints.** Cloudflare returns
   403 to Python's default `urllib` user-agent, so scripted calls need a
   normal `User-Agent` header (curl's works).
+- **2026-10-04 — League Matches tab now hides Rule 6 struck-off matches.**
+  They used to show greyed out with a "Struck off" badge and a footnote,
+  so the tab showed 181 matches for 2026 while standings, analytics and
+  the weekly round-up said 179. That was confusing next to "21 matches
+  from 200". `league_detail.html` now skips `is_struck_off` rows and
+  numbers the rest 1..N (`loop.index`, not the sheet's `m.no`), so the
+  last `#` equals the count; the struck-off footnote is gone. Data is
+  unchanged: `get_league()` still flags them, and they stay in the
+  workbook.
 
 ---
 
