@@ -1821,6 +1821,13 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   "Edit" (Amend) feature on `/weekly-scores` once this deploys, not by this
   session directly. *Intentionally temporary*, same as the Parklands entry:
   remove once 04-Oct's scores are submitted to the league database.
+  *Closed out same day:* the admin ran this swap from a PC session with
+  live R2 access (`weekly_score_service.amend_match()` on each affected
+  match) and confirmed no "Nadim" rows remained for 04-Oct, so the
+  `EXTRA_PLAYERS_BY_DATE["2026-10-04"]` dropdown override is removed here -
+  it was only ever a UI combobox convenience, not something the amend
+  itself depended on (`_validate_match()` doesn't check names against the
+  dropdown list).
 
 ---
 
