@@ -41,7 +41,6 @@ VALID_COURTS = set(range(1, 5))
 # leaving it lying around for future Sundays.
 EXTRA_PLAYERS_BY_DATE = {
     "2026-09-20": ["Thomas", "Shreya", "Faiyaz", "Rafay", "Vishal"],  # played at Parklands
-    "2026-10-04": ["Hasan"],  # booked via Spond as "Nadim" (his dad); Hasan actually played
 }
 EXTRA_COURTS_BY_DATE = {
     "2026-09-20": ["Parklands"],
