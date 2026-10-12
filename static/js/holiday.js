@@ -27,11 +27,16 @@
     // ---- Totals cards ---------------------------------------------------
     function renderCards() {
         var min = state.min_people;
+        var minFam = state.min_families;
         var html = state.totals.map(function (t) {
             var pct = Math.min(100, Math.round(t.people / min * 100));
+            var needs = [];
+            if (t.need_people) needs.push(plural(t.need_people, 'more person', 'more people'));
+            if (t.need_families) needs.push(plural(t.need_families, 'more family', 'more families'));
             var status = t.min_reached
                 ? '<span class="badge text-bg-success">Minimum reached ✓</span>'
-                : '<span class="badge text-bg-warning">Not enough yet (need ' + t.need + ' more)</span>';
+                : '<span class="badge text-bg-warning text-wrap text-start">Not enough yet (need ' + needs.join(', ') + ')</span>';
+            var tick = function (ok) { return ok ? ' <span class="text-success">✓</span>' : ''; };
             var lead = '';
             if (t.leading) lead = '<span class="badge text-bg-primary">🏆 Currently leading</span>';
             else if (t.tied) lead = '<span class="badge text-bg-info">Tied for the lead</span>';
@@ -45,11 +50,11 @@
                 '</div>' + lead + '</div>' +
                 '<div class="d-flex align-items-baseline gap-2 my-2">' +
                 '<span class="wk-count">' + t.people + '</span>' +
-                '<span class="text-muted">/ ' + min + ' minimum</span></div>' +
+                '<span class="text-muted">/ ' + min + ' people minimum' + tick(!t.need_people) + '</span></div>' +
                 '<div class="progress mb-2" role="progressbar" aria-valuenow="' + t.people + '" aria-valuemin="0" aria-valuemax="' + min + '">' +
                 '<div class="progress-bar ' + (t.min_reached ? 'bg-success' : '') + '" style="width:' + pct + '%"></div></div>' +
                 '<div class="d-flex justify-content-between align-items-center flex-wrap gap-1">' +
-                '<span class="small text-muted">' + plural(t.families, 'family', 'families') + ' attending</span>' +
+                '<span class="small text-muted">' + t.families + ' / ' + minFam + ' families minimum' + tick(!t.need_families) + '</span>' +
                 status + '</div>' +
                 '</div></div></div>';
         }).join('');

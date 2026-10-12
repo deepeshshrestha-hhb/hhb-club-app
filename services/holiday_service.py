@@ -5,7 +5,8 @@ A private, unlisted availability poll for a group of 9 families (not a club
 feature - nothing on the site links to it; see routes/holiday_routes.py).
 Each family says whether they can make each candidate weekend and how many
 people would come, so the group can pick the weekend with the most people
-(minimum MIN_PEOPLE on the same weekend for it to go ahead).
+(at least MIN_FAMILIES families and MIN_PEOPLE people on the same weekend
+for it to go ahead).
 
 Storage follows vote_service.py's JSON pattern: one record per family keyed
 by family name (resubmitting overwrites in place), a lock around every
@@ -63,7 +64,9 @@ FAMILIES = [
     "Ram Aryal and family",
 ]
 
-MIN_PEOPLE = 15        # needed on the same weekend for the holiday to go ahead
+# Both needed on the same weekend for the holiday to go ahead.
+MIN_FAMILIES = 3
+MIN_PEOPLE = 10
 MAX_PER_FAMILY = 15    # upper bound on "number of people" per family/weekend
 NOTE_MAX = 200
 
@@ -198,8 +201,9 @@ def get_state() -> dict:
             **wk,
             "people": people,
             "families": families,
-            "need": max(0, MIN_PEOPLE - people),
-            "min_reached": people >= MIN_PEOPLE,
+            "need_people": max(0, MIN_PEOPLE - people),
+            "need_families": max(0, MIN_FAMILIES - families),
+            "min_reached": people >= MIN_PEOPLE and families >= MIN_FAMILIES,
         })
 
     top = max(t["people"] for t in totals)
@@ -214,4 +218,5 @@ def get_state() -> dict:
         "responded": sum(1 for f in FAMILIES if f in responses),
         "family_count": len(FAMILIES),
         "min_people": MIN_PEOPLE,
+        "min_families": MIN_FAMILIES,
     }
