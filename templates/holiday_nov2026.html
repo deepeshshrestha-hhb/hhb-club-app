@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}November Group Holiday 2026{% endblock %}
+
+{% block head_extra %}
+{% set page_url = site_url ~ request.path %}
+{% set og_image = site_url ~ url_for('static', filename='img/holiday/Holiday_Strategy.jpg') %}
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Tell us which weekend your family can make and how many are coming">
+<meta property="og:type" content="website">
+<meta property="og:title" content="November Group Holiday – Pick your weekend">
+<meta property="og:description" content="Tell us which weekend your family can make and how many are coming">
+<meta property="og:url" content="{{ page_url }}">
+<meta property="og:image" content="{{ og_image }}">
+<meta property="og:image:type" content="image/jpeg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+    .holiday-wrap { max-width: 920px; margin: 0 auto; }
+    .holiday-hero {
+        background: linear-gradient(135deg, var(--hhb-primary), var(--hhb-accent));
+        color: #fff; border-radius: 1rem; padding: 1.5rem 1.25rem;
+    }
+    .holiday-hero h1 { font-size: clamp(1.5rem, 5vw, 2.1rem); font-weight: 700; margin: 0 0 .35rem; color: #fff; }
+    .holiday-hero p { margin: 0; opacity: .95; }
+    .holiday-rule { border-left: 5px solid var(--hhb-primary); }
+    .wk-card { border-width: 2px; transition: border-color .2s; }
+    .wk-card.leading { border-color: var(--hhb-accent); box-shadow: 0 0 0 3px rgba(0,179,134,.15); }
+    .wk-count { font-size: 2.2rem; font-weight: 700; line-height: 1; }
+    .wk-card .progress { height: 12px; }
+    .wk-form-block { background: var(--hhb-light); border-radius: .75rem; padding: .9rem; }
+    #holidayTable th:first-child, #holidayTable td:first-child {
+        position: sticky; left: 0; background: #fff; z-index: 1;
+        white-space: normal; min-width: 105px; max-width: 120px; box-shadow: 1px 0 0 #dee2e6;
+    }
+    #holidayTable thead th:first-child { background: var(--bs-table-bg, #fff); }
+    #holidayTable td, #holidayTable th { white-space: nowrap; font-size: .9rem; vertical-align: middle; }
+    #holidayTable td.note-cell { white-space: normal; min-width: 180px; font-size: .9rem; }
+    #holidayTable tfoot td { font-weight: 700; background: #eef6ff; }
+    #holidayTable tfoot td:first-child { background: #eef6ff; }
+    .awaiting { color: #9aa0a6; font-style: italic; }
+    .strategy-img { max-width: 100%; border-radius: .5rem; cursor: zoom-in; }
+    .holiday-toast { z-index: 1090; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="holiday-wrap">
+
+    <!-- 1. Header -->
+    <div class="holiday-hero mb-3">
+        <h1>November Group Holiday 2026</h1>
+        <p>Two weekends are on the table — tell us which one your family can make and how many of you are coming.</p>
+    </div>
+
+    <!-- 2. Minimum-numbers rule -->
+    <div class="card holiday-rule shadow-sm mb-3">
+        <div class="card-body">
+            <h2 class="h6 fw-bold mb-2">📋 Minimum numbers</h2>
+            <p class="mb-0">For this holiday to go ahead we need a minimum of <strong>{{ min_people }} people</strong>
+                signed up for the same weekend. We'll go with whichever weekend has the most people — as long as it
+                reaches {{ min_people }}. If neither weekend reaches {{ min_people }}, the November holiday won't go
+                ahead. The more the better!</p>
+        </div>
+    </div>
+
+    <!-- 3. Live totals -->
+    <div class="d-flex justify-content-between align-items-baseline mb-2">
+        <h2 class="h5 fw-bold mb-0">Live totals</h2>
+        <span class="text-muted small" id="respondedCount"></span>
+    </div>
+    <div class="row g-3 mb-4" id="totalsCards"></div>
+
+    <!-- 4. Form -->
+    <div class="card shadow-sm mb-4" id="responseCard">
+        <div class="card-body">
+            <h2 class="h5 fw-bold mb-3">Your family's response</h2>
+            <form id="holidayForm" novalidate>
+                <div class="mb-3">
+                    <label for="familySelect" class="form-label fw-semibold">Select your family</label>
+                    <select id="familySelect" name="family" class="form-select" required>
+                        <option value="">Choose…</option>
+                        {% for f in families %}<option value="{{ f }}">{{ f }}</option>{% endfor %}
+                    </select>
+                    <div class="form-text" id="lastUpdated"></div>
+                </div>
+
+                {% for wk in weekends %}
+                <div class="wk-form-block mb-3" data-wk="{{ wk.key }}">
+                    <div class="fw-bold">{{ wk.name }}: {{ wk.dates }}
+                        {% if wk.label %}<span class="badge text-bg-primary ms-1">{{ wk.label }}</span>{% endif %}
+                    </div>
+                    <div class="text-muted small mb-2">{{ wk.nights }}</div>
+                    <div class="row g-2 align-items-end">
+                        <div class="col-7">
+                            <div class="form-label small mb-1">Can you make it?</div>
+                            <div class="btn-group w-100" role="group" aria-label="{{ wk.name }} availability">
+                                <input type="radio" class="btn-check" name="{{ wk.key }}_available" id="{{ wk.key }}Yes" value="yes" autocomplete="off">
+                                <label class="btn btn-outline-success" for="{{ wk.key }}Yes">✓ Yes</label>
+                                <input type="radio" class="btn-check" name="{{ wk.key }}_available" id="{{ wk.key }}No" value="no" autocomplete="off">
+                                <label class="btn btn-outline-secondary" for="{{ wk.key }}No">✗ No</label>
+                            </div>
+                        </div>
+                        <div class="col-5">
+                            <label for="{{ wk.key }}People" class="form-label small mb-1">Number of people</label>
+                            <input type="number" class="form-control" id="{{ wk.key }}People" name="{{ wk.key }}_people"
+                                   min="1" max="{{ max_people }}" inputmode="numeric" disabled>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="mb-3">
+                    <label for="noteInput" class="form-label fw-semibold">Note <span class="text-muted fw-normal">(optional)</span></label>
+                    <input type="text" id="noteInput" name="note" class="form-control" maxlength="{{ note_max }}"
+                           placeholder="e.g. Kids' party on the Saturday, can arrive late">
+                </div>
+
+                <div class="alert alert-danger py-2 d-none" id="formError"></div>
+                <button type="submit" class="btn btn-hhb-primary text-white w-100" id="submitBtn" disabled>Submit</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. Responses table -->
+    <h2 class="h5 fw-bold mb-2">Responses</h2>
+    <div class="table-responsive shadow-sm rounded mb-4 bg-white">
+        <table class="table table-sm mb-0" id="holidayTable">
+            <thead class="table-light">
+                <tr>
+                    <th>Family</th>
+                    {% for wk in weekends %}<th>{{ wk.name }} ({{ wk.short }})</th>{% endfor %}
+                    <th>Note</th>
+                    <th>Last updated</th>
+                </tr>
+            </thead>
+            <tbody id="holidayRows"></tbody>
+            <tfoot><tr id="holidayTotalsRow"></tr></tfoot>
+        </table>
+    </div>
+
+    <!-- 6. Strategy reminder -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <button class="btn btn-link text-decoration-none fw-semibold p-0 w-100 text-start collapsed" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#strategyCollapse" aria-expanded="false" aria-controls="strategyCollapse">
+                ▸ Reminder: our Annual Group Holiday Strategy
+            </button>
+        </div>
+        <div class="collapse" id="strategyCollapse">
+            <div class="card-body text-center">
+                <a href="{{ url_for('static', filename='img/holiday/Holiday_Strategy.jpg') }}" target="_blank" rel="noopener">
+                    <img src="{{ url_for('static', filename='img/holiday/Holiday_Strategy.jpg') }}" class="strategy-img"
+                         alt="Annual Group Holiday Strategy" loading="lazy">
+                </a>
+                <p class="text-muted small mt-2 mb-0">Agreed earlier this year — two fixed windows: Feb mid-term (3 nights)
+                    and a November weekend (2 nights). Tap the image to open full size.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3 holiday-toast">
+    <div id="holidayToast" class="toast align-items-center text-bg-success border-0" role="status" aria-live="polite">
+        <div class="d-flex">
+            <div class="toast-body" id="holidayToastBody">Saved.</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.HOLIDAY = {
+        apiBase: {{ url_for('holiday.page', slug=slug)|tojson }},
+        weekends: {{ weekends|tojson }},
+        maxPeople: {{ max_people }},
+        state: {{ state|tojson }}
+    };
+</script>
+<script src="{{ url_for('static', filename='js/holiday.js') }}?v={{ asset_version('js/holiday.js') }}"></script>
+{% endblock %}
