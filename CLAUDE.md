@@ -95,6 +95,8 @@ routes/                 # Flask blueprints (thin; delegate to services)
   rules_routes.py        # /rules (Club Rules - rotation, sitting out, pool play sections)
   sunday_pools_routes.py # /sunday-pools + /sunday-pools/generate (admin) - Sunday Pool Play
   vote_routes.py         # /vote + /vote/results + /vote/admin/toggle-* (admin) - Top 20 Player Vote
+  holiday_routes.py      # /holiday/nov-2026-<slug> - UNLISTED private family-holiday poll (not a club
+                        #   feature; never link it anywhere - see Decisions Log 2026-10-12)
 services/               # Business logic + data parsing (the heart of the app)
   spond_service.py      # Live Spond fetch: events (calendar) + members (CSV) + per-date confirmed
                         #   attendees (get_confirmed_attendees, for Weekly Score Upload, and
@@ -127,6 +129,8 @@ services/               # Business logic + data parsing (the heart of the app)
                         #   admin voting_open/results_published flags, compute_rankings()
                         #   (pure Borda-scoring function) - see Decisions Log for why JSON,
                         #   not the Excel workbook the original feature spec asked for
+  holiday_service.py    # November Group Holiday poll (data/holiday_nov2026.json): slug, weekends,
+                        #   families + MIN_PEOPLE config at the top; upsert per family + totals
   photos_service.py     # Club + event photo CRUD (Photos.xlsx + static/images/photos/)
   podium_service.py     # Podium photos in static/images/podium/ (numbered _1, _2 …)
   feedback_service.py   # User feedback CRUD (Feedback.xlsx, General + Feature Request)
@@ -1850,6 +1854,32 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   last `#` equals the count; the struck-off footnote is gone. Data is
   unchanged: `get_league()` still flags them, and they stay in the
   workbook.
+
+- **2026-10-12 — Added an unlisted "November Group Holiday 2026" poll page**
+  (`/holiday/nov-2026-5nupatxwf`, `holiday_service.py`, `holiday_routes.py`,
+  `templates/holiday_nov2026.html`, `static/js/holiday.js`). It isn't a club
+  feature: it's for a private group of 9 families choosing between two
+  November weekends. Each family gives Yes/No and a headcount (1-15) per
+  weekend. The page shows live totals against a 15-person minimum, a
+  "Currently leading" (or tied) badge, and a table of all 9 families.
+  - **Hidden on purpose:** it's not linked anywhere and not in robots.txt
+    (that would reveal the path). It has a `noindex` meta tag plus an
+    `X-Robots-Tag` header on the page and its API, and any other slug 404s.
+    To change the link, edit `HOLIDAY_SLUG`.
+  - **No venue:** the page and OG tags must not mention any venue or
+    location.
+  - **Storage:** `data/holiday_nov2026.json` (gitignored), one record per
+    family. It follows `vote_service`'s JSON pattern: locked saves and a
+    background R2 upload.
+  - **Template:** `base.html` gained a `title` block and two context flags,
+    `hide_nav` and `hide_feedback`, which this page sets. All other pages
+    are unchanged.
+  - **OG tags:** these use a hardcoded `SITE_URL`. Requests arrive through
+    the Cloudflare Worker, so `url_for(_external=True)` would build
+    `onrender.com` links.
+  - **Image:** the strategy image is a static file at
+    `static/img/holiday/Holiday_Strategy.jpg`, committed to git (not R2).
+    Keep the exact casing, since Render's filesystem is case-sensitive.
 
 ---
 

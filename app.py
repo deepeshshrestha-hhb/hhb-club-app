@@ -16,6 +16,7 @@ from routes.charity_routes import charity_bp
 from routes.weekly_score_routes import weekly_bp
 from routes.sunday_pools_routes import sunday_pools_bp
 from routes.vote_routes import vote_bp
+from routes.holiday_routes import holiday_bp
 from services import r2_service
 from services import committee_service
 from services import about_content_service
@@ -77,6 +78,7 @@ def create_app():
     app.register_blueprint(weekly_bp)
     app.register_blueprint(sunday_pools_bp)
     app.register_blueprint(vote_bp)
+    app.register_blueprint(holiday_bp)
 
     @app.context_processor
     def inject_feedback_players():
