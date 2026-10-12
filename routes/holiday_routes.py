@@ -34,6 +34,7 @@ def page(slug):
         weekends=hs.WEEKENDS,
         families=hs.FAMILIES,
         min_people=hs.MIN_PEOPLE,
+        min_families=hs.MIN_FAMILIES,
         max_people=hs.MAX_PER_FAMILY,
         note_max=hs.NOTE_MAX,
         site_url=hs.SITE_URL,

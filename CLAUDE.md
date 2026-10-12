@@ -1860,8 +1860,10 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   `templates/holiday_nov2026.html`, `static/js/holiday.js`). It isn't a club
   feature: it's for a private group of 9 families choosing between two
   November weekends. Each family gives Yes/No and a headcount (1-15) per
-  weekend. The page shows live totals against a 15-person minimum, a
-  "Currently leading" (or tied) badge, and a table of all 9 families.
+  weekend. The page shows live totals, a "Currently leading" (or tied)
+  badge, and a table of all 9 families. The minimum to go ahead is **3
+  families and 10 people on the same weekend** (`MIN_FAMILIES` /
+  `MIN_PEOPLE`); it was 15 people at launch and changed the same day.
   - **Hidden on purpose:** it's not linked anywhere and not in robots.txt
     (that would reveal the path). It has a `noindex` meta tag plus an
     `X-Robots-Tag` header on the page and its API, and any other slug 404s.
