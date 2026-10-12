@@ -131,12 +131,20 @@
                     {% for wk in weekends %}<th>{{ wk.name }} ({{ wk.short }})</th>{% endfor %}
                     <th>Note</th>
                     <th>Last updated</th>
+                    {% if is_admin %}<th class="text-end">Admin</th>{% endif %}
                 </tr>
             </thead>
             <tbody id="holidayRows"></tbody>
             <tfoot><tr id="holidayTotalsRow"></tr></tfoot>
         </table>
     </div>
+
+    {% if is_admin %}
+    <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <span class="small"><strong>Admin:</strong> use 🗑 in the table to delete one family's response, or clear everything.</span>
+        <button type="button" class="btn btn-sm btn-outline-danger" id="clearAllBtn">Clear all responses</button>
+    </div>
+    {% endif %}
 
     <!-- 6. Strategy reminder -->
     <div class="card shadow-sm mb-4">
@@ -175,6 +183,7 @@
         apiBase: {{ url_for('holiday.page', slug=slug)|tojson }},
         weekends: {{ weekends|tojson }},
         maxPeople: {{ max_people }},
+        isAdmin: {{ is_admin|tojson }},
         state: {{ state|tojson }}
     };
 </script>

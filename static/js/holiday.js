@@ -72,12 +72,15 @@
             return '<tr><td class="fw-semibold">' + esc(row.family.replace(/ and family$/, '')) + '</td>' +
                 weekends.map(function (wk) { return '<td>' + cell(r, wk.key) + '</td>'; }).join('') +
                 '<td class="note-cell">' + (r && r.note ? esc(r.note) : '') + '</td>' +
-                '<td class="small text-muted">' + (r ? esc(r.updated_display) : '') + '</td></tr>';
+                '<td class="small text-muted">' + (r ? esc(r.updated_display) : '') + '</td>' +
+                (cfg.isAdmin ? '<td class="text-end">' + (r ? '<button type="button" class="btn btn-sm btn-outline-danger py-0 delete-btn" data-family="' +
+                    esc(row.family) + '" title="Delete this response">🗑</button>' : '') + '</td>' : '') +
+                '</tr>';
         }).join('');
         document.getElementById('holidayTotalsRow').innerHTML = '<td>Total</td>' +
             state.totals.map(function (t) {
                 return '<td>' + plural(t.people, 'person', 'people') + ' · ' + plural(t.families, 'family', 'families') + '</td>';
-            }).join('') + '<td></td><td></td>';
+            }).join('') + '<td></td><td></td>' + (cfg.isAdmin ? '<td></td>' : '');
     }
 
     function renderAll() { renderCards(); renderTable(); }
@@ -182,6 +185,48 @@
             })
             .finally(function () { saving = false; updateSubmitState(); });
     });
+
+    // ---- Admin: delete one / clear all ----------------------------------
+    function toast(msg) {
+        document.getElementById('holidayToastBody').textContent = msg;
+        bootstrap.Toast.getOrCreateInstance(document.getElementById('holidayToast')).show();
+    }
+
+    function adminPost(path, payload, okMsg) {
+        return fetch(cfg.apiBase + path, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload || {})
+        })
+            .then(function (res) { return res.json().then(function (body) { return { ok: res.ok, body: body }; }); })
+            .then(function (r) {
+                if (!r.ok || !r.body.ok) throw new Error((r.body && r.body.error) || 'Request failed.');
+                state = r.body.state;
+                renderAll();
+                loadFamily();
+                toast(okMsg(r.body));
+            })
+            .catch(function (err) { alert(err.message || 'Request failed.'); });
+    }
+
+    if (cfg.isAdmin) {
+        document.getElementById('holidayRows').addEventListener('click', function (e) {
+            var btn = e.target.closest('.delete-btn');
+            if (!btn) return;
+            var family = btn.getAttribute('data-family');
+            if (!confirm('Delete the response from ' + family + '?')) return;
+            btn.disabled = true;
+            adminPost('/api/delete', { family: family }, function () { return 'Deleted ' + family + '.'; });
+        });
+        document.getElementById('clearAllBtn').addEventListener('click', function () {
+            if (!confirm('Delete ALL responses? This cannot be undone.')) return;
+            var b = this;
+            b.disabled = true;
+            adminPost('/api/clear', {}, function (body) {
+                return 'Cleared ' + body.removed + ' response' + (body.removed === 1 ? '' : 's') + '.';
+            }).finally(function () { b.disabled = false; });
+        });
+    }
 
     // Pick up other families' answers while the page stays open.
     setInterval(function () {

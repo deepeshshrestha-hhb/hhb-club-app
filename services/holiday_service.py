@@ -144,6 +144,28 @@ def save_response(payload: dict):
     return record, None
 
 
+def delete_response(family: str) -> bool:
+    """Admin-only (gated in the route). Returns False if there was nothing to delete."""
+    with _lock:
+        data = _load()
+        if family not in data["responses"]:
+            return False
+        del data["responses"][family]
+        _save(data)
+    return True
+
+
+def clear_all() -> int:
+    """Admin-only (gated in the route): wipe every response, e.g. after testing.
+    Returns how many were removed."""
+    with _lock:
+        data = _load()
+        n = len(data["responses"])
+        data["responses"] = {}
+        _save(data)
+    return n
+
+
 def _display_time(iso_local: str) -> str:
     """'2026-10-12 14:05' -> '12 Oct, 14:05' (already UK time)."""
     try:

@@ -1880,6 +1880,12 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   - **Image:** the strategy image is a static file at
     `static/img/holiday/Holiday_Strategy.jpg`, committed to git (not R2).
     Keep the exact casing, since Render's filesystem is case-sensitive.
+  - **Admin delete (added the same day):** a logged-in admin gets a 🗑
+    button per table row plus "Clear all responses", via
+    `POST …/api/delete` and `POST …/api/clear`. These are JSON endpoints
+    that return 403 to non-admins; they don't use `admin_required`, whose
+    login redirect wouldn't suit a `fetch()` call. The page has no navbar,
+    so log in at `/admin/login?next=/holiday/nov-2026-5nupatxwf`.
 
 ---
 
