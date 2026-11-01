@@ -72,3 +72,7 @@ Thumbs.db
 # Claude Code — local/personal config, not project state
 .claude/settings.local.json
 .claude/launch.json
+
+# November Group Holiday 2026 poll - family names/notes, created on first submit, stored in R2, not source-controlled
+data/holiday_nov2026.json
+data/holiday_nov2026.json.tmp

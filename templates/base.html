@@ -6,7 +6,7 @@
     <!-- Mobile responsiveness -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>HHB Club</title>
+    <title>{% block title %}HHB Club{% endblock %}</title>
 
     <!-- Bootstrap 5 -->
     <link 
@@ -21,6 +21,7 @@
 
 <body class="bg-light">
 
+    {% if not hide_nav %}
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark hhb-navbar">
         <div class="container-fluid">
@@ -47,6 +48,7 @@
             </div>
         </div>
     </nav>
+    {% endif %}
 
     <!-- Main content area -->
     <div class="container-fluid mt-4 mb-5">
@@ -244,6 +246,7 @@
     </script>
     {% endif %}
 
+    {% if not hide_feedback %}
     <!-- Site-wide feedback form (modal) + persistent trigger -->
     <button type="button" class="btn btn-hhb-accent text-white feedback-fab"
             data-bs-toggle="modal" data-bs-target="#feedbackModal" title="Share feedback">
@@ -316,6 +319,8 @@
         toggleEmail();
     })();
     </script>
+
+    {% endif %}
 
     {% block extra_js %}{% endblock %}
 
