@@ -134,7 +134,7 @@ def _compute(years):
     seasons_by_player = defaultdict(set)
     opp_meetings = Counter()
     opp_wins = Counter()   # (winner_player, loser_player) -> wins
-    day_wins = Counter()   # (player, date) -> wins
+    day_wins = Counter()   # (player, date_raw, date) -> wins
     by_date = Counter()
     score_counter = Counter()
     points_scored = 0
@@ -164,7 +164,7 @@ def _compute(years):
                 current_sundays[p].add(m["date_raw"])
         for p in m["win"]:
             wins[p] += 1
-            day_wins[(p, m["date"])] += 1
+            day_wins[(p, m["date_raw"], m["date"])] += 1
             if m["year"] == current_year:
                 current_wins[p] += 1
         for w in m["win"]:
@@ -221,8 +221,12 @@ def _compute(years):
         "score": f"{m['win_score']}–{m['lose_score']}", "diff": m["diff"],
     } for m in sorted(matches, key=lambda m: (-m["diff"], m["date_raw"]))[:3]]
 
-    best_day = sorted(day_wins.items(), key=lambda kv: (-kv[1], kv[0][0]))[:3]
-    most_wins_one_sunday = [{"player": p, "date": d, "wins": w} for (p, d), w in best_day]
+    # Every day at the top two win counts (ties included), most recent
+    # first within a count - a fixed top 3 hid tied days arbitrarily.
+    top_counts = sorted(set(day_wins.values()), reverse=True)[:2]
+    best_day = sorted(((k, w) for k, w in day_wins.items() if w in top_counts),
+                      key=lambda kv: (-kv[1], -kv[0][1].toordinal(), kv[0][0]))
+    most_wins_one_sunday = [{"player": p, "date": d, "wins": w} for (p, _, d), w in best_day]
 
     busiest = sorted(by_date.items(), key=lambda kv: (-kv[1], kv[0]))[:1]
     busiest_sunday = {"date": _fmt_date(busiest[0][0]), "matches": busiest[0][1]} if busiest else None

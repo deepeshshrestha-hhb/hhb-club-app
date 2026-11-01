@@ -1889,6 +1889,12 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     login redirect wouldn't suit a `fetch()` call. The page has no navbar,
     so log in at `/admin/login?next=/holiday/nov-2026-5nupatxwf`.
 
+- **2026-11-01 — "Most Wins on a Single Sunday" now lists every tied day.**
+  It used to show a fixed top 3, breaking ties by player name, so Shiva's
+  8 wins on 01-Nov (and Rukhsar's/Sandip's earlier 8s) were hidden behind
+  Farooq's. It now shows every day at the top two win counts (9 and 8 today:
+  7 rows), most recent first within a count, with the date in brackets.
+
 ---
 
 ## Next Steps / TODO
