@@ -1895,6 +1895,19 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   Farooq's. It now shows every day at the top two win counts (9 and 8 today:
   7 rows), most recent first within a count, with the date in brackets.
 
+- **2026-11-02 — Every Top-N list on All-Time League Analytics now keeps
+  exact ties at the cut-off.** Follow-up to the Most-Wins-on-a-Sunday fix:
+  an audit found Farooq & Purvaiz (18 played, 14 won - identical to Farooq &
+  Nawaz) hidden from both pairs Top 5s by name order, and three of four 21-4
+  wins hidden from Biggest Winning Margins by oldest-date-first. New
+  `_top_with_ties()` keeps anything tied with the last shown row on the
+  ranking numbers (name/date/insertion order never decides who's cut), and
+  `_with_ranks()` gives tied rows the same `#` (e.g. two pairs at 5). Applied
+  to the player and pair Top 5s, Biggest Winning Margins (now newest first
+  within a tie), Busiest Sunday (lists every tied date), Most Common
+  Scorelines, Biggest Rivalries and Most Different Partners. Section
+  headings now read "Top 5" from `TOP_N` rather than the list length.
+
 ---
 
 ## Next Steps / TODO

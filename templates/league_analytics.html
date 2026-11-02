@@ -170,7 +170,7 @@
                 <tbody>
                     {% for r in rows %}
                     <tr>
-                        <td>{% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}</td>
+                        <td>{% if r.rank == 1 %}🥇{% elif r.rank == 2 %}🥈{% elif r.rank == 3 %}🥉{% else %}{{ r.rank }}{% endif %}</td>
                         <td>{{ r.player }}</td>
                         <td class="text-end {{ 'fw-bold' if highlight == 'played' }}">{{ r.played }}</td>
                         <td class="text-end {{ 'fw-bold' if highlight == 'wins' }}">{{ r.wins }}</td>
@@ -195,7 +195,7 @@
                 <tbody>
                     {% for r in rows %}
                     <tr>
-                        <td>{{ loop.index }}</td>
+                        <td>{{ r.rank }}</td>
                         <td>{{ r.pair }}</td>
                         <td class="text-end {{ 'fw-bold' if highlight == 'played' }}">{{ r.played }}</td>
                         <td class="text-end {{ 'fw-bold' if highlight == 'wins' }}">{{ r.wins }}</td>
@@ -210,14 +210,14 @@
 </div>
 {% endmacro %}
 
-<h4 class="mb-3">🏸 Players &mdash; Top {{ a.top_played | length }}</h4>
+<h4 class="mb-3">🏸 Players &mdash; Top {{ a.constants.top_n }}</h4>
 <div class="row g-3 mb-4">
     {{ player_table('Most Matches Played', a.top_played, 'played') }}
     {{ player_table('Most Wins', a.top_wins, 'wins') }}
     {{ player_table('Best Win %', a.top_win_pct, 'pct', 'Minimum ' ~ a.constants.min_player_pct ~ ' matches.') }}
 </div>
 
-<h4 class="mb-3">🤝 Pairs &mdash; Top {{ a.top_pairs_played | length }}</h4>
+<h4 class="mb-3">🤝 Pairs &mdash; Top {{ a.constants.top_n }}</h4>
 <div class="row g-3 mb-4">
     {{ pair_table('Most Matches Together', a.top_pairs_played, 'played') }}
     {{ pair_table('Most Wins Together', a.top_pairs_wins, 'wins') }}
