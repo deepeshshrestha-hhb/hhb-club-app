@@ -95,8 +95,8 @@ routes/                 # Flask blueprints (thin; delegate to services)
   rules_routes.py        # /rules (Club Rules - rotation, sitting out, pool play sections)
   sunday_pools_routes.py # /sunday-pools + /sunday-pools/generate (admin) - Sunday Pool Play
   vote_routes.py         # /vote + /vote/results + /vote/admin/toggle-* (admin) - Top 20 Player Vote
-  holiday_routes.py      # /holiday/nov-2026-<slug> - UNLISTED private family-holiday poll (not a club
-                        #   feature; never link it anywhere - see Decisions Log 2026-10-12)
+  party_routes.py        # /party/tihar/hillfield-brae - UNLISTED private Tihar Party RSVP (not a club
+                        #   feature; never link it anywhere - see Decisions Log 2026-11-06)
 services/               # Business logic + data parsing (the heart of the app)
   spond_service.py      # Live Spond fetch: events (calendar) + members (CSV) + per-date confirmed
                         #   attendees (get_confirmed_attendees, for Weekly Score Upload, and
@@ -129,8 +129,8 @@ services/               # Business logic + data parsing (the heart of the app)
                         #   admin voting_open/results_published flags, compute_rankings()
                         #   (pure Borda-scoring function) - see Decisions Log for why JSON,
                         #   not the Excel workbook the original feature spec asked for
-  holiday_service.py    # November Group Holiday poll (data/holiday_nov2026.json): slug, weekends,
-                        #   families + MIN_PEOPLE config at the top; upsert per family + totals
+  tihar_party_service.py # Tihar Party RSVP (data/tihar_party.json): headcount per family (0 = can't
+                        #   make it), upsert per family + totals; family list at the top
   photos_service.py     # Club + event photo CRUD (Photos.xlsx + static/images/photos/)
   podium_service.py     # Podium photos in static/images/podium/ (numbered _1, _2 …)
   feedback_service.py   # User feedback CRUD (Feedback.xlsx, General + Feature Request)
@@ -1907,6 +1907,27 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   within a tie), Busiest Sunday (lists every tied date), Most Common
   Scorelines, Biggest Rivalries and Most Different Partners. Section
   headings now read "Top 5" from `TOP_N` rather than the list length.
+
+- **2026-11-06 — Retired the November Group Holiday poll; added an unlisted
+  Tihar Party RSVP** (`/party/tihar/hillfield-brae`, `tihar_party_service.py`,
+  `party_routes.py`, `templates/tihar_party.html`, `static/js/tihar_party.js`,
+  invitation at `static/img/party/tihar_invite.jpg`). It's for the same 9
+  families, for the party on Sat 7 Nov 2026. Each family enters a headcount
+  (0 = can't make it, editable by picking the family again); the page shows
+  the running total and a per-family table. There's no note field or admin
+  controls, since only the counts were wanted.
+  - **Holiday poll archive:** its code was deleted, so the old URL now 404s.
+    The code is in git history (last present in commit `16396ca`), and the
+    responses stay in R2 at `data/holiday_nov2026.json` (still gitignored).
+    The 2026-10-12 entry above describes that page as it was.
+  - **Hidden, but guessable:** noindex meta tag and header, not linked
+    anywhere, not in robots.txt. Unlike the holiday poll there's no random
+    slug (asked for a simple URL), and the invitation shows the home address.
+    Retire this page after the party.
+  - **Local testing:** local `.env` has production R2 creds, so testing this
+    on the normal dev server would write fake RSVPs to the live data. It was
+    tested on a separate instance with `R2_*` blanked and `DATA_PATH` pointed
+    at a scratch file.
 
 ---
 
