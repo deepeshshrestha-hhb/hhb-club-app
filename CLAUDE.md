@@ -95,8 +95,6 @@ routes/                 # Flask blueprints (thin; delegate to services)
   rules_routes.py        # /rules (Club Rules - rotation, sitting out, pool play sections)
   sunday_pools_routes.py # /sunday-pools + /sunday-pools/generate (admin) - Sunday Pool Play
   vote_routes.py         # /vote + /vote/results + /vote/admin/toggle-* (admin) - Top 20 Player Vote
-  party_routes.py        # /party/tihar/hillfield-brae - UNLISTED private Tihar Party RSVP (not a club
-                        #   feature; never link it anywhere - see Decisions Log 2026-11-06)
 services/               # Business logic + data parsing (the heart of the app)
   spond_service.py      # Live Spond fetch: events (calendar) + members (CSV) + per-date confirmed
                         #   attendees (get_confirmed_attendees, for Weekly Score Upload, and
@@ -129,8 +127,6 @@ services/               # Business logic + data parsing (the heart of the app)
                         #   admin voting_open/results_published flags, compute_rankings()
                         #   (pure Borda-scoring function) - see Decisions Log for why JSON,
                         #   not the Excel workbook the original feature spec asked for
-  tihar_party_service.py # Tihar Party RSVP (data/tihar_party.json): headcount per family (0 = can't
-                        #   make it), upsert per family + totals; family list at the top
   photos_service.py     # Club + event photo CRUD (Photos.xlsx + static/images/photos/)
   podium_service.py     # Podium photos in static/images/podium/ (numbered _1, _2 …)
   feedback_service.py   # User feedback CRUD (Feedback.xlsx, General + Feature Request)
@@ -1928,6 +1924,13 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     on the normal dev server would write fake RSVPs to the live data. It was
     tested on a separate instance with `R2_*` blanked and `DATA_PATH` pointed
     at a scratch file.
+
+- **2026-11-08 — Retired the Tihar Party RSVP after the party.** Its route,
+  service, template, script and invitation image were deleted, so
+  `/party/tihar/hillfield-brae` now 404s. The code is in git history (last
+  present in commit `95e4f9e`), and the RSVPs stay in R2 at
+  `data/tihar_party.json` (still gitignored). The `hide_nav`/`hide_feedback`
+  flags in `base.html` are kept for any future one-off page.
 
 ---
 
