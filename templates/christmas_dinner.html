@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Christmas Dinner 2026 – RSVP{% endblock %}
+
+{% block head_extra %}
+{% set photo = url_for('static', filename='img/party/christmas_2024_de_buddha.jpg') %}
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Friday 11 December, 6:30 pm onwards at City of Temple Kathmandu, Paisley. Let us know how many of your family are coming.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Christmas Dinner 2026 – RSVP">
+<meta property="og:description" content="Friday 11 December, 6:30 pm onwards at City of Temple Kathmandu, Paisley. Let us know how many of your family are coming.">
+<meta property="og:url" content="{{ site_url ~ request.path }}">
+<meta property="og:image" content="{{ site_url ~ photo }}">
+<meta property="og:image:type" content="image/jpeg">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+    :root { --xm-bg: #10241b; --xm-panel: #183326; --xm-line: #2f5242; --xm-gold: #e8b04b; --xm-cream: #fbf5e6; --xm-red: #c0392b; --xm-soft: #c9d6cc; }
+    html, body.bg-light { background: var(--xm-bg) !important; } /* outranks base.html's body.bg-light */
+    footer { display: none; } /* the club footer isn't relevant here and is unreadable on dark */
+    .xm-wrap { max-width: 560px; margin: 0 auto; color: var(--xm-cream); }
+    .xm-hero { position: relative; border-radius: .9rem; overflow: hidden; }
+    .xm-hero img { display: block; width: 100%; height: auto; }
+    .xm-hero-text { position: absolute; inset: auto 0 0 0; padding: 3rem 1rem .9rem;
+        background: linear-gradient(to top, rgba(10,24,17,.92), rgba(10,24,17,0)); }
+    .xm-hero-text h1 { color: #fff; font-size: clamp(1.5rem, 6vw, 2rem); font-weight: 700; margin: 0; }
+    .xm-hero-text p { color: var(--xm-gold); margin: .15rem 0 0; font-weight: 600; }
+    .xm-caption { color: var(--xm-soft); font-size: .8rem; font-style: italic; text-align: center; margin: .4rem 0 1rem; }
+    .xm-panel { background: var(--xm-panel); border: 1px solid var(--xm-line); border-radius: .75rem; padding: 1.1rem; }
+    .xm-panel h2 { color: var(--xm-gold); font-size: 1.15rem; font-weight: 700; margin: 0 0 .75rem; }
+    .xm-facts { list-style: none; padding: 0; margin: 0 0 .9rem; }
+    .xm-facts li { display: flex; gap: .6rem; padding: .3rem 0; }
+    .xm-facts .xm-ico { width: 1.4rem; flex: none; text-align: center; }
+    .xm-facts strong { color: #fff; }
+    .xm-note { color: var(--xm-soft); font-size: .9rem; }
+    .xm-map { width: 100%; height: 220px; border: 0; border-radius: .5rem; display: block; }
+    .xm-btn-outline { border: 1px solid var(--xm-gold); color: var(--xm-gold); font-weight: 600; }
+    .xm-btn-outline:hover, .xm-btn-outline:focus { background: var(--xm-gold); color: var(--xm-bg); }
+    .xm-panel .form-label { color: var(--xm-cream); font-weight: 600; }
+    .xm-hint { color: var(--xm-soft); font-size: .875rem; }
+    .xm-count { color: var(--xm-gold); font-size: 2.75rem; font-weight: 700; line-height: 1; }
+    .xm-submit { background: var(--xm-red); border-color: var(--xm-red); color: #fff; font-weight: 700; }
+    .xm-submit:hover, .xm-submit:focus, .xm-submit:active,
+    .xm-submit:disabled { background: var(--xm-red); border-color: var(--xm-red); color: #fff; }
+    .xm-submit:disabled { opacity: .45; }
+    #xmTable { --bs-table-bg: transparent; --bs-table-color: var(--xm-cream); --bs-table-border-color: var(--xm-line); margin: 0; }
+    #xmTable th { color: var(--xm-gold); font-weight: 600; }
+    #xmTable tfoot td { font-weight: 700; color: var(--xm-gold); border-bottom: 0; }
+    .xm-muted { color: #93a89b; }
+    .xm-toast { z-index: 1090; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="xm-wrap">
+    <div class="xm-hero">
+        <img src="{{ url_for('static', filename='img/party/christmas_2024_de_buddha.jpg') }}" width="2000" height="1500"
+             alt="The nine families together at our Christmas dinner at De' Buddha, Johnstone, in 2024">
+        <div class="xm-hero-text">
+            <h1>🎄 Christmas Dinner 2026</h1>
+            <p>Friday 11 December · 6:30 pm onwards</p>
+        </div>
+    </div>
+    <p class="xm-caption">Christmas Dinner 2024 at De' Buddha, Johnstone</p>
+
+    <div class="xm-panel mb-3">
+        <h2>This year</h2>
+        <p>Our annual Christmas dinner is back! This year we're trying <strong>{{ venue.name }}</strong>, the new
+            Nepalese restaurant in Paisley from the same owners as De' Buddha in Johnstone, where we had our
+            2024 Christmas dinner.</p>
+        <ul class="xm-facts">
+            <li><span class="xm-ico">📅</span><span><strong>Friday 11 December 2026</strong></span></li>
+            <li><span class="xm-ico">🕡</span><span><strong>6:30 pm onwards</strong></span></li>
+            <li><span class="xm-ico">📍</span><span><strong>{{ venue.name }}</strong><br>{{ venue.address }}</span></li>
+        </ul>
+        <p class="xm-note">The restaurant is on the first floor and there's no lift.</p>
+        <iframe class="xm-map mb-2" src="{{ venue.embed_url }}" title="Map showing {{ venue.name }}, Paisley"
+                loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <a class="btn xm-btn-outline w-100" href="{{ venue.maps_url }}" target="_blank" rel="noopener">Open in Google Maps</a>
+    </div>
+
+    <div class="xm-panel mb-3">
+        <h2>How many of you are coming?</h2>
+        <form id="xmForm" novalidate>
+            <div class="mb-3">
+                <label for="familySelect" class="form-label">Your family</label>
+                <select id="familySelect" class="form-select" required>
+                    <option value="">Choose…</option>
+                    {% for f in families %}<option value="{{ f }}">{{ f }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="peopleInput" class="form-label">Number of people</label>
+                <input type="number" id="peopleInput" class="form-control" min="0" max="{{ max_people }}" inputmode="numeric" required>
+                <div class="xm-hint mt-1">Enter 0 if you can't make it. You can come back and change this.</div>
+            </div>
+            <div class="alert alert-danger py-2 d-none" id="formError"></div>
+            <button type="submit" class="btn xm-submit w-100" id="submitBtn" disabled>Send</button>
+        </form>
+    </div>
+
+    <div class="xm-panel mb-3" aria-live="polite">
+        <div class="xm-count" id="totalPeople"></div>
+        <div class="mt-1" id="totalLabel"></div>
+        <div class="xm-hint" id="respondedLabel"></div>
+    </div>
+
+    <div class="xm-panel">
+        <h2>Replies</h2>
+        <table class="table table-sm" id="xmTable">
+            <thead><tr><th>Family</th><th>Coming</th></tr></thead>
+            <tbody id="xmRows"></tbody>
+            <tfoot><tr id="xmTotalRow"></tr></tfoot>
+        </table>
+    </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3 xm-toast">
+    <div id="xmToast" class="toast align-items-center text-bg-success border-0" role="status" aria-live="polite">
+        <div class="d-flex">
+            <div class="toast-body" id="xmToastBody">Saved.</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.XMAS_DINNER = {
+        apiBase: {{ url_for('christmas_dinner.page')|tojson }},
+        maxPeople: {{ max_people }},
+        state: {{ state|tojson }}
+    };
+</script>
+<script src="{{ url_for('static', filename='js/christmas_dinner.js') }}?v={{ asset_version('js/christmas_dinner.js') }}"></script>
+{% endblock %}

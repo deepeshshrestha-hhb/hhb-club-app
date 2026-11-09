@@ -80,3 +80,7 @@ data/holiday_nov2026.json.tmp
 # Tihar Party RSVP - family names, created on first submit, stored in R2, not source-controlled
 data/tihar_party.json
 data/tihar_party.json.tmp
+
+# Christmas Dinner 2026 RSVP - family names, created on first submit, stored in R2, not source-controlled
+data/christmas_dinner_2026.json
+data/christmas_dinner_2026.json.tmp
