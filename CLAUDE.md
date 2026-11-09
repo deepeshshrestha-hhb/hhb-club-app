@@ -1952,6 +1952,8 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     a response carrying `X-Frame-Options: SAMEORIGIN`. The in-app preview
     browser blocks all outside requests, so the map can only be checked on
     the live site.
+    Query by the **street address only**: with "City of Temple Kathmandu" in
+    front, the embed centred on Gallowhill (wrong area, no pin).
   - Same hiding and testing approach as the Tihar entry: noindex, not linked,
     and tested on a separate R2-free instance. Retire it after the dinner.
 

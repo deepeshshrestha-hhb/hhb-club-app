@@ -27,12 +27,15 @@ SITE_URL = "https://www.hhbclub.co.uk"
 VENUE = {
     "name": "City of Temple Kathmandu",
     "address": "First Floor, 8 Moss Street, Paisley PA1 1BL",
+    # Both use the plain street address: with the restaurant name in front,
+    # Google's keyless embed resolved to the wrong part of Paisley with no pin.
+    # The address alone lands on Moss Street (55.8459, -4.4244, PA1 1BL).
     "maps_url": "https://www.google.com/maps/search/?api=1&query="
-                "City+of+Temple+Kathmandu%2C+8+Moss+Street%2C+Paisley+PA1+1BL",
+                "8+Moss+Street%2C+Paisley+PA1+1BL",
     # The keyless embed URL directly - the older maps.google.com/maps?output=embed
     # form redirects here with X-Frame-Options: SAMEORIGIN, which blanks the iframe.
     "embed_url": "https://www.google.com/maps/embed?origin=mfe&pb=!1m3!2m1!1s"
-                 "City+of+Temple+Kathmandu,+8+Moss+Street,+Paisley+PA1+1BL!6i16",
+                 "8+Moss+Street,+Paisley+PA1+1BL!6i17",
 }
 
 FAMILIES = [
