@@ -95,6 +95,8 @@ routes/                 # Flask blueprints (thin; delegate to services)
   rules_routes.py        # /rules (Club Rules - rotation, sitting out, pool play sections)
   sunday_pools_routes.py # /sunday-pools + /sunday-pools/generate (admin) - Sunday Pool Play
   vote_routes.py         # /vote + /vote/results + /vote/admin/toggle-* (admin) - Top 20 Player Vote
+  christmas_dinner_routes.py # /party/christmas-dinner-2026 - UNLISTED private Christmas Dinner RSVP
+                        #   (not a club feature; never link it anywhere - see Decisions Log 2026-11-09)
 services/               # Business logic + data parsing (the heart of the app)
   spond_service.py      # Live Spond fetch: events (calendar) + members (CSV) + per-date confirmed
                         #   attendees (get_confirmed_attendees, for Weekly Score Upload, and
@@ -127,6 +129,8 @@ services/               # Business logic + data parsing (the heart of the app)
                         #   admin voting_open/results_published flags, compute_rankings()
                         #   (pure Borda-scoring function) - see Decisions Log for why JSON,
                         #   not the Excel workbook the original feature spec asked for
+  christmas_dinner_service.py # Christmas Dinner 2026 RSVP (data/christmas_dinner_2026.json): headcount
+                        #   per family (0 = can't make it) + totals; VENUE + family list at the top
   photos_service.py     # Club + event photo CRUD (Photos.xlsx + static/images/photos/)
   podium_service.py     # Podium photos in static/images/podium/ (numbered _1, _2 …)
   feedback_service.py   # User feedback CRUD (Feedback.xlsx, General + Feature Request)
@@ -1931,6 +1935,25 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   present in commit `95e4f9e`), and the RSVPs stay in R2 at
   `data/tihar_party.json` (still gitignored). The `hide_nav`/`hide_feedback`
   flags in `base.html` are kept for any future one-off page.
+
+- **2026-11-09 — Added an unlisted Christmas Dinner 2026 RSVP**
+  (`/party/christmas-dinner-2026`, `christmas_dinner_service.py`,
+  `christmas_dinner_routes.py`, `templates/christmas_dinner.html`,
+  `static/js/christmas_dinner.js`). It's for the same 9 families as the Tihar
+  RSVP and works the same way: a headcount per family (0 = can't make it),
+  a running total and a replies table. The page adds a hero photo from the
+  2024 dinner at De' Buddha, Johnstone (`static/img/party/
+  christmas_2024_de_buddha.jpg`), the date (Fri 11 Dec 2026, 6:30 pm) and the
+  venue: City of Temple Kathmandu, First Floor, 8 Moss Street, Paisley PA1
+  1BL. It's run by De' Buddha's owners, and it's upstairs with no lift. A
+  Google Maps embed and link sit in `VENUE`.
+  - **Map embed:** use the `google.com/maps/embed?origin=mfe&pb=...` form.
+    The older `maps.google.com/maps?...&output=embed` URL redirects there via
+    a response carrying `X-Frame-Options: SAMEORIGIN`. The in-app preview
+    browser blocks all outside requests, so the map can only be checked on
+    the live site.
+  - Same hiding and testing approach as the Tihar entry: noindex, not linked,
+    and tested on a separate R2-free instance. Retire it after the dinner.
 
 ---
 
