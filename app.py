@@ -17,6 +17,7 @@ from routes.weekly_score_routes import weekly_bp
 from routes.sunday_pools_routes import sunday_pools_bp
 from routes.vote_routes import vote_bp
 from routes.christmas_dinner_routes import christmas_dinner_bp
+from routes.annual_dinner_routes import annual_dinner_bp
 from services import r2_service
 from services import committee_service
 from services import about_content_service
@@ -79,6 +80,7 @@ def create_app():
     app.register_blueprint(sunday_pools_bp)
     app.register_blueprint(vote_bp)
     app.register_blueprint(christmas_dinner_bp)
+    app.register_blueprint(annual_dinner_bp)
 
     @app.context_processor
     def inject_feedback_players():
@@ -93,7 +95,12 @@ def create_app():
 
     @app.route("/")
     def dashboard():
-        return render_template("dashboard.html")
+        from services.annual_dinner_service import get_banner
+        try:
+            dinner = get_banner()
+        except Exception:
+            dinner = None  # never let the banner break the homepage
+        return render_template("dashboard.html", dinner=dinner)
 
     @app.route("/about")
     def about():

@@ -43,6 +43,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - **Photos** — club gallery (`/photos/gallery`), per-event photos linked from
     tournament pages, podium photos, and per-player profile photos
   - **Feedback** — site-wide modal (General + Feature Request); `/feedback`
+  - **Annual Dinner & Gala 2026** (`/annual-dinner`) — event page for Sat 5 Dec
+    2026: countdown, 2026 champions, volunteer roles, member RSVPs with guest
+    head count, admin tools; promoted by a Dashboard banner until 6 Dec
   - **Admin** (`/admin`) — Spond Refresh, Refresh Signup Analytics, Refresh Data
     from R2, and photo management (club + podium), behind a single-user login
 
@@ -97,6 +100,8 @@ routes/                 # Flask blueprints (thin; delegate to services)
   vote_routes.py         # /vote + /vote/results + /vote/admin/toggle-* (admin) - Top 20 Player Vote
   christmas_dinner_routes.py # /party/christmas-dinner-2026 - UNLISTED private Christmas Dinner RSVP
                         #   (not a club feature; never link it anywhere - see Decisions Log 2026-11-09)
+  annual_dinner_routes.py # /annual-dinner + api/ (state, rsvp, role claim) + admin/ (settings,
+                        #   roles, champions, rsvp delete, export.csv/.xlsx) - Annual Dinner & Gala 2026
 services/               # Business logic + data parsing (the heart of the app)
   spond_service.py      # Live Spond fetch: events (calendar) + members (CSV) + per-date confirmed
                         #   attendees (get_confirmed_attendees, for Weekly Score Upload, and
@@ -131,6 +136,9 @@ services/               # Business logic + data parsing (the heart of the app)
                         #   not the Excel workbook the original feature spec asked for
   christmas_dinner_service.py # Christmas Dinner 2026 RSVP (data/christmas_dinner_2026.json): headcount
                         #   per family (0 = can't make it) + totals; VENUE + family list at the top
+  annual_dinner_service.py # Annual Dinner & Gala 2026 (data/AnnualDinner2026.xlsx: Settings, Roles,
+                        #   RSVPs, Champions sheets); champions auto-pulled from 2026 scoresheets;
+                        #   get_banner() feeds the Dashboard banner (None after 6 Dec 2026)
   photos_service.py     # Club + event photo CRUD (Photos.xlsx + static/images/photos/)
   podium_service.py     # Podium photos in static/images/podium/ (numbered _1, _2 …)
   feedback_service.py   # User feedback CRUD (Feedback.xlsx, General + Feature Request)
@@ -1956,6 +1964,42 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     front, the embed centred on Gallowhill (wrong area, no pin).
   - Same hiding and testing approach as the Tihar entry: noindex, not linked,
     and tested on a separate R2-free instance. Retire it after the dinner.
+
+- **2026-11-10 — Added the Annual Dinner & Gala 2026 page** (`/annual-dinner`,
+  `annual_dinner_service.py`, `annual_dinner_routes.py`,
+  `templates/annual_dinner.html`, `static/css/annual_dinner.css`,
+  `static/js/annual_dinner.js` + `annual_dinner_countdown.js`). It's the club's
+  first Annual Dinner & Gala (Sat 5 Dec 2026, 5-9 pm), and unlike the private
+  party pages above it's a real club page with the normal nav, linked from a
+  Dashboard banner.
+  - **Storage:** one workbook, `data/AnnualDinner2026.xlsx` (gitignored, R2 is
+    canonical), with four sheets: `Settings` (venue name/address/map link,
+    attendance target, default **35**), `Roles`, `RSVPs` (one row per member,
+    keyed by full name) and `Champions` (admin overrides only). Excel was
+    asked for, but the write path follows the JSON services' safety pattern: a
+    module lock around every read-modify-write, an atomic temp-file save, and
+    the R2 upload in a background thread.
+  - **Members:** dropdowns use `player_service.get_player_names()`
+    (`hhb_members.csv`, Spond-synced). The server rejects any name not on that
+    list, and guest counts must be whole numbers from 0 to 10 per band.
+  - **Head count:** members attending count as adults. Total = attending
+    members + adult/teen/child guests. The public page shows names only; the
+    guest breakdown per person is admin-only. Anyone picking a member's name can
+    load and change that member's RSVP (no PIN, as specced).
+  - **Roles:** six seeded roles (Rukhsar, Deepesh, Zaheer prefilled). The
+    public can claim an *open* role only; the server refuses a claim on a
+    filled one. Admin assigns/clears/renames/adds/removes.
+  - **Champions:** pulled live from the 2026 Doubles and Championships
+    scoresheets (cached on file mtimes); the League row shows "Season finishes
+    ..." until `get_league(2026)` is complete, then fills in. An admin row with
+    the same event name overrides it (blank winners hides it).
+  - **Chart:** a hand-drawn SVG doughnut, not Chart.js, so no extra CDN script.
+  - **Dashboard banner:** `get_banner()` returns None after 6 Dec 2026, which
+    hides the banner. It's wrapped in try/except so it can never break `/`.
+  - **Admin:** inline on the page (`session.is_admin`), plain form posts
+    behind `admin_required`. Log in at `/admin/login?next=/annual-dinner`.
+  - Previewed on a separate R2-free local instance before going live (local
+    `.env` points at production R2).
 
 ---
 

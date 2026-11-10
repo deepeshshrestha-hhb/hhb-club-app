@@ -84,3 +84,7 @@ data/tihar_party.json.tmp
 # Christmas Dinner 2026 RSVP - family names, created on first submit, stored in R2, not source-controlled
 data/christmas_dinner_2026.json
 data/christmas_dinner_2026.json.tmp
+
+# Annual Dinner & Gala 2026 RSVPs/roles/settings (member names + dietary notes; R2 is canonical)
+data/AnnualDinner2026.xlsx
+data/AnnualDinner2026.tmp.xlsx

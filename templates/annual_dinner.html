@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}Annual Dinner & Gala 2026 – HHB Club{% endblock %}
+
+{% block head_extra %}
+{% set og_desc = ev.date ~ ', ' ~ ev.time ~ '. Our first ever Annual Dinner & Gala: dinner, entertainment for all ages and a celebration of our 2026 champions. Families welcome. RSVP now!' %}
+<meta name="description" content="{{ og_desc }}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ ev.title }}">
+<meta property="og:description" content="{{ og_desc }}">
+<meta property="og:url" content="{{ site_url ~ request.path }}">
+<meta property="og:image" content="{{ site_url ~ url_for('static', filename='images/Annual Doubles Classic 2026 - 20260607_090756.jpg') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/annual_dinner.css') }}?v={{ asset_version('css/annual_dinner.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="ad-wrap">
+
+    {# ------------------------------------------------------------ HERO #}
+    <section class="ad-hero mb-4">
+        <div class="ad-confetti" aria-hidden="true">
+            {% for i in range(18) %}<span></span>{% endfor %}
+        </div>
+        <div class="ad-hero-inner">
+            <span class="ad-pill">✨ Our first ever · a new HHB tradition</span>
+            <h1 class="ad-title">Annual Dinner<br><span>&amp; Gala 2026</span></h1>
+            <ul class="ad-facts">
+                <li><span aria-hidden="true">📅</span> {{ ev.date }}</li>
+                <li><span aria-hidden="true">🕔</span> {{ ev.time }}</li>
+                <li><span aria-hidden="true">📍</span>
+                    {% if state.settings.venue_name %}
+                        <span>
+                            <strong>{{ state.settings.venue_name }}</strong>{% if state.settings.venue_address %}<br><small>{{ state.settings.venue_address }}</small>{% endif %}
+                            {% if state.settings.venue_map_url %}<br><a class="ad-maplink" href="{{ state.settings.venue_map_url }}" target="_blank" rel="noopener">Open map &raquo;</a>{% endif %}
+                        </span>
+                    {% else %}
+                        <span>Venue TBC</span>
+                    {% endif %}
+                </li>
+            </ul>
+
+            <div class="ad-countdown" id="adCountdown" data-start="{{ ev.start_iso }}" aria-live="polite">
+                <div><b data-unit="d">–</b><small>days</small></div>
+                <div><b data-unit="h">–</b><small>hours</small></div>
+                <div><b data-unit="m">–</b><small>mins</small></div>
+                <div><b data-unit="s">–</b><small>secs</small></div>
+            </div>
+            <p class="ad-countdown-done d-none" id="adCountdownDone">🎉 It's party time!</p>
+
+            <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mt-3">
+                <a href="#rsvp" class="btn ad-btn-gold btn-lg px-4">RSVP now</a>
+                <a href="#roles" class="btn ad-btn-ghost btn-lg px-4">Volunteer</a>
+            </div>
+            <p class="ad-hero-count mt-3 mb-0"><strong id="heroCount">{{ state.summary.total }}</strong> <span id="heroCountLabel">{{ 'person' if state.summary.total == 1 else 'people' }}</span> coming so far</p>
+        </div>
+    </section>
+
+    {# ------------------------------------------------------- CHAMPIONS #}
+    <section class="mb-4" id="champions">
+        <h2 class="ad-h2">🏆 Celebrating our 2026 Champions</h2>
+        <div class="row g-2 g-md-3">
+            {% for c in champions %}
+            <div class="col-12 col-sm-6">
+                <div class="ad-champ h-100">
+                    <div class="ad-champ-icon" aria-hidden="true">{{ '⏳' if not c.winners else '🥇' }}</div>
+                    <div>
+                        <div class="ad-champ-event">{{ c.event }}</div>
+                        {% if c.winners %}
+                            <div class="ad-champ-name">{{ c.winners }}</div>
+                        {% else %}
+                            <div class="ad-champ-tbc">{{ c.note or 'To be decided' }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12"><p class="text-muted">Champions will be announced soon.</p></div>
+            {% endfor %}
+        </div>
+        <p class="small text-muted mt-2 mb-0">Every 2026 tournament winner will be celebrated on the night.</p>
+    </section>
+
+    {# ------------------------------------------------- WHAT TO EXPECT #}
+    <section class="mb-4">
+        <h2 class="ad-h2">🎊 What to expect</h2>
+        <div class="row g-2 g-md-3">
+            <div class="col-6 col-md-3"><div class="ad-expect h-100"><div class="ad-expect-ico">🍽️</div><h3>Dinner</h3><p>A hall with full catering. Come hungry!</p></div></div>
+            <div class="col-6 col-md-3"><div class="ad-expect h-100"><div class="ad-expect-ico">🎤</div><h3>Entertainment</h3><p>Fun for all ages, from little ones to grown-ups.</p></div></div>
+            <div class="col-6 col-md-3"><div class="ad-expect h-100"><div class="ad-expect-ico">🏅</div><h3>Awards</h3><p>We celebrate all of 2026's tournament winners.</p></div></div>
+            <div class="col-6 col-md-3"><div class="ad-expect h-100"><div class="ad-expect-ico">👨‍👩‍👧‍👦</div><h3>Families welcome</h3><p>Bring your partner, kids and family along.</p></div></div>
+        </div>
+    </section>
+
+    {# ----------------------------------------------------------- ROLES #}
+    <section class="mb-4" id="roles">
+        <h2 class="ad-h2">🙋 Volunteer roles</h2>
+        <p class="text-muted small">Help make our first gala a great one. Open roles can be taken by any member: pick your name and tap <em>I'll do it</em>. One person can hold more than one role.</p>
+        <div class="ad-panel p-0 overflow-hidden">
+            <div id="rolesList" class="ad-roles"></div>
+        </div>
+        <div id="roleError" class="alert alert-danger small mt-2 d-none" role="alert"></div>
+    </section>
+
+    {# ------------------------------------------------------------ RSVP #}
+    <section class="mb-4" id="rsvp">
+        <h2 class="ad-h2">💌 RSVP</h2>
+        <div class="ad-panel">
+            <form id="rsvpForm" novalidate>
+                <div class="mb-3">
+                    <label for="memberSelect" class="form-label fw-semibold">Your name</label>
+                    <select id="memberSelect" class="form-select form-select-lg" required>
+                        <option value="">Select your name…</option>
+                        {% for m in members %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+                    </select>
+                    <div id="rsvpExisting" class="form-text text-success d-none">✓ We have your RSVP. Change anything below and tap Update.</div>
+                </div>
+
+                <fieldset class="mb-3">
+                    <legend class="form-label fw-semibold fs-6">Are you coming?</legend>
+                    <div class="ad-yesno" role="radiogroup">
+                        <input type="radio" class="btn-check" name="attending" id="attYes" value="Yes">
+                        <label class="btn btn-outline-success btn-lg" for="attYes">🎉 Yes, I'll be there</label>
+                        <input type="radio" class="btn-check" name="attending" id="attNo" value="No">
+                        <label class="btn btn-outline-secondary btn-lg" for="attNo">Sorry, can't make it</label>
+                    </div>
+                </fieldset>
+
+                <div id="guestFields" class="d-none">
+                    <p class="form-label fw-semibold mb-1">Anyone coming with you?</p>
+                    <p class="small text-muted mb-2">Don't count yourself, just your guests.</p>
+                    {% for key, label, hint in [('adults','Adults','20+'),('teens','Teens','13–19'),('children','Children','up to 12')] %}
+                    <div class="ad-stepper">
+                        <div><strong>{{ label }}</strong> <span class="text-muted small">{{ hint }}</span></div>
+                        <div class="ad-stepper-ctl">
+                            <button type="button" class="btn btn-outline-primary" data-step="-1" data-band="{{ key }}" aria-label="Fewer {{ label|lower }}">−</button>
+                            <output id="band_{{ key }}" aria-live="polite">0</output>
+                            <button type="button" class="btn btn-outline-primary" data-step="1" data-band="{{ key }}" aria-label="More {{ label|lower }}">+</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="mt-3">
+                        <label for="notesInput" class="form-label fw-semibold">Dietary requirements / notes <span class="text-muted fw-normal small">(optional)</span></label>
+                        <textarea id="notesInput" class="form-control" rows="2" maxlength="500" placeholder="e.g. 1 vegetarian, nut allergy"></textarea>
+                    </div>
+                    <p class="ad-party mt-3 mb-0">Your party: <strong id="partySize">1</strong></p>
+                </div>
+
+                <div id="rsvpError" class="alert alert-danger small mt-3 mb-0 d-none" role="alert"></div>
+                <button type="submit" id="rsvpSubmit" class="btn ad-btn-primary btn-lg w-100 mt-3" disabled>Send RSVP</button>
+            </form>
+        </div>
+    </section>
+
+    {# ---------------------------------------------------- WHO'S COMING #}
+    <section class="mb-4" id="coming">
+        <h2 class="ad-h2">🥳 Who's coming</h2>
+        <div class="ad-panel">
+            <div class="d-flex justify-content-between align-items-end mb-1">
+                <span><strong class="ad-big" id="progTotal">{{ state.summary.total }}</strong> <span class="text-muted">of {{ state.settings.target }} target</span></span>
+                <span class="small text-muted" id="progPct">{{ state.summary.progress_pct }}%</span>
+            </div>
+            <div class="progress ad-progress" role="progressbar" aria-label="Attendance towards target"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ state.summary.progress_pct }}">
+                <div class="progress-bar" id="progBar" style="width: {{ state.summary.progress_pct }}%"></div>
+            </div>
+            <div id="comingList" class="ad-names mt-3"></div>
+        </div>
+    </section>
+
+    {# ------------------------------------------------------ HEAD COUNT #}
+    <section class="mb-4" id="headcount">
+        <h2 class="ad-h2">📊 Head count</h2>
+        <div class="ad-panel">
+            <div class="row g-3 align-items-center">
+                <div class="col-12 col-md-5 text-center">
+                    <div class="ad-donut-wrap">
+                        <svg id="ageDonut" viewBox="0 0 120 120" role="img" aria-label="Age mix of everyone attending"></svg>
+                        <div class="ad-donut-center"><strong id="hcTotal">0</strong><small>total</small></div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-7">
+                    <ul class="ad-legend list-unstyled mb-3">
+                        <li><span class="ad-swatch" style="background:var(--ad-adult)"></span>Adults (20+)<b id="hcAdults">0</b></li>
+                        <li><span class="ad-swatch" style="background:var(--ad-teen)"></span>Teens (13–19)<b id="hcTeens">0</b></li>
+                        <li><span class="ad-swatch" style="background:var(--ad-child)"></span>Children (up to 12)<b id="hcChildren">0</b></li>
+                    </ul>
+                    <div class="row g-2 text-center">
+                        <div class="col-6"><div class="ad-stat"><b id="hcYes">0</b><small>members coming</small></div></div>
+                        <div class="col-6"><div class="ad-stat"><b id="hcNo">0</b><small>members can't make it</small></div></div>
+                    </div>
+                    <p class="small text-muted mt-2 mb-0">Members count as adults. Total = members attending + all their guests.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ----------------------------------------------------------- ADMIN #}
+    {% if is_admin %}
+    <section class="mb-4" id="admin">
+        <h2 class="ad-h2">🔧 Admin</h2>
+
+        <div class="ad-panel mb-3">
+            <h3 class="h6 fw-bold">Venue &amp; target</h3>
+            <form method="post" action="{{ url_for('annual_dinner.admin_settings') }}" class="row g-2">
+                <div class="col-12 col-md-6"><label class="form-label small mb-0">Venue name</label>
+                    <input name="venue_name" class="form-control" value="{{ state.settings.venue_name }}" placeholder="Leave blank for “Venue TBC”"></div>
+                <div class="col-12 col-md-6"><label class="form-label small mb-0">Address</label>
+                    <input name="venue_address" class="form-control" value="{{ state.settings.venue_address }}"></div>
+                <div class="col-12 col-md-8"><label class="form-label small mb-0">Map link (optional)</label>
+                    <input name="venue_map_url" type="url" class="form-control" value="{{ state.settings.venue_map_url }}" placeholder="https://maps.google.com/…"></div>
+                <div class="col-6 col-md-4"><label class="form-label small mb-0">Attendance target</label>
+                    <input name="target" type="number" min="1" max="1000" class="form-control" value="{{ state.settings.target }}"></div>
+                <div class="col-12"><button class="btn btn-hhb-primary text-white">Save</button></div>
+            </form>
+        </div>
+
+        <div class="ad-panel mb-3">
+            <h3 class="h6 fw-bold">Volunteer roles</h3>
+            {% for r in state.roles %}
+            <div class="ad-admin-role">
+                <form method="post" action="{{ url_for('annual_dinner.admin_role_rename', role_id=r.id) }}" class="d-flex gap-1 mb-1">
+                    <input name="role" class="form-control form-control-sm" value="{{ r.role }}" aria-label="Role name">
+                    <button class="btn btn-sm btn-outline-secondary">Rename</button>
+                </form>
+                <div class="d-flex gap-1">
+                    <form method="post" action="{{ url_for('annual_dinner.admin_role_assign', role_id=r.id) }}" class="d-flex gap-1 flex-grow-1">
+                        <select name="holder" class="form-select form-select-sm" aria-label="Holder for {{ r.role }}">
+                            <option value="">— Open (Please volunteer) —</option>
+                            {% for m in members %}<option value="{{ m }}" {{ 'selected' if m == r.holder }}>{{ m }}</option>{% endfor %}
+                        </select>
+                        <button class="btn btn-sm btn-outline-primary">Assign</button>
+                    </form>
+                    <form method="post" action="{{ url_for('annual_dinner.admin_role_remove', role_id=r.id) }}"
+                          onsubmit="return confirm('Remove the role “{{ r.role }}”?');">
+                        <button class="btn btn-sm btn-outline-danger" aria-label="Remove role">🗑</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            <form method="post" action="{{ url_for('annual_dinner.admin_role_add') }}" class="d-flex gap-1 mt-3">
+                <input name="role" class="form-control form-control-sm" placeholder="New role name" required>
+                <button class="btn btn-sm btn-hhb-primary text-white text-nowrap">Add role</button>
+            </form>
+        </div>
+
+        <div class="ad-panel mb-3">
+            <h3 class="h6 fw-bold">Champions</h3>
+            <p class="small text-muted">Pulled automatically from the 2026 tournament archive. To change a line, enter the same event name with new winners; leave winners blank to hide it. A new event name adds a line.</p>
+            {% if admin.champion_overrides %}
+            <ul class="list-unstyled small">
+                {% for c in admin.champion_overrides %}
+                <li class="d-flex justify-content-between align-items-center border-bottom py-1">
+                    <span><strong>{{ c.event }}</strong>: {{ c.winners or '(hidden)' }}</span>
+                    <form method="post" action="{{ url_for('annual_dinner.admin_champion_remove') }}">
+                        <input type="hidden" name="event" value="{{ c.event }}">
+                        <button class="btn btn-sm btn-link text-danger p-0">Undo</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <form method="post" action="{{ url_for('annual_dinner.admin_champion_set') }}" class="row g-1">
+                <div class="col-12 col-md-5"><input name="event" class="form-control form-control-sm" placeholder="Event, e.g. Annual Players League" list="champEvents" required></div>
+                <div class="col-8 col-md-5"><input name="winners" class="form-control form-control-sm" placeholder="Winner(s)"></div>
+                <div class="col-4 col-md-2"><button class="btn btn-sm btn-hhb-primary text-white w-100">Save</button></div>
+                <datalist id="champEvents">{% for c in champions %}<option value="{{ c.event }}">{% endfor %}</datalist>
+            </form>
+        </div>
+
+        <div class="ad-panel">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <h3 class="h6 fw-bold mb-0">All RSVPs ({{ admin.rsvps|length }})</h3>
+                <div class="d-flex gap-1">
+                    <a class="btn btn-sm btn-outline-success" href="{{ url_for('annual_dinner.admin_export_xlsx') }}">Excel</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('annual_dinner.admin_export_csv') }}">CSV</a>
+                </div>
+            </div>
+            <p class="small text-muted">To edit one, pick that member's name in the RSVP form above. Their answer loads and you can update it.</p>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle small mb-0">
+                    <thead><tr><th>Member</th><th>Coming</th><th title="Adult guests">A</th><th title="Teen guests">T</th><th title="Child guests">C</th><th>Notes</th><th></th></tr></thead>
+                    <tbody>
+                    {% for r in admin.rsvps %}
+                        <tr>
+                            <td class="text-nowrap">{{ r.member }}</td>
+                            <td>{{ '✅' if r.attending else '❌' }}</td>
+                            <td>{{ r.adults }}</td><td>{{ r.teens }}</td><td>{{ r.children }}</td>
+                            <td>{{ r.notes }}</td>
+                            <td>
+                                <form method="post" action="{{ url_for('annual_dinner.admin_rsvp_delete') }}"
+                                      onsubmit="return confirm('Delete {{ r.member }}\'s RSVP?');">
+                                    <input type="hidden" name="member" value="{{ r.member }}">
+                                    <button class="btn btn-sm btn-link text-danger p-0" aria-label="Delete">🗑</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="7" class="text-muted">No RSVPs yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+</div>
+
+<div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index:1090">
+    <div id="adToast" class="toast text-bg-success border-0" role="status" aria-live="polite" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="adToastBody">Saved</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.ANNUAL_DINNER = {
+        apiBase: {{ url_for('annual_dinner.page')|tojson }},
+        state: {{ state|tojson }},
+        members: {{ members|tojson }},
+        maxPerBand: {{ max_per_band }}
+    };
+</script>
+<script src="{{ url_for('static', filename='js/annual_dinner_countdown.js') }}?v={{ asset_version('js/annual_dinner_countdown.js') }}"></script>
+<script src="{{ url_for('static', filename='js/annual_dinner.js') }}?v={{ asset_version('js/annual_dinner.js') }}"></script>
+{% endblock %}
