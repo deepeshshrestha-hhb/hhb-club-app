@@ -80,6 +80,7 @@
     {# Annual Dinner & Gala banner - get_banner() returns None after 6 Dec 2026, hiding it. #}
     <div class="col-12 mb-3">
         <a class="ad-banner" href="{{ url_for('annual_dinner.page') }}">
+            {% if dinner.hidden %}<span class="badge text-bg-warning mb-1">Admin preview · hidden from members</span>{% endif %}
             <div class="ad-banner-kicker">✨ Our first ever · RSVP open</div>
             <h2>Annual Dinner &amp; Gala 2026</h2>
             <div class="ad-banner-meta"><span class="text-nowrap">📅 {{ dinner.date }}</span> <span class="text-nowrap">🕔 {{ dinner.time }}</span></div>
