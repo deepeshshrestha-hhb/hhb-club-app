@@ -82,6 +82,16 @@ def admin_settings():
     return _back()
 
 
+@annual_dinner_bp.route("/admin/toggle-banner", methods=["POST"])
+@admin_required
+def admin_toggle_banner():
+    on = request.form.get("visible") == "1"
+    ads.set_banner_visible(on)
+    flash("Annual Dinner banner is now showing on the Dashboard." if on
+          else "Annual Dinner banner hidden from the Dashboard.", "success")
+    return redirect(url_for("admin.admin_page"))
+
+
 @annual_dinner_bp.route("/admin/roles/add", methods=["POST"])
 @admin_required
 def admin_role_add():

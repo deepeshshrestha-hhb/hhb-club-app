@@ -97,7 +97,7 @@ def create_app():
     def dashboard():
         from services.annual_dinner_service import get_banner
         try:
-            dinner = get_banner()
+            dinner = get_banner(include_hidden=bool(session.get("is_admin")))
         except Exception:
             dinner = None  # never let the banner break the homepage
         return render_template("dashboard.html", dinner=dinner)

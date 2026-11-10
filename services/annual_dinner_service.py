@@ -42,6 +42,9 @@ DEFAULT_SETTINGS = {
     "venue_address": "",
     "venue_map_url": "",
     "target": 35,
+    # Dashboard banner is off until an admin switches it on (/admin card), so
+    # the committee can review /annual-dinner via its direct link first.
+    "banner_visible": False,
 }
 
 DEFAULT_ROLES = [
@@ -119,6 +122,7 @@ def _load() -> dict:
             if k in DEFAULT_SETTINGS:
                 data["settings"][k] = r.get("value") if r.get("value") is not None else ""
         data["settings"]["target"] = max(1, _int(data["settings"]["target"], 35))
+        data["settings"]["banner_visible"] = str(data["settings"]["banner_visible"]).strip().lower() in ("true", "1", "yes")
         for k in ("venue_name", "venue_address", "venue_map_url"):
             data["settings"][k] = _s(data["settings"][k])
     if "Roles" in wb.sheetnames:
@@ -305,14 +309,31 @@ def get_rsvp(member: str):
         return _load()["rsvps"].get(member)
 
 
-def get_banner() -> dict | None:
-    """Data for the Dashboard banner, or None once the event has passed."""
+def get_banner(include_hidden: bool = False) -> dict | None:
+    """Data for the Dashboard banner, or None once the event has passed or
+    while an admin hasn't switched it on. include_hidden=True (admins) still
+    returns it while switched off, flagged hidden, as a preview."""
     if datetime.now(LOCAL_TZ).date() > BANNER_LAST_DAY:
         return None
     with _lock:
         data = _load()
+    visible = data["settings"]["banner_visible"]
+    if not visible and not include_hidden:
+        return None
     return {"start_iso": EVENT_START_ISO, "total": _summary(data)["total"],
-            "date": EVENT_DATE_DISPLAY, "time": EVENT_TIME_DISPLAY}
+            "date": EVENT_DATE_DISPLAY, "time": EVENT_TIME_DISPLAY, "hidden": not visible}
+
+
+def is_banner_visible() -> bool:
+    with _lock:
+        return _load()["settings"]["banner_visible"]
+
+
+def set_banner_visible(visible: bool):
+    with _lock:
+        data = _load()
+        data["settings"]["banner_visible"] = bool(visible)
+        _save(data)
 
 
 def get_admin_data() -> dict:

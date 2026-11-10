@@ -1994,8 +1994,12 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     ..." until `get_league(2026)` is complete, then fills in. An admin row with
     the same event name overrides it (blank winners hides it).
   - **Chart:** a hand-drawn SVG doughnut, not Chart.js, so no extra CDN script.
-  - **Dashboard banner:** `get_banner()` returns None after 6 Dec 2026, which
-    hides the banner. It's wrapped in try/except so it can never break `/`.
+  - **Dashboard banner:** off by default. A switch on `/admin` ("Annual Dinner
+    & Gala 2026" card, `Settings.banner_visible`) turns it on, so the
+    committee could approve the page via its direct link before it was
+    promoted. Admins always see a preview with an "Admin preview" badge.
+    `get_banner()` also returns None after 6 Dec 2026. It's wrapped in
+    try/except so it can never break `/`.
   - **Admin:** inline on the page (`session.is_admin`), plain form posts
     behind `admin_required`. Log in at `/admin/login?next=/annual-dinner`.
   - Previewed on a separate R2-free local instance before going live (local
