@@ -76,6 +76,27 @@
         </div>
     </div>
 
+    {% if dinner %}
+    {# Annual Dinner & Gala banner - get_banner() returns None after 6 Dec 2026, hiding it. #}
+    <div class="col-12 mb-3">
+        <a class="ad-banner" href="{{ url_for('annual_dinner.page') }}">
+            <div class="ad-banner-kicker">✨ Our first ever · RSVP open</div>
+            <h2>Annual Dinner &amp; Gala 2026</h2>
+            <div class="ad-banner-meta"><span class="text-nowrap">📅 {{ dinner.date }}</span> <span class="text-nowrap">🕔 {{ dinner.time }}</span></div>
+            <div class="ad-countdown" id="dashDinnerCountdown" data-start="{{ dinner.start_iso }}">
+                <div><b data-unit="d">–</b><small>days</small></div>
+                <div><b data-unit="h">–</b><small>hours</small></div>
+                <div><b data-unit="m">–</b><small>mins</small></div>
+                <div><b data-unit="s">–</b><small>secs</small></div>
+            </div>
+            <div class="ad-banner-foot">
+                <span>🥳 <strong>{{ dinner.total }}</strong> {{ 'person' if dinner.total == 1 else 'people' }} coming so far</span>
+                <span class="btn ad-btn-gold">RSVP now &raquo;</span>
+            </div>
+        </a>
+    </div>
+    {% endif %}
+
     <div class="col-12 mb-2">
         <div class="hhb-hero-banner" style="background-image: url('/static/images/photos/5568b66a-b840-4943-8841-8e58afe6c9a9.jpg'); cursor:pointer;"
              data-bs-toggle="modal" data-bs-target="#heroPhotoModal" title="Click to view full photo"></div>
@@ -178,4 +199,16 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block head_extra %}
+{% if dinner %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/annual_dinner.css') }}?v={{ asset_version('css/annual_dinner.css') }}">
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if dinner %}
+<script src="{{ url_for('static', filename='js/annual_dinner_countdown.js') }}?v={{ asset_version('js/annual_dinner_countdown.js') }}"></script>
+{% endif %}
 {% endblock %}
