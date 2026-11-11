@@ -1971,6 +1971,8 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     by editing live data: the live server only reads its own disk copy (see
     the 2026-10-04 Hasan entry). The 24 Friday RSVPs stay in R2 under the old
     file name.
+    The page title, link preview and banner now say **Christmas Lunch 2026**.
+    The URL, file names and the 2024 photo caption keep "dinner".
 
 - **2026-11-10 — Added the Annual Dinner & Gala 2026 page** (`/annual-dinner`,
   `annual_dinner_service.py`, `annual_dinner_routes.py`,
