@@ -1,5 +1,6 @@
 """
-Christmas Dinner 2026 RSVP (Fri 11 Dec 2026): data/christmas_dinner_2026.json
+Christmas Dinner 2026 RSVP (now a lunch, Sat 12 Dec 2026, 12:30 pm):
+data/christmas_dinner_2026_lunch.json
 
 A private headcount for a group of 9 families (not a club feature - nothing on
 the site links to it; see routes/christmas_dinner_routes.py). Each family says
@@ -52,7 +53,11 @@ FAMILIES = [
 
 MAX_PER_FAMILY = 15
 
-DATA_PATH = Path(Config.DATA_DIR) / "christmas_dinner_2026.json"
+# The event moved from Fri 11 Dec dinner to Sat 12 Dec lunch on 2026-11-11, and
+# every family had to reply again. A new file name gives a clean slate without
+# editing live data: the old Friday replies stay in R2 under
+# christmas_dinner_2026.json as a record.
+DATA_PATH = Path(Config.DATA_DIR) / "christmas_dinner_2026_lunch.json"
 
 # Same rationale as vote_service._vote_lock: one gunicorn worker, 4 threads,
 # all sharing this file.

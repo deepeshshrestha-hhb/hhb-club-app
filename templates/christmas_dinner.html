@@ -5,10 +5,10 @@
 {% block head_extra %}
 {% set photo = url_for('static', filename='img/party/christmas_2024_de_buddha.jpg') %}
 <meta name="robots" content="noindex, nofollow">
-<meta name="description" content="Friday 11 December, 6:30 pm onwards at City of Temple Kathmandu, Paisley. Let us know how many of your family are coming.">
+<meta name="description" content="Now Saturday 12 December, lunch from 12:30 pm at City of Temple Kathmandu, Paisley. Let us know how many of your family are coming.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Christmas Dinner 2026 – RSVP">
-<meta property="og:description" content="Friday 11 December, 6:30 pm onwards at City of Temple Kathmandu, Paisley. Let us know how many of your family are coming.">
+<meta property="og:description" content="Now Saturday 12 December, lunch from 12:30 pm at City of Temple Kathmandu, Paisley. Let us know how many of your family are coming.">
 <meta property="og:url" content="{{ site_url ~ request.path }}">
 <meta property="og:image" content="{{ site_url ~ photo }}">
 <meta property="og:image:type" content="image/jpeg">
@@ -47,17 +47,25 @@
     #xmTable tfoot td { font-weight: 700; color: var(--xm-gold); border-bottom: 0; }
     .xm-muted { color: #93a89b; }
     .xm-toast { z-index: 1090; }
+    .xm-change { background: #3a2a10; border: 1px solid var(--xm-gold); border-radius: .75rem; padding: .9rem 1rem; }
+    .xm-change strong { color: var(--xm-gold); }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="xm-wrap">
+    <div class="xm-change mb-3" role="status">
+        <strong>📣 Change of date and time.</strong> City of Temple has no availability for our group on
+        Friday 11 December evening, so we've moved to a <strong>lunch on Saturday 12 December from
+        12:30 pm</strong>, same venue. Earlier replies have been cleared, so please send your numbers again.
+    </div>
+
     <div class="xm-hero">
         <img src="{{ url_for('static', filename='img/party/christmas_2024_de_buddha.jpg') }}" width="2000" height="1500"
              alt="The nine families together at our Christmas dinner at De' Buddha, Johnstone, in 2024">
         <div class="xm-hero-text">
             <h1>🎄 Christmas Dinner 2026</h1>
-            <p>Friday 11 December · 6:30 pm onwards</p>
+            <p>Saturday 12 December · Lunch from 12:30 pm</p>
         </div>
     </div>
     <p class="xm-caption">Christmas Dinner 2024 at De' Buddha, Johnstone</p>
@@ -68,8 +76,8 @@
             Nepalese restaurant in Paisley from the same owners as De' Buddha in Johnstone, where we had our
             2024 Christmas dinner.</p>
         <ul class="xm-facts">
-            <li><span class="xm-ico">📅</span><span><strong>Friday 11 December 2026</strong></span></li>
-            <li><span class="xm-ico">🕡</span><span><strong>6:30 pm onwards</strong></span></li>
+            <li><span class="xm-ico">📅</span><span><strong>Saturday 12 December 2026</strong></span></li>
+            <li><span class="xm-ico">🕧</span><span><strong>Lunch from 12:30 pm</strong></span></li>
             <li><span class="xm-ico">📍</span><span><strong>{{ venue.name }}</strong><br>{{ venue.address }}</span></li>
         </ul>
         <p class="xm-note">The restaurant is on the first floor and there's no lift.</p>

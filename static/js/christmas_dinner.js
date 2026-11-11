@@ -89,7 +89,7 @@
                 render();
                 submitBtn.textContent = 'Update';
                 document.getElementById('xmToastBody').textContent =
-                    people === 0 ? 'Thanks for letting us know.' : 'Thank you, see you on the 11th!';
+                    people === 0 ? 'Thanks for letting us know.' : 'Thank you, see you on the 12th!';
                 bootstrap.Toast.getOrCreateInstance(document.getElementById('xmToast')).show();
             })
             .catch(function (err) {
