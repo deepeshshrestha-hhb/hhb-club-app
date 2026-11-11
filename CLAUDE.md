@@ -1964,6 +1964,13 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     front, the embed centred on Gallowhill (wrong area, no pin).
   - Same hiding and testing approach as the Tihar entry: noindex, not linked,
     and tested on a separate R2-free instance. Retire it after the dinner.
+  - **2026-11-11 — moved to Sat 12 Dec, lunch from 12:30 pm** (same venue,
+    same URL). City of Temple had no Friday-evening availability for 24. A
+    notice at the top of the page explains the change. RSVPs were reset by
+    pointing `DATA_PATH` at a new `data/christmas_dinner_2026_lunch.json`, not
+    by editing live data: the live server only reads its own disk copy (see
+    the 2026-10-04 Hasan entry). The 24 Friday RSVPs stay in R2 under the old
+    file name.
 
 - **2026-11-10 — Added the Annual Dinner & Gala 2026 page** (`/annual-dinner`,
   `annual_dinner_service.py`, `annual_dinner_routes.py`,
