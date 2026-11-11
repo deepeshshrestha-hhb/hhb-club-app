@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Christmas Dinner 2026 – RSVP{% endblock %}
+{% block title %}Christmas Lunch 2026 – RSVP{% endblock %}
 
 {% block head_extra %}
 {% set photo = url_for('static', filename='img/party/christmas_2024_de_buddha.jpg') %}
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="Now Saturday 12 December, lunch from 12:30 pm at City of Temple Kathmandu, Paisley. Let us know how many of your family are coming.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Christmas Dinner 2026 – RSVP">
+<meta property="og:title" content="Christmas Lunch 2026 – RSVP">
 <meta property="og:description" content="Now Saturday 12 December, lunch from 12:30 pm at City of Temple Kathmandu, Paisley. Let us know how many of your family are coming.">
 <meta property="og:url" content="{{ site_url ~ request.path }}">
 <meta property="og:image" content="{{ site_url ~ photo }}">
@@ -64,7 +64,7 @@
         <img src="{{ url_for('static', filename='img/party/christmas_2024_de_buddha.jpg') }}" width="2000" height="1500"
              alt="The nine families together at our Christmas dinner at De' Buddha, Johnstone, in 2024">
         <div class="xm-hero-text">
-            <h1>🎄 Christmas Dinner 2026</h1>
+            <h1>🎄 Christmas Lunch 2026</h1>
             <p>Saturday 12 December · Lunch from 12:30 pm</p>
         </div>
     </div>
@@ -72,7 +72,7 @@
 
     <div class="xm-panel mb-3">
         <h2>This year</h2>
-        <p>Our annual Christmas dinner is back! This year we're trying <strong>{{ venue.name }}</strong>, the new
+        <p>Our annual Christmas get-together is back, as a lunch this time! This year we're trying <strong>{{ venue.name }}</strong>, the new
             Nepalese restaurant in Paisley from the same owners as De' Buddha in Johnstone, where we had our
             2024 Christmas dinner.</p>
         <ul class="xm-facts">
