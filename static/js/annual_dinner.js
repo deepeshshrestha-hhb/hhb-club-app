@@ -214,7 +214,52 @@
         $('hcYes').textContent = s.members_yes;
         $('hcNo').textContent = s.members_no;
         renderDonut(s);
+        renderRsvps();
     }
+
+    // ---------------------------------------------------------- all rsvps --
+    // Public table. Notes sit behind an icon (they can be long); the delete
+    // button is only drawn for admins (the route itself is admin_required).
+    function hasNotes(n) {
+        n = String(n || '').trim();
+        return n !== '' && !/^(none|n\/a|na|-)$/i.test(n);
+    }
+    function renderRsvps() {
+        var rows = state.rsvps || [];
+        $('rsvpCount').textContent = rows.length;
+        var cols = cfg.isAdmin ? 7 : 6;
+        $('rsvpRows').innerHTML = rows.length ? rows.map(function (r, i) {
+            var num = function (v) { return v ? v : '<span class="text-muted">–</span>'; };
+            var notes = hasNotes(r.notes)
+                ? '<button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" data-notes="' + i +
+                  '" aria-label="Read notes from ' + esc(r.member) + '" title="Read notes">📝</button>'
+                : '';
+            var del = cfg.isAdmin
+                ? '<td><form method="post" action="' + esc(cfg.deleteUrl) + '" data-delete="' + esc(r.member) + '">' +
+                  '<input type="hidden" name="member" value="' + esc(r.member) + '">' +
+                  '<button class="btn btn-sm btn-link text-danger p-0" aria-label="Delete RSVP">🗑</button></form></td>'
+                : '';
+            return '<tr><td class="text-nowrap">' + esc(r.member) + '</td>' +
+                '<td class="text-center">' + (r.attending ? '✅' : '❌') + '</td>' +
+                '<td class="text-center">' + num(r.adults) + '</td>' +
+                '<td class="text-center">' + num(r.teens) + '</td>' +
+                '<td class="text-center">' + num(r.children) + '</td>' +
+                '<td class="text-center">' + notes + '</td>' + del + '</tr>';
+        }).join('') : '<tr><td colspan="' + cols + '" class="text-muted">No RSVPs yet.</td></tr>';
+    }
+    $('rsvpRows').addEventListener('click', function (e) {
+        var btn = e.target.closest('[data-notes]');
+        if (!btn) return;
+        var r = (state.rsvps || [])[+btn.getAttribute('data-notes')];
+        if (!r) return;
+        $('notesModalTitle').textContent = 'Notes from ' + r.member;
+        $('notesModalBody').textContent = r.notes;
+        bootstrap.Modal.getOrCreateInstance($('notesModal')).show();
+    });
+    $('rsvpRows').addEventListener('submit', function (e) {
+        var f = e.target.closest('[data-delete]');
+        if (f && !confirm('Delete ' + f.getAttribute('data-delete') + "'s RSVP?")) e.preventDefault();
+    });
 
     function renderAll() { renderRoles(); renderSummary(); }
 

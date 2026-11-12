@@ -293,14 +293,18 @@ def _summary(data: dict) -> dict:
 
 
 def get_state() -> dict:
-    """Everything the public page needs - no per-person guest breakdowns."""
+    """Everything the public page needs, including the All RSVPs table
+    (per-member guest counts and notes are public as of 2026-11-12)."""
     with _lock:
         data = _load()
+    rows = sorted(data["rsvps"].values(), key=lambda r: r["member"].casefold())
     return {
         "settings": data["settings"],
         "roles": data["roles"],
         "summary": _summary(data),
         "responded": sorted(data["rsvps"], key=str.casefold),
+        "rsvps": [{k: r[k] for k in ("member", "attending", "adults", "teens", "children", "notes")}
+                  for r in rows],
     }
 
 
