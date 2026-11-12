@@ -2013,6 +2013,12 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     behind `admin_required`. Log in at `/admin/login?next=/annual-dinner`.
   - Previewed on a separate R2-free local instance before going live (local
     `.env` points at production R2).
+  - **2026-11-12 — All RSVPs table made public.** `get_state()` now includes
+    `rsvps` (member, attending, per-band guest counts, notes), and
+    `annual_dinner.js` renders the table for everyone (live on submit + 30s
+    poll). Notes show as a 📝 icon that opens a popup ("None"/"n/a"/"-" count
+    as blank). The 🗑 delete button is drawn only for admins, and its route is
+    still `admin_required`. The admin section keeps only the Excel/CSV export.
 
 ---
 

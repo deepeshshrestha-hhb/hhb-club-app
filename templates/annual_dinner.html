@@ -194,6 +194,27 @@
         </div>
     </section>
 
+    {# ------------------------------------------------------- ALL RSVPS #}
+    <section class="mb-4" id="rsvps">
+        <h2 class="ad-h2">📋 All RSVPs (<span id="rsvpCount">{{ state.rsvps|length }}</span>)</h2>
+        <div class="ad-panel">
+            <p class="small text-muted">Guests each member is bringing. To change yours, pick your name in the RSVP form above.</p>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle small mb-0 ad-rsvp-table" id="rsvpTable">
+                    <thead><tr>
+                        <th>Member</th><th class="text-center" title="Coming?">Going</th>
+                        <th class="text-center" title="Adult guests">Adults</th>
+                        <th class="text-center" title="Teen guests">Teens</th>
+                        <th class="text-center" title="Child guests">Kids</th>
+                        <th class="text-center" title="Notes">📝</th>
+                        {% if is_admin %}<th></th>{% endif %}
+                    </tr></thead>
+                    <tbody id="rsvpRows"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     {# ----------------------------------------------------------- ADMIN #}
     {% if is_admin %}
     <section class="mb-4" id="admin">
@@ -268,41 +289,29 @@
         </div>
 
         <div class="ad-panel">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                <h3 class="h6 fw-bold mb-0">All RSVPs ({{ admin.rsvps|length }})</h3>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <h3 class="h6 fw-bold mb-0">Export RSVPs</h3>
                 <div class="d-flex gap-1">
                     <a class="btn btn-sm btn-outline-success" href="{{ url_for('annual_dinner.admin_export_xlsx') }}">Excel</a>
                     <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('annual_dinner.admin_export_csv') }}">CSV</a>
                 </div>
             </div>
-            <p class="small text-muted">To edit one, pick that member's name in the RSVP form above. Their answer loads and you can update it.</p>
-            <div class="table-responsive">
-                <table class="table table-sm align-middle small mb-0">
-                    <thead><tr><th>Member</th><th>Coming</th><th title="Adult guests">A</th><th title="Teen guests">T</th><th title="Child guests">C</th><th>Notes</th><th></th></tr></thead>
-                    <tbody>
-                    {% for r in admin.rsvps %}
-                        <tr>
-                            <td class="text-nowrap">{{ r.member }}</td>
-                            <td>{{ '✅' if r.attending else '❌' }}</td>
-                            <td>{{ r.adults }}</td><td>{{ r.teens }}</td><td>{{ r.children }}</td>
-                            <td>{{ r.notes }}</td>
-                            <td>
-                                <form method="post" action="{{ url_for('annual_dinner.admin_rsvp_delete') }}"
-                                      onsubmit="return confirm('Delete {{ r.member }}\'s RSVP?');">
-                                    <input type="hidden" name="member" value="{{ r.member }}">
-                                    <button class="btn btn-sm btn-link text-danger p-0" aria-label="Delete">🗑</button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr><td colspan="7" class="text-muted">No RSVPs yet.</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <p class="small text-muted mb-0 mt-2">To delete an RSVP, use the 🗑 in the All RSVPs table above.</p>
         </div>
     </section>
     {% endif %}
+</div>
+
+<div class="modal fade" id="notesModal" tabindex="-1" aria-labelledby="notesModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notesModalTitle">Notes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body"><p id="notesModalBody" class="mb-0" style="white-space:pre-wrap"></p></div>
+        </div>
+    </div>
 </div>
 
 <div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index:1090">
@@ -321,7 +330,9 @@
         apiBase: {{ url_for('annual_dinner.page')|tojson }},
         state: {{ state|tojson }},
         members: {{ members|tojson }},
-        maxPerBand: {{ max_per_band }}
+        maxPerBand: {{ max_per_band }},
+        isAdmin: {{ 'true' if is_admin else 'false' }},
+        deleteUrl: {{ url_for('annual_dinner.admin_rsvp_delete')|tojson }}
     };
 </script>
 <script src="{{ url_for('static', filename='js/annual_dinner_countdown.js') }}?v={{ asset_version('js/annual_dinner_countdown.js') }}"></script>

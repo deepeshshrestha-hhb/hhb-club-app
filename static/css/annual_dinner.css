@@ -232,3 +232,8 @@
 .ad-banner .ad-countdown b { font-size: 1.3rem; }
 .ad-banner-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem; margin-top: .9rem; }
 .ad-banner-foot strong { color: var(--ad-gold); }
+
+/* All RSVPs table - compact so every column fits on a phone */
+.ad-rsvp-table th, .ad-rsvp-table td { padding: .35rem .2rem; }
+.ad-rsvp-table thead th { font-size: .75rem; white-space: nowrap; }
+.ad-rsvp-table td:first-child { word-break: break-word; }

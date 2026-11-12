@@ -142,7 +142,7 @@ def admin_champion_remove():
 def admin_rsvp_delete():
     ads.delete_rsvp((request.form.get("member") or "").strip())
     flash("RSVP deleted.", "success")
-    return _back()
+    return _back("rsvps")
 
 
 @annual_dinner_bp.route("/admin/export.csv")
