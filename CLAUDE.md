@@ -264,9 +264,9 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   Worker could be removed and DNS-only records restored.
 - **No custom domains on the Render service.** The Worker fetches
   `hhb-club.onrender.com` directly, so Render never sees `hhbclub.co.uk`.
-  A custom domain added there can't pass Render's certificate checks, and
-  its retries wake the sleeping free service (see Decisions Log 2026-11-13).
-  The domain lives only on the Worker (Workers & Pages → hhb-club-proxy →
+  A custom domain added there can't pass Render's certificate checks, so it
+  only sits in Certificate Error (both were removed 2026-11-13, see Decisions
+  Log). The domain lives only on the Worker (Workers & Pages → hhb-club-proxy →
   Domains), and the Render address is in the Worker's code (`worker.js`).
 - **Day-to-day change → deploy workflow:** see
   [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (and the phone cheat-sheet
@@ -2026,29 +2026,31 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     as blank). The 🗑 delete button is drawn only for admins, and its route is
     still `admin_required`. The admin section keeps only the Excel/CSV export.
 
-- **2026-11-13 — Removed both custom domains from the Render service** after
-  three mornings (10-12 Nov) of the site being down until a manual redeploy.
-  - **Symptom:** every request got a 429 from Render's edge with
-    `x-render-routing: hibernate-rate-limited`. Render was refusing to wake
-    the sleeping free service. Free hours were fine (165 of 750 used). Render
-    reported no outage.
-  - **Cause (likely, not proven):** `hhbclub.co.uk` and `www.hhbclub.co.uk`
-    were still listed under Render → Custom Domains, both showing
-    **Certificate Error**. Since the 2026-08-01 Worker setup, Render's
-    certificate checks (`/.well-known/acme-challenge/...` and
-    `/.well-known/cf-custom-hostname-challenge/...`) go through the Worker
-    and get the app's 404, so they never pass. Render keeps retrying, about
-    8 times in 20 seconds in the 9 Nov logs. Each retry counts as a wake-up
-    request while the service sleeps overnight (the cron-job.org pinger
-    only runs 7 am-11 pm). This probably ramped up when the 90-day
-    certificate entered its renewal window in early November.
-  - **Fix:** deleted both entries on Render. Visitors are unaffected, since
-    the Worker fetches `hhb-club.onrender.com` directly; both domains were
-    checked as returning 200 straight after.
-  - **If it happens again:** Manual Deploy → Deploy latest commit brings the
-    site back. Next steps would be having the Worker answer `/.well-known/*`
-    itself, or a Render support ticket quoting the header. The Starter plan
-    (no sleep) would also avoid it.
+- **2026-11-13/14 — Morning "429 hibernate-rate-limited" outages: Render's
+  block lifts by itself around 8 am; accepted as is.**
+  - **Symptom (since 10 Nov):** after the service sleeps overnight (the
+    cron-job.org pinger only runs 7 am-11 pm, every 12 min), Render's edge
+    refuses to wake it: 429 with `x-render-routing: hibernate-rate-limited`.
+    Free hours were fine (165 of 750 used) and Render reported no outage.
+    On 10-12 Nov a manual redeploy (Deploy latest commit) brought it back
+    each time.
+  - **Not the custom domains.** On 13 Nov both Render custom domains were
+    deleted: they sat in Certificate Error because Render's certificate
+    checks go through the Worker and get the app's 404. The block still
+    happened on 14 Nov, so they weren't the cause. Removing them was
+    harmless (the Worker fetches `hhb-club.onrender.com` directly).
+  - **It clears on its own.** On 14 Nov, with no redeploy, the pinger got
+    503s at 7:00-7:48. The 8:00 ping started the service (gunicorn at 08:01;
+    that request timed out while the app booted) and 8:12 got 200. The
+    earlier mornings were redeployed before the block lifted, so this
+    wasn't seen then. The cause is on Render's side and unknown; nothing in
+    the app or its startup data changed around 9-10 Nov (startup still pulls
+    ~146 MB from R2, mostly photos).
+  - **Decision:** live with it, since Sunday sessions start at 9 am. Don't
+    redeploy for a morning outage before ~8:15. If it ever needs fixing:
+    run the pinger 24/7 (~720-744 of the 750 free hours a month), move to
+    the Starter plan (no sleep), or raise a Render support ticket quoting
+    the header.
 
 ---
 
