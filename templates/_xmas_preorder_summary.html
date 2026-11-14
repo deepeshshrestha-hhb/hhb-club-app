@@ -1,0 +1,97 @@
+{# Kitchen summary + all-orders table. Rendered inside the pre-order page, on the
+   standalone /preorder/summary page, and as a ?partial=1 fragment the page
+   swaps in after each save. #}
+{% set k = state.kitchen %}
+{% macro count_list(title, rows) %}
+{% if rows %}
+<div class="col-12 col-sm-6 col-lg-4">
+    <div class="xp-card h-100">
+        <h3>{{ title }}</h3>
+        <ul class="xp-count-list">
+            {% for r in rows %}
+            <li><span>{{ r.name }}{% if r.detail %}<span class="xp-detail">{{ r.detail }}</span>{% endif %}</span>
+                <span class="xp-n">{{ r.count }}</span></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+<div class="print-only mb-2">
+    <strong>{{ ev.title }} – {{ ev.date }}, {{ ev.time }}</strong> · {{ ev.venue }}, {{ ev.address }}
+</div>
+
+<section id="xpKitchen" class="mb-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+        <h2 class="h5 fw-bold mb-0" style="color:var(--xp-blue)">👨‍🍳 Kitchen summary</h2>
+        <div class="d-flex gap-2 no-print">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.print()">🖨 Print</button>
+            <a class="btn btn-sm btn-outline-success" href="{{ url_for('christmas_dinner.preorder_export') }}">⬇ Export to Excel</a>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <span class="xp-stat">Orders received <b>{{ k.received }} / {{ k.expected }}</b></span>
+        <span class="xp-stat">2-course <b>{{ k.two_course }}</b></span>
+        <span class="xp-stat">3-course <b>{{ k.three_course }}</b></span>
+        <span class="xp-stat">Kids menu <b>{{ k.kids }}</b></span>
+    </div>
+    {% if k.received %}
+    <div class="row g-3">
+        {{ count_list("Starters", k.starters) }}
+        {{ count_list("Mains", k.mains) }}
+        {{ count_list("Desserts", k.desserts) }}
+        {{ count_list("Kids meals", k.kids_meals) }}
+        {{ count_list("Kid's Ice Cream (" ~ k.icecream_total ~ ")", k.icecream) }}
+    </div>
+    {% else %}
+    <p class="text-muted mb-0">No orders yet.</p>
+    {% endif %}
+</section>
+
+<section id="xpAllOrders" class="xp-card">
+    <h2>📋 All orders</h2>
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0" id="xpOrders">
+            <thead>
+                <tr><th>Family</th><th>Name</th><th>Menu</th><th>Starter</th><th>Main</th><th>Rice/Naan</th>
+                    <th>Dessert / Kids add-on</th><th>Notes</th><th class="text-end">Price</th></tr>
+            </thead>
+            {% for f in state.families %}
+            <tbody>
+                <tr class="xp-fam-row">
+                    <td colspan="6">{{ f.family }} <span class="fw-normal text-muted">({{ f.ordered_count }}/{{ f.member_count }} ordered)</span></td>
+                    <td colspan="2">{% if f.paid %}🟢 Paid ({{ f.paid_amount_label }}){% else %}🔴 Not paid{% endif %}</td>
+                    <td class="text-end">{{ f.total_label }}</td>
+                </tr>
+                {% for o in f.orders %}
+                <tr>
+                    <td class="text-muted">{{ f.family }}</td>
+                    <td class="fw-semibold">{{ o.member }}</td>
+                    <td>{{ o.menu_label }}</td>
+                    <td>{{ o.starter or '—' }}</td>
+                    <td>{{ o.kids_meal if o.menu_type == 'kids' else o.main }}</td>
+                    <td>{{ o.rice_naan or '—' }}</td>
+                    <td>{{ o.dessert_or_addon or '—' }}</td>
+                    <td>{{ o.notes }}</td>
+                    <td class="text-end">{{ o.total_label }}</td>
+                </tr>
+                {% endfor %}
+                {% if f.remaining %}
+                <tr class="xp-pending">
+                    <td colspan="9">Not yet ordered: {{ f.members | rejectattr('ordered') | map(attribute='name') | join(', ') }}</td>
+                </tr>
+                {% endif %}
+            </tbody>
+            {% endfor %}
+            <tfoot>
+                <tr><td colspan="8" class="text-end">Grand total food</td><td class="text-end">{{ state.totals.food }}</td></tr>
+                <tr><td colspan="8" class="text-end">Total tip</td><td class="text-end">{{ state.totals.tip }}</td></tr>
+                <tr><td colspan="8" class="text-end">Grand total</td><td class="text-end">{{ state.totals.total }}</td></tr>
+                <tr><td colspan="8" class="text-end">Total marked paid</td><td class="text-end">{{ state.totals.paid }}</td></tr>
+                <tr><td colspan="8" class="text-end">Outstanding</td><td class="text-end">{{ state.totals.outstanding }}</td></tr>
+            </tfoot>
+        </table>
+    </div>
+    <p class="small text-muted mt-2 mb-0">Prices include £2 per person towards the tip.</p>
+</section>
