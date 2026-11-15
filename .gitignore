@@ -90,3 +90,7 @@ data/christmas_dinner_2026_lunch.json.tmp
 # Annual Dinner & Gala 2026 RSVPs/roles/settings (member names + dietary notes; R2 is canonical)
 data/AnnualDinner2026.xlsx
 data/AnnualDinner2026.tmp.xlsx
+
+# Christmas Lunch 2026 pre-orders (names, notes, payments)
+data/xmas2026_preorders.xlsx
+data/xmas2026_preorders.tmp.xlsx

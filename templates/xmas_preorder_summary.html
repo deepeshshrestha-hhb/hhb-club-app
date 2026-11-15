@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Christmas Lunch 2026 – Orders summary{% endblock %}
+
+{% block head_extra %}
+<meta name="robots" content="noindex, nofollow">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/xmas_preorder.css') }}?v={{ asset_version('css/xmas_preorder.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="xp-wrap">
+    <div class="xp-header mb-3 no-print">
+        <h1>🎄 Christmas Lunch 2026 – Orders</h1>
+        <p class="xp-sub">{{ ev.date }} · {{ ev.time }}</p>
+        <p class="xp-venue">{{ ev.venue }}, {{ ev.address }}</p>
+        <a class="small" href="{{ url_for('christmas_dinner.preorder_page') }}">← Back to pre-order page</a>
+    </div>
+    {% include "_xmas_preorder_summary.html" %}
+</div>
+{% endblock %}

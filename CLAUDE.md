@@ -64,7 +64,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Config:** copy `.env.example` → `.env` and fill in Spond creds (required for
   the live calendar/members), plus optional `R2_*` / `ADMIN_*` vars. `.env` is
   gitignored.
-- **Tests / lint:** there is **no** test suite or linter configured. For
+- **Tests / lint:** no linter and almost no tests. The one exception is
+  `python -m unittest tests.test_xmas_pricing` (Christmas Lunch pre-order
+  pricing). For
   data-format changes the real confirmation is the page rendering **on Render**
   (Linux), since some `.xlsm` quirks are hidden on Windows (see Known issues).
 - **Flask dev server caveat:** prefer `--no-reload` and track the PID — stale
@@ -100,6 +102,7 @@ routes/                 # Flask blueprints (thin; delegate to services)
   vote_routes.py         # /vote + /vote/results + /vote/admin/toggle-* (admin) - Top 20 Player Vote
   christmas_dinner_routes.py # /party/christmas-dinner-2026 - UNLISTED private Christmas Dinner RSVP
                         #   (not a club feature; never link it anywhere - see Decisions Log 2026-11-09)
+                        #   + /preorder meal pre-order & payment tracker (see Decisions Log 2026-11-14)
   annual_dinner_routes.py # /annual-dinner + api/ (state, rsvp, role claim) + admin/ (settings,
                         #   roles, champions, rsvp delete, export.csv/.xlsx) - Annual Dinner & Gala 2026
 services/               # Business logic + data parsing (the heart of the app)
@@ -136,6 +139,8 @@ services/               # Business logic + data parsing (the heart of the app)
                         #   not the Excel workbook the original feature spec asked for
   christmas_dinner_service.py # Christmas Dinner 2026 RSVP (data/christmas_dinner_2026.json): headcount
                         #   per family (0 = can't make it) + totals; VENUE + family list at the top
+  xmas2026_preorder_service.py # Christmas Lunch 2026 pre-orders (data/xmas2026_preorders.xlsx):
+                        #   families seed, MENU_XMAS2026, Decimal price_order(), kitchen summary, export
   annual_dinner_service.py # Annual Dinner & Gala 2026 (data/AnnualDinner2026.xlsx: Settings, Roles,
                         #   RSVPs, Champions sheets); champions auto-pulled from 2026 scoresheets;
                         #   get_banner() feeds the Dashboard banner (None after 6 Dec 2026)
@@ -2051,6 +2056,36 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     run the pinger 24/7 (~720-744 of the 750 free hours a month), move to
     the Starter plan (no sleep), or raise a Render support ticket quoting
     the header.
+
+- **2026-11-14 — Added a Christmas Lunch 2026 meal pre-order & payment
+  tracker** (`/party/christmas-dinner-2026/preorder`,
+  `xmas2026_preorder_service.py`, `templates/xmas_preorder.html` +
+  `_xmas_preorder_summary.html` + `xmas_preorder_summary.html`,
+  `static/js/xmas_preorder.js`, `static/css/xmas_preorder.css`,
+  `tests/test_xmas_pricing.py`). It lives in the existing unlisted
+  `christmas_dinner_bp` (same noindex header); the only link to it is a
+  "Pre-order your meal" button on the RSVP page.
+  - **Who:** 29 people in 9 families, seeded in the service (`FAMILIES`;
+    Hazel and Deelisha are children). A warning is logged if the seed isn't 29.
+  - **Menu and prices:** all in `MENU_XMAS2026` and `TIP_PER_PERSON` (£2).
+    The server always reprices with `price_order()` using `Decimal`. The
+    browser's live price line is only a preview.
+  - **Storage:** `data/xmas2026_preorders.xlsx` (gitignored) with `orders`,
+    `payments` and `settings` sheets. It uses the Annual Dinner save pattern:
+    a lock, an atomic save and a background R2 upload.
+  - **Payments:** families tick "We have transferred the payment", which
+    stores the family total at that moment. An amber alert shows if the total
+    changes later. No bank details are shown on the page. Anyone with the
+    link can edit any order or paid tick, by design.
+  - **Lock:** admin-only switch (existing `/admin/login`). When locked, the
+    server refuses non-admin saves. Admins can still edit, and paid ticks
+    still work.
+  - **Summary and export:** the kitchen summary and the all-orders table
+    are one Jinja partial. The page re-fetches it with `?partial=1` after
+    each save, so counts and table come from the same data. `/preorder/export`
+    downloads an .xlsx, and printing is set up for A4 landscape.
+  - **Testing:** tested on an R2-free local instance with `DATA_PATH` moved
+    to a scratch file, so no test orders reached production.
 
 ---
 
