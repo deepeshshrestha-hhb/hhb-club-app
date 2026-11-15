@@ -139,6 +139,66 @@ MENU_XMAS2026 = {
     "kids_icecream": {"price": "2.95", "flavours": ["Vanilla", "Chocolate"], "sauces": ["Chocolate", "Strawberry"]},
 }
 
+
+def _dr(group, items, alcohol=False):
+    return {"group": group, "alcohol": alcohol, "items": [{"name": n, "price": p} for n, p in items]}
+
+
+def _sizes(names, half, full):
+    out = []
+    for n in names:
+        out += [(f"{n} (half)", half), (f"{n} (full)", full)]
+    return out
+
+
+# Optional drinks, one per person, from the City of Temple Cocktail & Drink Menu
+# 2026. Alcohol groups are hidden from (and refused for) the children.
+DRINKS_XMAS2026 = [
+    _dr("Soft drinks (can)", [(n, "2.50") for n in ("Coke", "Diet Coke", "Fanta", "Sprite", "Irn Bru", "Diet Irn Bru")]
+        + [("Fentimans Classic Ginger Beer", "3.95"), ("J20 (Orange and Passion Fruit)", "3.95"),
+           ("Appletiser", "3.95"), ("Fever-Tree Tonic (200ml)", "2.50")]),
+    _dr("Draught soft drinks", _sizes(["Soda Water"], "1.50", "2.80")
+        + _sizes(["Soda & Lime", "Soda & Orange", "Soda & Blackcurrant"], "2.50", "3.50")
+        + _sizes(["Coke (draught)", "Diet Coke (draught)", "Lemonade"], "2.50", "3.80")
+        + _sizes(["Apple Juice", "Orange Juice", "Cranberry Juice"], "2.50", "3.95")),
+    _dr("Water", [("Still Water (330ml)", "3.50"), ("Sparkling Water (330ml)", "3.50"),
+                  ("Still Water (750ml)", "6.50"), ("Sparkling Water (750ml)", "6.50")]),
+    _dr("Alcohol-free beer & cider", [("San Miguel 0.0% (bottle)", "4.20"),
+                                      ("Kopparberg Non-Alcoholic Cider", "4.50")], alcohol=True),  # adults only
+    _dr("Draught beer", [("Tennents (pint)", "5.50"), ("Tennents (half)", "3.50"),
+                         ("Cobra (pint)", "6.50"), ("Cobra (half)", "4.50")], alcohol=True),
+    _dr("Bottled beer & cider", [("Kathmandu Beer (500ml)", "6.50"), ("Nepali Beer (630ml)", "7.20"),
+                                 ("Gluten Free Beer", "4.50"), ("Magners Cider", "4.50"),
+                                 ("Kopparberg Cider", "4.95")], alcohol=True),
+    _dr("Nepali drinks", [("Rice Wine – Chhyang (175ml)", "6.50"), ("Yarchagumba Whisky", "12.95"),
+                          ("Khukuri Rum", "4.80"), ("Himalayan Brandy", "4.80")], alcohol=True),
+    _dr("City of Temple cocktails", [("City of Temple “Kathmandu”", "10.50"), ("High Hill Stupa", "9.95"),
+                                     ("Mandala", "9.50"), ("The Laughing Buddha", "9.95"),
+                                     ("The Singing Bowl", "9.50")], alcohol=True),
+    _dr("Classic cocktails", [("Old Fashioned", "9.50"), ("Cosmopolitan", "8.95"), ("Negroni", "9.95"),
+                              ("Daiquiri", "8.95"), ("Tequila Sunrise", "8.95")], alcohol=True),
+    _dr("Gin", [("Gordon's", "4.20"), ("Gordon's Pink", "4.50"), ("The Botanist", "5.20"),
+                ("Caorunn", "5.20"), ("Brockmans", "5.20"), ("Hendricks", "5.20")], alcohol=True),
+    _dr("Vodka & rum", [("Smirnoff Vodka", "4.20"), ("Grey Goose", "5.20"), ("Bacardi", "4.20"),
+                        ("Captain Morgan Spiced Rum", "4.20")], alcohol=True),
+    _dr("Whisky & brandy", [("Jameson", "4.20"), ("Jack Daniels", "4.20"), ("Isle of Jura (10 yrs)", "4.50"),
+                            ("Talisker (10 yrs)", "4.50"), ("Glenfiddich (12 yrs)", "4.50"),
+                            ("Famous Grouse", "3.80"), ("Bells", "3.80"), ("Martell", "4.50"),
+                            ("Remy Martin VSOP", "4.80")], alcohol=True),
+    _dr("Liqueurs & shots", [("Glayva", "3.50"), ("Amaretto", "3.50"), ("Cointreau", "3.50"),
+                             ("Disaronno", "3.50"), ("Martini Rosso", "3.50"), ("Drambuie", "3.80"),
+                             ("Kahlua", "3.80"), ("Southern Comfort", "4.20"), ("Malibu", "4.50"),
+                             ("Baileys (50ml)", "4.80"), ("Tequila Silver", "3.50"), ("Tequila Rose", "3.50"),
+                             ("Limoncello", "3.50"), ("Sambuca", "3.50"), ("Jagermeister", "3.80")], alcohol=True),
+]
+
+# Optional hot beverage, one per person, from the City of Temple Hot Beverages menu.
+HOT_DRINKS_XMAS2026 = [{"name": n, "price": p} for n, p in (
+    ("Breakfast Tea", "2.95"), ("Earl Grey Tea", "2.95"), ("Green Tea", "2.95"), ("Fruit Tea", "2.95"),
+    ("Nepalese Masala Tea", "3.95"), ("Cappuccino", "3.95"), ("Caffe Latte", "3.95"),
+    ("Flat White", "3.95"), ("Americano", "3.50"), ("Espresso", "2.95"), ("Hot Chocolate", "3.95"),
+)]
+
 _CENT = Decimal("0.01")
 ZERO = Decimal("0.00")
 
@@ -181,6 +241,13 @@ _CURRIES = {i["name"] for g in MENU_XMAS2026["mains"] if g.get("curry") for i in
 _DESSERTS = {i["name"]: i for i in MENU_XMAS2026["desserts"]}
 _KIDS = {i["name"]: i for i in MENU_XMAS2026["kids_meals"]}
 _IC = MENU_XMAS2026["kids_icecream"]
+_DRINKS = {i["name"]: {**i, "alcohol": g["alcohol"]} for g in DRINKS_XMAS2026 for i in g["items"]}
+_HOT = {i["name"]: i for i in HOT_DRINKS_XMAS2026}
+assert len(_DRINKS) == sum(len(g["items"]) for g in DRINKS_XMAS2026), "duplicate drink name"
+
+
+def _drink_label(item: dict) -> str:
+    return f"{item['name']} – {money(item['price'])}"
 
 
 def menu_for_template() -> dict:
@@ -199,6 +266,9 @@ def menu_for_template() -> dict:
         "kids_meal_price": m["kids_meal_price"],
         "kids_icecream": _IC,
         "tip": str(TIP_PER_PERSON),
+        "drinks": [{"group": g["group"], "alcohol": g["alcohol"],
+                    "items": [{**i, "label": _drink_label(i)} for i in g["items"]]} for g in DRINKS_XMAS2026],
+        "hot_drinks": [{**i, "label": _drink_label(i)} for i in HOT_DRINKS_XMAS2026],
     }
 
 
@@ -220,6 +290,9 @@ def price_order(order: dict) -> dict:
         for item in (_STARTERS.get(order.get("starter")), _MAINS.get(order.get("main"))):
             if item and item.get("supplement"):
                 parts.append((item.get("short", item["name"]), _d(item["supplement"])))
+    for item in (_DRINKS.get(order.get("drink")), _HOT.get(order.get("hot_drink"))):
+        if item:
+            parts.append((item["name"], _d(item["price"])))
     food = sum((p for _, p in parts), ZERO)
     tip = _d(TIP_PER_PERSON)
     return {"parts": parts, "food": food, "tip": tip, "total": food + tip}
@@ -254,8 +327,21 @@ def clean_order(payload: dict):
         "family": family, "member": member, "is_child": m["is_child"],
         "menu_type": "", "starter": "", "main": "", "rice_naan": "", "dessert": "",
         "kids_meal": "", "kids_icecream": False, "ic_flavour": "", "ic_sauce": "",
-        "notes": notes,
+        "drink": "", "hot_drink": "", "notes": notes,
     }
+
+    drink = str(payload.get("drink") or "").strip()
+    if drink:
+        if drink not in _DRINKS:
+            return None, "Please choose a drink from the list."
+        if m["is_child"] and _DRINKS[drink]["alcohol"]:
+            return None, "Please choose a soft drink for children."
+        order["drink"] = drink
+    hot = str(payload.get("hot_drink") or "").strip()
+    if hot:
+        if hot not in _HOT:
+            return None, "Please choose a hot drink from the list."
+        order["hot_drink"] = hot
 
     menu = payload.get("menu") or "lunch"
     if menu not in ("lunch", "kids"):
@@ -303,7 +389,8 @@ def clean_order(payload: dict):
 # --------------------------------------------------------------------------
 
 ORDER_COLS = ["family", "member", "is_child", "menu_type", "starter", "main", "rice_naan", "dessert",
-              "kids_meal", "kids_icecream", "ic_flavour", "ic_sauce", "notes", "food_price", "tip",
+              "kids_meal", "kids_icecream", "ic_flavour", "ic_sauce", "drink", "hot_drink", "notes",
+              "food_price", "tip",
               "total", "updated_at"]
 PAYMENT_COLS = ["family", "paid", "paid_amount", "paid_at"]
 SETTINGS_COLS = ["key", "value"]
@@ -466,13 +553,20 @@ def _ic_text(o) -> str:
     return f"Kid's Ice Cream ({o['ic_flavour']}, {o['ic_sauce']} sauce)" if o.get("kids_icecream") else ""
 
 
+def _drinks_text(o) -> str:
+    return ", ".join(d for d in (o.get("drink"), o.get("hot_drink")) if d)
+
+
 def _summary_text(o) -> str:
     if o["menu_type"] == "kids":
         bits = [o["kids_meal"]] + ([_ic_text(o)] if o.get("kids_icecream") else [])
-        return "Kids: " + " + ".join(bits)
-    main = o["main"] + (f" ({o['rice_naan']})" if o.get("rice_naan") else "")
-    bits = [o["starter"], main] + ([o["dessert"]] if o.get("dessert") else [])
-    return f"{_menu_label(o)}: " + " · ".join(bits)
+        text = "Kids: " + " + ".join(bits)
+    else:
+        main = o["main"] + (f" ({o['rice_naan']})" if o.get("rice_naan") else "")
+        bits = [o["starter"], main] + ([o["dessert"]] if o.get("dessert") else [])
+        text = f"{_menu_label(o)}: " + " · ".join(bits)
+    drinks = _drinks_text(o)
+    return f"{text} · Drinks: {drinks}" if drinks else text
 
 
 def _order_view(o: dict) -> dict:
@@ -482,6 +576,7 @@ def _order_view(o: dict) -> dict:
         "menu_label": _menu_label(o),
         "summary": _summary_text(o),
         "dessert_or_addon": o.get("dessert") or _ic_text(o),
+        "drinks_text": _drinks_text(o),
         "parts": [[label, f"{amt:.2f}"] for label, amt in p["parts"]],
         "food": f"{p['food']:.2f}", "tip": f"{p['tip']:.2f}", "total": f"{p['total']:.2f}",
         "total_label": money(p["total"]),
@@ -502,8 +597,13 @@ def _kitchen(orders: list) -> dict:
     starters, mains, desserts, kids, ic = Counter(), Counter(), Counter(), Counter(), Counter()
     sides = defaultdict(Counter)
     stats = Counter()
+    drinks, hot = Counter(), Counter()
     for o in orders:
         stats[o["menu_type"]] += 1
+        if o.get("drink"):
+            drinks[o["drink"]] += 1
+        if o.get("hot_drink"):
+            hot[o["hot_drink"]] += 1
         if o["menu_type"] == "kids":
             kids[o["kids_meal"]] += 1
             if o.get("kids_icecream"):
@@ -524,6 +624,8 @@ def _kitchen(orders: list) -> dict:
         "kids_meals": _sorted_counts(kids),
         "icecream_total": sum(ic.values()),
         "icecream": _sorted_counts(ic),
+        "drinks": _sorted_counts(drinks),
+        "hot_drinks": _sorted_counts(hot),
     }
 
 
@@ -594,30 +696,32 @@ def export_workbook() -> io.BytesIO:
     ws = wb.active
     ws.title = "All orders"
     header = ["Family", "Name", "Menu", "Starter", "Main", "Rice/Naan", "Dessert / Kids add-on",
-              "Notes", "Food", "Tip", "Total"]
+              "Drink", "Hot drink", "Notes", "Food & drinks", "Tip", "Total"]
     ws.append(header)
     for c in ws[1]:
         c.font, c.fill = bold, head_fill
     for f in state["families"]:
         paid = f"Paid ({f['paid_amount_label']})" if f["paid"] else "Not paid"
         ws.append([f["family"], f"{f['ordered_count']}/{f['member_count']} ordered", paid,
-                   "", "", "", "", "", float(f["food"]), float(f["tip"]), float(f["total"])])
+                   "", "", "", "", "", "", "", float(f["food"]), float(f["tip"]), float(f["total"])])
         for c in ws[ws.max_row]:
             c.font, c.fill = bold, fam_fill
         for o in f["orders"]:
             main = o["kids_meal"] if o["menu_type"] == "kids" else o["main"]
             ws.append([f["family"], o["member"], o["menu_label"], o["starter"], main, o["rice_naan"],
-                       o["dessert_or_addon"], o["notes"], float(o["food"]), float(o["tip"]), float(o["total"])])
+                       o["dessert_or_addon"], o["drink"], o["hot_drink"], o["notes"],
+                       float(o["food"]), float(o["tip"]), float(o["total"])])
     ws.append([])
     t = state["totals"]
-    for label, val in (("Grand total food", t["food"]), ("Total tip", t["tip"]), ("Grand total", t["total"]),
-                       ("Total marked paid", t["paid"]), ("Outstanding", t["outstanding"])):
-        ws.append([label] + [""] * 9 + [float(val.replace("£", "").replace(",", ""))])
+    for label, val in (("Grand total food & drinks", t["food"]), ("Total tip", t["tip"]),
+                       ("Grand total", t["total"]), ("Total marked paid", t["paid"]),
+                       ("Outstanding", t["outstanding"])):
+        ws.append([label] + [""] * 11 + [float(val.replace("£", "").replace(",", ""))])
         ws.cell(ws.max_row, 1).font = bold
-    for row in ws.iter_rows(min_row=2, min_col=9, max_col=11):
+    for row in ws.iter_rows(min_row=2, min_col=11, max_col=13):
         for c in row:
             c.number_format = gbp
-    for col, width in zip("ABCDEFGHIJK", (20, 16, 9, 30, 30, 12, 40, 36, 9, 7, 9)):
+    for col, width in zip("ABCDEFGHIJKLM", (20, 16, 9, 30, 30, 12, 40, 28, 18, 36, 12, 7, 9)):
         ws.column_dimensions[col].width = width
     ws.freeze_panes = "A2"
 
@@ -627,7 +731,8 @@ def export_workbook() -> io.BytesIO:
                f"3-course {k['three_course']}", f"Kids menu {k['kids']}"])
     ks.cell(1, 1).font = bold
     for title, rows in (("Starters", k["starters"]), ("Mains", k["mains"]), ("Desserts", k["desserts"]),
-                        ("Kids meals", k["kids_meals"]), ("Kid's Ice Cream", k["icecream"])):
+                        ("Kids meals", k["kids_meals"]), ("Kid's Ice Cream", k["icecream"]),
+                        ("Drinks", k["drinks"]), ("Hot drinks", k["hot_drinks"])):
         if not rows:
             continue
         ks.append([])

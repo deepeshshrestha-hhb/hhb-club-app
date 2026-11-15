@@ -16,6 +16,7 @@
         lunch: $('lunchFields'), kids: $('kidsFields'), starter: $('starterSelect'), main: $('mainSelect'),
         riceWrap: $('riceWrap'), rice: $('riceSelect'), dessertWrap: $('dessertWrap'), dessert: $('dessertSelect'),
         kidsMeal: $('kidsSelect'), ic: $('icCheck'), icWrap: $('icWrap'), icFlavour: $('icFlavour'), icSauce: $('icSauce'),
+        drinksWrap: $('drinksWrap'), drink: $('drinkSelect'), hot: $('hotSelect'),
         notesWrap: $('notesWrap'), notes: $('notesInput'), notesCount: $('notesCount'),
         price: $('priceLine'), error: $('formError'), save: $('saveBtn'),
         familyCard: $('familyCard'), locked: $('xpLocked'), summary: $('summaryContainer'),
@@ -79,6 +80,9 @@
         el.ic.checked = !!(o && o.kids_icecream);
         el.icFlavour.value = (o && o.ic_flavour) || '';
         el.icSauce.value = (o && o.ic_sauce) || '';
+        el.drink.querySelectorAll('optgroup[data-alcohol]').forEach((g) => { g.hidden = m.is_child; g.disabled = m.is_child; });
+        el.drink.value = (o && o.drink) || '';
+        el.hot.value = (o && o.hot_drink) || '';
         el.notes.value = (o && o.notes) || '';
         el.save.textContent = o ? 'Update Order' : 'Save Order';
         el.fields.disabled = !canEdit();
@@ -96,6 +100,7 @@
         show(el.lunch, menu === 'lunch');
         show(el.kids, menu === 'kids');
         show(el.notesWrap, !!menu);
+        show(el.drinksWrap, !!menu);
 
         const mainOpt = el.main.selectedOptions[0];
         const isCurry = !!(mainOpt && mainOpt.dataset.curry);
@@ -125,6 +130,12 @@
             [el.starter, el.main].forEach((sel) => {
                 const opt = sel.selectedOptions[0];
                 if (opt && opt.value && cents(opt.dataset.supp) > 0) parts.push([opt.dataset.short, cents(opt.dataset.supp)]);
+            });
+        }
+        if (menu) {
+            [el.drink, el.hot].forEach((sel) => {
+                const opt = sel.selectedOptions[0];
+                if (opt && opt.value) parts.push([opt.value, cents(opt.dataset.price)]);
             });
         }
         return parts;
@@ -166,7 +177,7 @@
             meal_type: checked('meal_type'), starter: el.starter.value, main: el.main.value,
             rice_naan: el.rice.value, dessert: el.dessert.value, kids_meal: el.kidsMeal.value,
             kids_icecream: el.ic.checked, ic_flavour: el.icFlavour.value, ic_sauce: el.icSauce.value,
-            notes: el.notes.value.trim(),
+            drink: el.drink.value, hot_drink: el.hot.value, notes: el.notes.value.trim(),
         };
     }
 
@@ -234,14 +245,14 @@
                 <thead><tr><th>Member</th><th>Order</th><th class="text-end">Price</th></tr></thead>
                 <tbody>${rows}</tbody>
                 <tfoot>
-                    <tr><td colspan="2">Food subtotal</td><td class="text-end">${esc(fs.food_label)}</td></tr>
+                    <tr><td colspan="2">Food &amp; drinks</td><td class="text-end">${esc(fs.food_label)}</td></tr>
                     <tr><td colspan="2">Tip (${fs.ordered_count} × ${gbp(cents(C.tip))})</td><td class="text-end">${esc(fs.tip_label)}</td></tr>
                     <tr><td colspan="2" class="fw-bold">Family total</td><td class="text-end xp-total">${esc(fs.total_label)}</td></tr>
                 </tfoot>
             </table></div>
             ${fs.remaining ? `<div class="alert alert-info py-2 small">${fs.remaining} member${fs.remaining > 1 ? 's' : ''} still to order — total may change</div>` : ''}
             <div class="xp-pay">
-                <p class="mb-2">Please transfer <strong>${esc(fs.total_label)}</strong> to ${esc(C.organiser)} in advance.</p>
+                <p class="mb-2">Please transfer <strong>${esc(fs.total_label)}</strong> to ${esc(C.organiser)} around the <strong>1st week of December</strong> and tick the box below when done. No need to pay yet.</p>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="paidCheck" ${fs.paid ? 'checked' : ''} ${fs.ordered_count ? '' : 'disabled'}>
                     <label class="form-check-label" for="paidCheck">We have transferred the payment.</label>

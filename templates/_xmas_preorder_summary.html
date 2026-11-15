@@ -43,6 +43,8 @@
         {{ count_list("Desserts", k.desserts) }}
         {{ count_list("Kids meals", k.kids_meals) }}
         {{ count_list("Kid's Ice Cream (" ~ k.icecream_total ~ ")", k.icecream) }}
+        {{ count_list("Drinks", k.drinks) }}
+        {{ count_list("Hot drinks", k.hot_drinks) }}
     </div>
     {% else %}
     <p class="text-muted mb-0">No orders yet.</p>
@@ -55,13 +57,13 @@
         <table class="table table-sm align-middle mb-0" id="xpOrders">
             <thead>
                 <tr><th>Family</th><th>Name</th><th>Menu</th><th>Starter</th><th>Main</th><th>Rice/Naan</th>
-                    <th>Dessert / Kids add-on</th><th>Notes</th><th class="text-end">Price</th></tr>
+                    <th>Dessert / Kids add-on</th><th>Drinks</th><th>Notes</th><th class="text-end">Price</th></tr>
             </thead>
             {% for f in state.families %}
             <tbody>
                 <tr class="xp-fam-row">
                     <td colspan="6">{{ f.family }} <span class="fw-normal text-muted">({{ f.ordered_count }}/{{ f.member_count }} ordered)</span></td>
-                    <td colspan="2">{% if f.paid %}🟢 Paid ({{ f.paid_amount_label }}){% else %}🔴 Not paid{% endif %}</td>
+                    <td colspan="3">{% if f.paid %}🟢 Paid ({{ f.paid_amount_label }}){% else %}🔴 Not paid{% endif %}</td>
                     <td class="text-end">{{ f.total_label }}</td>
                 </tr>
                 {% for o in f.orders %}
@@ -73,23 +75,24 @@
                     <td>{{ o.kids_meal if o.menu_type == 'kids' else o.main }}</td>
                     <td>{{ o.rice_naan or '—' }}</td>
                     <td>{{ o.dessert_or_addon or '—' }}</td>
+                    <td>{{ o.drinks_text or '—' }}</td>
                     <td>{{ o.notes }}</td>
                     <td class="text-end">{{ o.total_label }}</td>
                 </tr>
                 {% endfor %}
                 {% if f.remaining %}
                 <tr class="xp-pending">
-                    <td colspan="9">Not yet ordered: {{ f.members | rejectattr('ordered') | map(attribute='name') | join(', ') }}</td>
+                    <td colspan="10">Not yet ordered: {{ f.members | rejectattr('ordered') | map(attribute='name') | join(', ') }}</td>
                 </tr>
                 {% endif %}
             </tbody>
             {% endfor %}
             <tfoot>
-                <tr><td colspan="8" class="text-end">Grand total food</td><td class="text-end">{{ state.totals.food }}</td></tr>
-                <tr><td colspan="8" class="text-end">Total tip</td><td class="text-end">{{ state.totals.tip }}</td></tr>
-                <tr><td colspan="8" class="text-end">Grand total</td><td class="text-end">{{ state.totals.total }}</td></tr>
-                <tr><td colspan="8" class="text-end">Total marked paid</td><td class="text-end">{{ state.totals.paid }}</td></tr>
-                <tr><td colspan="8" class="text-end">Outstanding</td><td class="text-end">{{ state.totals.outstanding }}</td></tr>
+                <tr><td colspan="9" class="text-end">Grand total food &amp; drinks</td><td class="text-end">{{ state.totals.food }}</td></tr>
+                <tr><td colspan="9" class="text-end">Total tip</td><td class="text-end">{{ state.totals.tip }}</td></tr>
+                <tr><td colspan="9" class="text-end">Grand total</td><td class="text-end">{{ state.totals.total }}</td></tr>
+                <tr><td colspan="9" class="text-end">Total marked paid</td><td class="text-end">{{ state.totals.paid }}</td></tr>
+                <tr><td colspan="9" class="text-end">Outstanding</td><td class="text-end">{{ state.totals.outstanding }}</td></tr>
             </tfoot>
         </table>
     </div>
