@@ -121,5 +121,36 @@ class ValidationTests(unittest.TestCase):
         self.assertIn("150", err)
 
 
+class DrinkTests(unittest.TestCase):
+    def test_drink_and_hot_drink_added_to_price(self):
+        p = x.price_order(adult(drink="Cobra (pint)", hot_drink="Nepalese Masala Tea"))
+        self.assertEqual(p["food"], D("24.40"))   # 13.95 + 6.50 + 3.95
+        self.assertEqual(p["total"], D("26.40"))
+        self.assertEqual([label for label, _ in p["parts"]], ["2 Course", "Cobra (pint)", "Nepalese Masala Tea"])
+
+    def test_kids_meal_with_soft_drink(self):
+        p = x.price_order({"menu_type": "kids", "kids_meal": "Fish Finger & Chips", "drink": "Apple Juice (half)"})
+        self.assertEqual(p["total"], D("11.45"))  # 6.95 + 2.50 + 2.00 tip
+
+    def test_drinks_are_optional(self):
+        order, err = x.clean_order({"family": "Pankaj Shah", "member": "Pankaj", "meal_type": "2course",
+                                    "starter": "Sha Phaley", "main": "Chicken Katsu"})
+        self.assertIsNone(err)
+        self.assertEqual((order["drink"], order["hot_drink"]), ("", ""))
+
+    def test_unknown_drink_rejected(self):
+        _, err = x.clean_order({"family": "Pankaj Shah", "member": "Pankaj", "meal_type": "2course",
+                                "starter": "Sha Phaley", "main": "Chicken Katsu", "drink": "Champagne"})
+        self.assertIn("drink", err)
+
+    def test_children_cannot_order_alcohol(self):
+        base = {"family": "Barun Lal", "member": "Hazel", "menu": "kids", "kids_meal": "Fish Finger & Chips"}
+        _, err = x.clean_order({**base, "drink": "Tennents (pint)"})
+        self.assertIn("soft drink", err)
+        order, err = x.clean_order({**base, "drink": "Coke", "hot_drink": "Hot Chocolate"})
+        self.assertIsNone(err)
+        self.assertEqual(order["drink"], "Coke")
+
+
 if __name__ == "__main__":
     unittest.main()

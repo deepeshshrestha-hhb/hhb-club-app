@@ -2086,6 +2086,13 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     downloads an .xlsx, and printing is set up for A4 landscape.
   - **Testing:** tested on an R2-free local instance with `DATA_PATH` moved
     to a scratch file, so no test orders reached production.
+  - **2026-11-15 — drinks added.** Each person can add one drink and one hot
+    drink, priced from City of Temple's Cocktail & Drink Menu 2026 and Hot
+    Beverages menu (`DRINKS_XMAS2026` / `HOT_DRINKS_XMAS2026`). These are
+    added to their total, with no tip on top. Alcohol groups (including 0%
+    beer/cider) are hidden from children and refused by the server. The page
+    asks families to transfer around the 1st week of December. Extras ordered
+    on the day are settled separately.
 
 ---
 
