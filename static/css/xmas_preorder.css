@@ -88,3 +88,4 @@ footer { display: none; } /* club footer isn't relevant on this private page */
 .xp-steps { padding-left: 1.3rem; }
 .xp-steps li { margin-bottom: .25rem; }
 .xp-drinks-head { font-weight: 700; color: var(--xp-blue); border-top: 1px solid var(--xp-line); padding-top: .75rem; margin-bottom: .5rem; }
+.xp-paynote { background: #eaf3fc; border-left: 4px solid var(--xp-blue); border-radius: .4rem; padding: .6rem .8rem; }
