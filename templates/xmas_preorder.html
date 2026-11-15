@@ -25,6 +25,30 @@
         <a class="small" href="{{ url_for('christmas_dinner.page') }}">← Back to the RSVP page</a>
     </div>
 
+    <div class="xp-tip-alert mb-3 no-print" role="note">
+        💷 <strong>A £{{ menu.tip }} tip per person is added on top of every meal price.</strong>
+        It's included in your family total below.
+    </div>
+
+    <div class="xp-card mb-3 no-print">
+        <h2>How to order</h2>
+        <ol class="xp-steps mb-3">
+            <li>Choose your <strong>family</strong>.</li>
+            <li>Choose the <strong>person</strong> you're ordering for.</li>
+            <li>Choose their <strong>starter and main</strong> (and dessert for 3 courses), then <strong>Save Order</strong>.
+                Repeat for each person.</li>
+        </ol>
+        <p class="mb-2">We're pre-ordering from the <strong>Lunch Menu</strong> and the <strong>Kids Menu</strong>:</p>
+        <ul class="mb-3">
+            {% for mt in menu.meal_types %}<li>Lunch Menu, {{ mt.label }}: <strong>{{ mt.price_label }}</strong></li>{% endfor %}
+            <li>Kids Menu meal: <strong>£{{ menu.kids_meal_price }}</strong>, plus Kid's Ice Cream <strong>£{{ menu.kids_icecream.price }}</strong> if wanted</li>
+            <li>Some dishes carry a supplement, shown next to them (e.g. +£2.00).</li>
+        </ul>
+        <p class="mb-2"><strong>On the day:</strong> drinks will be ordered at the table, and you can also order extras or
+            anything from the À La Carte menu. We'll settle up for anything ordered on the day separately with {{ ev.organiser }}.</p>
+        <a class="btn btn-outline-primary btn-sm" href="https://www.cityoftemple.co.uk/menu.html" target="_blank" rel="noopener">View the City of Temple menus ↗</a>
+    </div>
+
     <div class="alert alert-warning fw-semibold no-print {% if not state.locked %}d-none{% endif %}" id="xpLocked" role="status">
         🔒 {{ state.locked_message }}{% if is_admin %} <span class="fw-normal">(You're logged in as admin, so you can still edit.)</span>{% endif %}
     </div>

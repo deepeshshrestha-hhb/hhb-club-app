@@ -82,3 +82,8 @@ footer { display: none; } /* club footer isn't relevant on this private page */
     #xpKitchen .row > div { break-inside: avoid; }
     a { color: #000 !important; text-decoration: none; }
 }
+
+.xp-tip-alert { background: #fff4d6; border: 2px solid #e8a317; border-radius: .75rem; padding: .75rem 1rem;
+    color: #5a3d00; font-size: 1.05rem; }
+.xp-steps { padding-left: 1.3rem; }
+.xp-steps li { margin-bottom: .25rem; }
