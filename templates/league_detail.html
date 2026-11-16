@@ -125,18 +125,20 @@
                                 <th class="sortable-col" data-sort-key="played" role="button" style="cursor:pointer; white-space:nowrap;">Played <span class="sort-arrow"></span></th>
                                 <th class="sortable-col" data-sort-key="wins" data-default-sort role="button" style="cursor:pointer; white-space:nowrap;">Won <span class="sort-arrow"></span></th>
                                 <th>Lost</th>
+                                <th class="sortable-col" data-sort-key="npd" role="button" style="cursor:pointer; white-space:nowrap;" title="Net Point Difference - the tie-breaker after Won">NPD <span class="sort-arrow"></span></th>
                                 <th class="sortable-col" data-sort-key="win_pct" role="button" style="cursor:pointer; white-space:nowrap;">Win % <span class="sort-arrow"></span></th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for s in league.standings %}
                             <tr class="{{ 'table-warning fw-bold' if s.rank == 1 else ('table-light' if s.rank <= 3) }}"
-                                data-rank="{{ s.rank }}" data-played="{{ s.played }}" data-wins="{{ s.wins }}" data-win_pct="{{ s.win_pct }}">
+                                data-rank="{{ s.rank }}" data-played="{{ s.played }}" data-wins="{{ s.wins }}" data-npd="{{ s.point_diff }}" data-win_pct="{{ s.win_pct }}">
                                 <td class="rank-cell">{% if s.rank == 1 %}🏆{% elif s.rank == 2 %}🥈{% elif s.rank == 3 %}🥉{% else %}{{ s.rank }}{% endif %}</td>
                                 <td>{{ s.player }}</td>
                                 <td>{{ s.played }}</td>
                                 <td>{{ s.wins }}</td>
                                 <td>{{ s.losses }}</td>
+                                <td>{{ '+' if s.point_diff > 0 }}{{ s.point_diff }}</td>
                                 <td>{{ s.win_pct }}%</td>
                             </tr>
                             {% endfor %}
@@ -145,7 +147,7 @@
                 </div>
             </div>
         </div>
-        <p class="text-muted small mt-2">Default rank is the league result (by Won). Click <strong>Played</strong>, <strong>Won</strong> or <strong>Win %</strong> to re-sort — the # column always shows each player's final league position. Wins and losses from completed matches only.</p>
+        <p class="text-muted small mt-2">Default rank is the league result: by Won, then NPD (net point difference), then Win %. Click <strong>Played</strong>, <strong>Won</strong>, <strong>NPD</strong> or <strong>Win %</strong> to re-sort — the # column always shows each player's final league position. Wins and losses from completed matches only.</p>
     </div>
 
     <!-- Matches -->
