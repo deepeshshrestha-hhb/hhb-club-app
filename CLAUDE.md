@@ -2094,6 +2094,13 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     asks families to transfer around the 1st week of December. Extras ordered
     on the day are settled separately.
 
+- **2026-11-16 — League Final Standings now shows an NPD column** (before
+  Win %). Ranking has always been Won -> NPD -> Win % (League Rule 9), but
+  NPD was computed (`point_diff` in `get_league()`) and never shown, so ties
+  on Won looked arbitrary. Template-only (`league_detail.html`): shown signed
+  (`+110`), sortable like Played/Won/Win %, and the footnote now states the
+  full tie-break order.
+
 ---
 
 ## Next Steps / TODO
