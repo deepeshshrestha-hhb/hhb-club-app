@@ -89,7 +89,7 @@
             {% endfor %}
             <tfoot>
                 <tr><td colspan="9" class="text-end">Grand total food &amp; drinks</td><td class="text-end">{{ state.totals.food }}</td></tr>
-                <tr><td colspan="9" class="text-end">Total tip</td><td class="text-end">{{ state.totals.tip }}</td></tr>
+                <tr><td colspan="9" class="text-end">Total tip ({{ state.totals.tip_percent }}%)</td><td class="text-end">{{ state.totals.tip }}</td></tr>
                 <tr><td colspan="9" class="text-end">Grand total</td><td class="text-end">{{ state.totals.total }}</td></tr>
                 <tr><td colspan="9" class="text-end">Total marked paid</td><td class="text-end">{{ state.totals.paid }}</td></tr>
                 <tr><td colspan="9" class="text-end">Outstanding</td><td class="text-end">{{ state.totals.outstanding }}</td></tr>

@@ -148,9 +148,8 @@
             el.price.textContent = menu ? 'Choose your meal to see the price.' : 'Choose Kids Menu or Lunch Menu.';
             return;
         }
-        parts.push(['Tip', cents(C.tip)]);
         const total = parts.reduce((s, p) => s + p[1], 0);
-        el.price.textContent = parts.map((p) => `${p[0]} ${gbp(p[1])}`).join(' + ') + ` = ${gbp(total)}`;
+        el.price.textContent = parts.map((p) => `${p[0]} ${gbp(p[1])}`).join(' + ') + ` = ${gbp(total)} (plus ${C.tipPercent}% tip, added to your family total)`;
     }
 
     function validate() {
@@ -246,7 +245,7 @@
                 <tbody>${rows}</tbody>
                 <tfoot>
                     <tr><td colspan="2">Food &amp; drinks</td><td class="text-end">${esc(fs.food_label)}</td></tr>
-                    <tr><td colspan="2">Tip (${fs.ordered_count} × ${gbp(cents(C.tip))})</td><td class="text-end">${esc(fs.tip_label)}</td></tr>
+                    <tr><td colspan="2">Tip (${C.tipPercent}% of food &amp; drinks)</td><td class="text-end">${esc(fs.tip_label)}</td></tr>
                     <tr><td colspan="2" class="fw-bold">Family total</td><td class="text-end xp-total">${esc(fs.total_label)}</td></tr>
                 </tfoot>
             </table></div>
