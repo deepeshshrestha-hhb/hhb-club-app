@@ -2101,6 +2101,19 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   (`+110`), sortable like Played/Won/Win %, and the footnote now states the
   full tie-break order.
 
+- **2026-11-17 — Fixed 2023 League match 340 (Waqas on both teams).** The
+  sheet had "Tousif/Waqas bt Deepesh/Waqas 21-16", a typo in the sheet
+  itself. The admin's WhatsApp record shows Tousif/**Jalal** bt
+  Deepesh/Waqas, so D344 is now Jalal. Waqas 2023: 39 P / 18 W (16th, was
+  14th); Jalal +1 win. This was the only match in 2022-2026 with a player
+  twice. *How it was edited:* D344 and J344's cached Winner value were
+  patched directly in the sheet XML, and `fullCalcOnLoad` was set, rather
+  than saved via openpyxl, which would wipe every formula's cached value.
+  The sheet's own pair-key and stats columns stay stale until it's next
+  opened in Excel (the website doesn't read them). `seed_r2.py` now takes
+  optional file paths, so the live copy can be updated with just this file.
+  A full run would also overwrite live data files with local copies.
+
 ---
 
 ## Next Steps / TODO
