@@ -2067,7 +2067,7 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   "Pre-order your meal" button on the RSVP page.
   - **Who:** 29 people in 9 families, seeded in the service (`FAMILIES`;
     Hazel and Deelisha are children). A warning is logged if the seed isn't 29.
-  - **Menu and prices:** all in `MENU_XMAS2026` and `TIP_PER_PERSON` (£2).
+  - **Menu and prices:** all in `MENU_XMAS2026` and `TIP_PERCENT` (10%, see below).
     The server always reprices with `price_order()` using `Decimal`. The
     browser's live price line is only a preview.
   - **Storage:** `data/xmas2026_preorders.xlsx` (gitignored) with `orders`,
@@ -2093,6 +2093,11 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     beer/cider) are hidden from children and refused by the server. The page
     asks families to transfer around the 1st week of December. Extras ordered
     on the day are settled separately.
+  - **2026-11-17 — tip changed from £2 per person to 10% of each family's
+    food & drinks total** (`TIP_PERCENT`, `tip_for()`), rounded half-up to the
+    penny once per family. Per-person prices no longer include any tip. A
+    family that ticked "paid" before this sees the amber "total has changed"
+    alert for the difference.
 
 - **2026-11-16 — League Final Standings now shows an NPD column** (before
   Win %). Ranking has always been Won -> NPD -> Win % (League Rule 9), but

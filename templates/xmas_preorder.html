@@ -26,8 +26,8 @@
     </div>
 
     <div class="xp-tip-alert mb-3 no-print" role="note">
-        💷 <strong>A £{{ menu.tip }} tip per person is added on top of every meal price.</strong>
-        It's included in your family total below.
+        💷 <strong>A {{ menu.tip_percent }}% tip is added on top of your family's food &amp; drinks total.</strong>
+        The prices you see for each person don't include it. It's added once to your family total, e.g. £100 of food &amp; drinks = £10 tip, £110 to pay.
     </div>
 
     <div class="xp-card mb-3 no-print">
@@ -254,7 +254,7 @@
         families: {{ families|tojson }},
         kidsPrice: {{ menu.kids_meal_price|tojson }},
         icPrice: {{ menu.kids_icecream.price|tojson }},
-        tip: {{ menu.tip|tojson }},
+        tipPercent: {{ menu.tip_percent|tojson }},
         organiser: {{ ev.organiser|tojson }},
         isAdmin: {{ is_admin|tojson }},
         state: {{ state|tojson }}

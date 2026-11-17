@@ -46,7 +46,7 @@ EVENT = {
 
 LOCKED_MESSAGE = "Orders are closed — contact Deepesh for changes."
 
-TIP_PER_PERSON = 2
+TIP_PERCENT = 10  # added on top of each family's food & drinks total
 EXPECTED_HEADCOUNT = 29
 NOTES_MAX = 150
 
@@ -265,7 +265,7 @@ def menu_for_template() -> dict:
         "kids_meals": items(m["kids_meals"]),
         "kids_meal_price": m["kids_meal_price"],
         "kids_icecream": _IC,
-        "tip": str(TIP_PER_PERSON),
+        "tip_percent": TIP_PERCENT,
         "drinks": [{"group": g["group"], "alcohol": g["alcohol"],
                     "items": [{**i, "label": _drink_label(i)} for i in g["items"]]} for g in DRINKS_XMAS2026],
         "hot_drinks": [{**i, "label": _drink_label(i)} for i in HOT_DRINKS_XMAS2026],
@@ -277,8 +277,9 @@ def menu_for_template() -> dict:
 # --------------------------------------------------------------------------
 
 def price_order(order: dict) -> dict:
-    """Server-side price for one person's order. Returns the itemised parts,
-    food, tip and total, all as Decimal."""
+    """Server-side price for one person's order (food & drinks, no tip - the
+    tip is worked out on the family total, see tip_for). Returns the itemised
+    parts, food and total (= food), all as Decimal."""
     parts = []
     if order.get("menu_type") == "kids":
         parts.append(("Kids meal", _d(MENU_XMAS2026["kids_meal_price"])))
@@ -294,13 +295,18 @@ def price_order(order: dict) -> dict:
         if item:
             parts.append((item["name"], _d(item["price"])))
     food = sum((p for _, p in parts), ZERO)
-    tip = _d(TIP_PER_PERSON)
-    return {"parts": parts, "food": food, "tip": tip, "total": food + tip}
+    return {"parts": parts, "food": food, "total": food}
+
+
+def tip_for(food: Decimal) -> Decimal:
+    """TIP_PERCENT of a family's food & drinks total, rounded to the penny."""
+    return _d(Decimal(food) * TIP_PERCENT / 100)
 
 
 def family_total(orders) -> Decimal:
-    """Sum of totals (food + tip) for the members who have ordered."""
-    return sum((price_order(o)["total"] for o in orders), ZERO)
+    """Food & drinks for the members who have ordered, plus the % tip."""
+    food = sum((price_order(o)["food"] for o in orders), ZERO)
+    return food + tip_for(food)
 
 
 # --------------------------------------------------------------------------
@@ -390,8 +396,7 @@ def clean_order(payload: dict):
 
 ORDER_COLS = ["family", "member", "is_child", "menu_type", "starter", "main", "rice_naan", "dessert",
               "kids_meal", "kids_icecream", "ic_flavour", "ic_sauce", "drink", "hot_drink", "notes",
-              "food_price", "tip",
-              "total", "updated_at"]
+              "food_price", "updated_at"]
 PAYMENT_COLS = ["family", "paid", "paid_amount", "paid_at"]
 SETTINGS_COLS = ["key", "value"]
 
@@ -462,7 +467,7 @@ def _build_workbook(data: dict) -> Workbook:
             if not o:
                 continue
             p = price_order(o)
-            row = {**o, "food_price": float(p["food"]), "tip": float(p["tip"]), "total": float(p["total"])}
+            row = {**o, "food_price": float(p["food"])}
             ws.append([row.get(c, "") for c in ORDER_COLS])
     ws = wb.create_sheet("payments")
     ws.append(PAYMENT_COLS)
@@ -578,7 +583,7 @@ def _order_view(o: dict) -> dict:
         "dessert_or_addon": o.get("dessert") or _ic_text(o),
         "drinks_text": _drinks_text(o),
         "parts": [[label, f"{amt:.2f}"] for label, amt in p["parts"]],
-        "food": f"{p['food']:.2f}", "tip": f"{p['tip']:.2f}", "total": f"{p['total']:.2f}",
+        "food": f"{p['food']:.2f}", "total": f"{p['total']:.2f}",
         "total_label": money(p["total"]),
     }
 
@@ -644,7 +649,7 @@ def _build_state(data: dict) -> dict:
                 rows.append(v)
                 all_orders.append(o)
                 food += Decimal(v["food"])
-        tip = _d(TIP_PER_PERSON) * len(rows)
+        tip = tip_for(food)
         total = food + tip
         pay = data["payments"].get(fam) or {"paid": False, "paid_amount": ZERO, "paid_at": ""}
         diff = (total - pay["paid_amount"]) if pay["paid"] else ZERO
@@ -670,6 +675,7 @@ def _build_state(data: dict) -> dict:
         "kitchen": _kitchen(all_orders),
         "totals": {
             "food": money(grand_food), "tip": money(grand_tip), "total": money(grand_total),
+            "tip_percent": TIP_PERCENT,
             "paid": money(total_paid), "outstanding": money(grand_total - total_paid),
         },
     }
@@ -696,7 +702,7 @@ def export_workbook() -> io.BytesIO:
     ws = wb.active
     ws.title = "All orders"
     header = ["Family", "Name", "Menu", "Starter", "Main", "Rice/Naan", "Dessert / Kids add-on",
-              "Drink", "Hot drink", "Notes", "Food & drinks", "Tip", "Total"]
+              "Drink", "Hot drink", "Notes", "Food & drinks", f"Tip ({TIP_PERCENT}%)", "Total"]
     ws.append(header)
     for c in ws[1]:
         c.font, c.fill = bold, head_fill
@@ -710,10 +716,10 @@ def export_workbook() -> io.BytesIO:
             main = o["kids_meal"] if o["menu_type"] == "kids" else o["main"]
             ws.append([f["family"], o["member"], o["menu_label"], o["starter"], main, o["rice_naan"],
                        o["dessert_or_addon"], o["drink"], o["hot_drink"], o["notes"],
-                       float(o["food"]), float(o["tip"]), float(o["total"])])
+                       float(o["food"]), None, None])
     ws.append([])
     t = state["totals"]
-    for label, val in (("Grand total food & drinks", t["food"]), ("Total tip", t["tip"]),
+    for label, val in (("Grand total food & drinks", t["food"]), (f"Total tip ({TIP_PERCENT}%)", t["tip"]),
                        ("Grand total", t["total"]), ("Total marked paid", t["paid"]),
                        ("Outstanding", t["outstanding"])):
         ws.append([label] + [""] * 11 + [float(val.replace("£", "").replace(",", ""))])

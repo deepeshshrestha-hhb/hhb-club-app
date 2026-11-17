@@ -19,13 +19,12 @@ class PricingTests(unittest.TestCase):
     def test_two_course_plain(self):
         p = x.price_order(adult())
         self.assertEqual(p["food"], D("13.95"))
-        self.assertEqual(p["tip"], D("2.00"))
-        self.assertEqual(p["total"], D("15.95"))
+        self.assertEqual(p["total"], D("13.95"))  # no tip per person
 
     def test_three_course_plain(self):
         p = x.price_order(adult("3course", dessert="Rasmalai Milk Cake"))
         self.assertEqual(p["food"], D("16.95"))
-        self.assertEqual(p["total"], D("18.95"))
+        self.assertEqual(p["total"], D("16.95"))
 
     def test_chilli_momo_supplement(self):
         for s in ("Chilli Momo (Chicken)", "Chilli Momo (Veg)"):
@@ -41,26 +40,31 @@ class PricingTests(unittest.TestCase):
     def test_chilli_momo_plus_lamb_three_course(self):
         p = x.price_order(adult("3course", "Chilli Momo (Chicken)", "Himalayan Lamb", dessert="Port Wine (50 ml)"))
         self.assertEqual(p["food"], D("20.95"))
-        self.assertEqual(p["total"], D("22.95"))
+        self.assertEqual(p["total"], D("20.95"))
         self.assertEqual([label for label, _ in p["parts"]], ["3 Course", "Chilli Momo", "Lamb"])
 
     def test_chilli_momo_plus_goat(self):
         p = x.price_order(adult("2course", "Chilli Momo (Veg)", "Gurkha's Goat Meat Curry"))
         self.assertEqual(p["food"], D("18.95"))
-        self.assertEqual(p["total"], D("20.95"))
+        self.assertEqual(p["total"], D("18.95"))
 
     def test_kids_menu(self):
-        self.assertEqual(x.price_order({"menu_type": "kids", "kids_meal": "Fish Finger & Chips"})["total"], D("8.95"))
+        self.assertEqual(x.price_order({"menu_type": "kids", "kids_meal": "Fish Finger & Chips"})["total"], D("6.95"))
         p = x.price_order({"menu_type": "kids", "kids_meal": "Chicken Korma & Rice", "kids_icecream": True})
         self.assertEqual(p["food"], D("9.90"))
-        self.assertEqual(p["total"], D("11.90"))
+        self.assertEqual(p["total"], D("9.90"))
 
-    def test_family_total_includes_tip_per_ordered_person(self):
+    def test_family_total_adds_ten_percent_tip(self):
         orders = [adult(), adult("3course", dessert="Rasmalai Milk Cake"),
                   {"menu_type": "kids", "kids_meal": "Fish Finger & Chips", "kids_icecream": True}]
-        # 13.95 + 16.95 + 9.90 food + 3 x £2 tip
-        self.assertEqual(x.family_total(orders), D("46.80"))
+        # 13.95 + 16.95 + 9.90 = 40.80 food, + 4.08 tip
+        self.assertEqual(x.family_total(orders), D("44.88"))
         self.assertEqual(x.family_total([]), D("0.00"))
+
+    def test_tip_rounds_to_the_penny(self):
+        self.assertEqual(x.tip_for(D("100.00")), D("10.00"))
+        self.assertEqual(x.tip_for(D("13.95")), D("1.40"))   # 1.395 rounds half up
+        self.assertEqual(x.tip_for(D("6.94")), D("0.69"))
 
     def test_money_format(self):
         self.assertEqual(x.money(D("22.9")), "£22.90")
@@ -112,7 +116,7 @@ class ValidationTests(unittest.TestCase):
         o, err = x.clean_order({"family": "Deepesh Shrestha", "member": "Deelisha", "menu": "lunch",
                                 "meal_type": "2course", "starter": "Halloumi Fries", "main": "Chicken Katsu"})
         self.assertIsNone(err)
-        self.assertEqual(x.price_order(o)["total"], D("15.95"))
+        self.assertEqual(x.price_order(o)["total"], D("13.95"))
 
     def test_unknown_member_and_long_notes(self):
         self.assertIsNotNone(x.clean_order({"family": "Pankaj Shah", "member": "Barun"})[1])
@@ -125,12 +129,12 @@ class DrinkTests(unittest.TestCase):
     def test_drink_and_hot_drink_added_to_price(self):
         p = x.price_order(adult(drink="Cobra (pint)", hot_drink="Nepalese Masala Tea"))
         self.assertEqual(p["food"], D("24.40"))   # 13.95 + 6.50 + 3.95
-        self.assertEqual(p["total"], D("26.40"))
+        self.assertEqual(p["total"], D("24.40"))
         self.assertEqual([label for label, _ in p["parts"]], ["2 Course", "Cobra (pint)", "Nepalese Masala Tea"])
 
     def test_kids_meal_with_soft_drink(self):
         p = x.price_order({"menu_type": "kids", "kids_meal": "Fish Finger & Chips", "drink": "Apple Juice (half)"})
-        self.assertEqual(p["total"], D("11.45"))  # 6.95 + 2.50 + 2.00 tip
+        self.assertEqual(p["total"], D("9.45"))  # 6.95 + 2.50, tip is on the family total
 
     def test_drinks_are_optional(self):
         order, err = x.clean_order({"family": "Pankaj Shah", "member": "Pankaj", "meal_type": "2course",
