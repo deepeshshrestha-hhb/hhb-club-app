@@ -72,7 +72,7 @@
                     <td class="fw-semibold">{{ o.member }}</td>
                     <td>{{ o.menu_label }}</td>
                     <td>{{ o.starter or '—' }}</td>
-                    <td>{{ o.kids_meal if o.menu_type == 'kids' else o.main }}</td>
+                    <td>{{ (o.kids_meal if o.menu_type == 'kids' else o.main) or '—' }}</td>
                     <td>{{ o.rice_naan or '—' }}</td>
                     <td>{{ o.dessert_or_addon or '—' }}</td>
                     <td>{{ o.drinks_text or '—' }}</td>

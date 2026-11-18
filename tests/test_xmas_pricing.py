@@ -85,12 +85,40 @@ class ValidationTests(unittest.TestCase):
                                 "starter": "Sha Phaley", "main": "Butter Chicken"})
         self.assertIn("rice", err)
 
-    def test_two_course_drops_dessert_and_non_curry_drops_rice(self):
+    def test_non_curry_drops_rice(self):
         o, err = x.clean_order({"family": "Pankaj Shah", "member": "Pankaj", "meal_type": "2course",
-                                "starter": "Sha Phaley", "main": "Chicken Katsu",
-                                "dessert": "Rasmalai Milk Cake", "rice_naan": "Naan Bread"})
+                                "starter": "Sha Phaley", "main": "Chicken Katsu", "rice_naan": "Naan Bread"})
         self.assertIsNone(err)
-        self.assertEqual((o["dessert"], o["rice_naan"]), ("", ""))
+        self.assertEqual(o["rice_naan"], "")
+
+    def test_two_course_any_two_courses(self):
+        base = {"family": "Pankaj Shah", "member": "Pankaj", "meal_type": "2course"}
+        for combo in ({"starter": "Chilli Momo (Veg)", "main": "Chicken Katsu"},
+                      {"main": "Himalayan Lamb", "rice_naan": "Naan Bread", "dessert": "Rasmalai Milk Cake"},
+                      {"starter": "Chilli Momo (Veg)", "dessert": "Rasmalai Milk Cake"}):
+            o, err = x.clean_order({**base, **combo})
+            self.assertIsNone(err, combo)
+            self.assertEqual(sum(1 for k in ("starter", "main", "dessert") if o[k]), 2)
+        # supplements still apply whichever two are picked
+        o, _ = x.clean_order({**base, "starter": "Chilli Momo (Veg)", "dessert": "Rasmalai Milk Cake"})
+        self.assertEqual(x.price_order(o)["total"], D("15.95"))
+        o, _ = x.clean_order({**base, "main": "Himalayan Lamb", "rice_naan": "Naan Bread", "dessert": "Rasmalai Milk Cake"})
+        self.assertEqual(x.price_order(o)["total"], D("15.95"))
+
+    def test_two_course_needs_exactly_two(self):
+        base = {"family": "Pankaj Shah", "member": "Pankaj", "meal_type": "2course"}
+        for combo in ({"starter": "Sha Phaley"}, {},
+                      {"starter": "Sha Phaley", "main": "Chicken Katsu", "dessert": "Rasmalai Milk Cake"}):
+            self.assertIn("any two", x.clean_order({**base, **combo})[1])
+        self.assertIn("dessert", x.clean_order({**base, "starter": "Sha Phaley", "dessert": "Cake"})[1])
+
+    def test_two_course_view_without_main(self):
+        o, _ = x.clean_order({"family": "Pankaj Shah", "member": "Pankaj", "meal_type": "2course",
+                              "starter": "Sha Phaley", "dessert": "Rasmalai Milk Cake"})
+        self.assertEqual(x._summary_text(o), "2 Course: Sha Phaley · Rasmalai Milk Cake")
+        k = x._kitchen([o])
+        self.assertEqual(k["mains"], [])
+        self.assertEqual([r["name"] for r in k["desserts"]], ["Rasmalai Milk Cake"])
 
     def test_three_course_needs_dessert(self):
         _, err = x.clean_order({"family": "Pankaj Shah", "member": "Pankaj", "meal_type": "3course",

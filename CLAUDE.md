@@ -2098,6 +2098,10 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     penny once per family. Per-person prices no longer include any tip. A
     family that ticked "paid" before this sees the amber "total has changed"
     alert for the difference.
+  - **2026-11-18 — 2 Course is now any two of starter, main and dessert**
+    (restaurant confirmed starter+main, main+dessert or starter+dessert).
+    `clean_order()` requires exactly two for 2 Course and all three for 3
+    Course; views, kitchen counts and export skip an unchosen course.
 
 - **2026-11-16 — League Final Standings now shows an NPD column** (before
   Win %). Ranking has always been Won -> NPD -> Win % (League Rule 9), but
