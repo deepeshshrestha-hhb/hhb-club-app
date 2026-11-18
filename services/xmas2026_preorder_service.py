@@ -83,7 +83,7 @@ _FAMILY_NAMES = [f["family"] for f in FAMILIES]
 
 MENU_XMAS2026 = {
     "meal_types": {
-        "2course": {"label": "2 Course", "price": "13.95", "courses": "Starter + Main"},
+        "2course": {"label": "2 Course", "price": "13.95", "courses": "Any 2 of starter, main, dessert"},
         "3course": {"label": "3 Course", "price": "16.95", "courses": "Starter + Main + Dessert"},
     },
     "starters": [
@@ -371,22 +371,29 @@ def clean_order(payload: dict):
     meal_type = payload.get("meal_type")
     if meal_type not in MENU_XMAS2026["meal_types"]:
         return None, "Please choose 2 Course or 3 Course."
-    starter, main = payload.get("starter"), payload.get("main")
-    if starter not in _STARTERS:
-        return None, "Please choose a starter."
-    if main not in _MAINS:
-        return None, "Please choose a main."
-    order.update(menu_type=meal_type, starter=starter, main=main)
+    # 3 Course = starter + main + dessert. 2 Course = any two of the three
+    # (restaurant confirmed starter+main, main+dessert or starter+dessert).
+    starter = str(payload.get("starter") or "").strip()
+    main = str(payload.get("main") or "").strip()
+    dessert = str(payload.get("dessert") or "").strip()
+    for value, valid, what in ((starter, _STARTERS, "starter"), (main, _MAINS, "main"),
+                               (dessert, _DESSERTS, "dessert")):
+        if value and value not in valid:
+            return None, f"Please choose a {what} from the list."
+    chosen = sum(1 for v in (starter, main, dessert) if v)
+    if meal_type == "3course":
+        for value, what in ((starter, "starter"), (main, "main"), (dessert, "dessert")):
+            if not value:
+                return None, f"Please choose a {what}."
+    elif chosen != 2:
+        return None, ("For 2 Course, please choose any two of starter, main and dessert "
+                      "(or pick 3 Course for all three).")
+    order.update(menu_type=meal_type, starter=starter, main=main, dessert=dessert)
     if main in _CURRIES:
         rice = payload.get("rice_naan")
         if rice not in MENU_XMAS2026["rice_naan"]:
             return None, "Please choose rice or naan for your curry."
         order["rice_naan"] = rice
-    if meal_type == "3course":
-        dessert = payload.get("dessert")
-        if dessert not in _DESSERTS:
-            return None, "Please choose a dessert."
-        order["dessert"] = dessert
     return order, None
 
 
@@ -567,8 +574,8 @@ def _summary_text(o) -> str:
         bits = [o["kids_meal"]] + ([_ic_text(o)] if o.get("kids_icecream") else [])
         text = "Kids: " + " + ".join(bits)
     else:
-        main = o["main"] + (f" ({o['rice_naan']})" if o.get("rice_naan") else "")
-        bits = [o["starter"], main] + ([o["dessert"]] if o.get("dessert") else [])
+        main = (o["main"] + (f" ({o['rice_naan']})" if o.get("rice_naan") else "")) if o.get("main") else ""
+        bits = [b for b in (o.get("starter"), main, o.get("dessert")) if b]
         text = f"{_menu_label(o)}: " + " · ".join(bits)
     drinks = _drinks_text(o)
     return f"{text} · Drinks: {drinks}" if drinks else text
@@ -614,9 +621,11 @@ def _kitchen(orders: list) -> dict:
             if o.get("kids_icecream"):
                 ic[f"{o['ic_flavour']} ice cream, {o['ic_sauce']} sauce"] += 1
             continue
-        starters[o["starter"]] += 1
-        mains[o["main"]] += 1
-        if o.get("rice_naan"):
+        if o.get("starter"):
+            starters[o["starter"]] += 1
+        if o.get("main"):
+            mains[o["main"]] += 1
+        if o.get("main") and o.get("rice_naan"):
             sides[o["main"]][o["rice_naan"]] += 1
         if o.get("dessert"):
             desserts[o["dessert"]] += 1

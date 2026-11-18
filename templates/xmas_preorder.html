@@ -35,7 +35,8 @@
         <ol class="xp-steps mb-3">
             <li>Choose your <strong>family</strong>.</li>
             <li>Choose the <strong>person</strong> you're ordering for.</li>
-            <li>Choose their <strong>starter and main</strong> (and dessert for 3 courses).</li>
+            <li>Choose their courses: <strong>2 Course</strong> is any two of starter, main and dessert
+                (e.g. starter + main, main + dessert, or starter + dessert); <strong>3 Course</strong> is all three.</li>
             <li>Optionally add a <strong>drink</strong> and/or a <strong>hot drink</strong>, then <strong>Save Order</strong>.
                 Repeat for each person.</li>
         </ol>
@@ -114,6 +115,7 @@
                                     <label class="btn btn-outline-primary" for="mt_{{ mt.key }}">{{ mt.label }} ({{ mt.price_label }})</label>
                                     {% endfor %}
                                 </div>
+                                <div class="form-text d-none" id="courseHint">2 Course: pick any <strong>two</strong> of starter, main and dessert, and leave the third as "No …".</div>
                             </div>
                             <div class="mb-3">
                                 <label for="starterSelect" class="form-label"><span class="xp-step">1</span>Starter</label>

@@ -14,7 +14,7 @@
         family: $('familySelect'), member: $('memberSelect'), form: $('orderForm'), fields: $('orderFields'),
         childMenu: $('childMenuWrap'), menuKids: $('menuKids'), menuLunch: $('menuLunch'),
         lunch: $('lunchFields'), kids: $('kidsFields'), starter: $('starterSelect'), main: $('mainSelect'),
-        riceWrap: $('riceWrap'), rice: $('riceSelect'), dessertWrap: $('dessertWrap'), dessert: $('dessertSelect'),
+        riceWrap: $('riceWrap'), courseHint: $('courseHint'), rice: $('riceSelect'), dessertWrap: $('dessertWrap'), dessert: $('dessertSelect'),
         kidsMeal: $('kidsSelect'), ic: $('icCheck'), icWrap: $('icWrap'), icFlavour: $('icFlavour'), icSauce: $('icSauce'),
         drinksWrap: $('drinksWrap'), drink: $('drinkSelect'), hot: $('hotSelect'),
         notesWrap: $('notesWrap'), notes: $('notesInput'), notesCount: $('notesCount'),
@@ -107,9 +107,14 @@
         show(el.riceWrap, isCurry);
         if (!isCurry) el.rice.value = '';
 
-        const three = checked('meal_type') === '3course';
-        show(el.dessertWrap, three);
-        if (!three) el.dessert.value = '';
+        // 2 Course = any two of starter/main/dessert; 3 Course = all three.
+        const mealType = checked('meal_type');
+        const two = mealType === '2course';
+        show(el.dessertWrap, !!mealType);
+        show(el.courseHint, two);
+        [[el.starter, 'starter'], [el.main, 'main'], [el.dessert, 'dessert']].forEach(([sel, what]) => {
+            sel.options[0].textContent = two ? `No ${what}` : `Choose a ${what}…`;
+        });
 
         show(el.icWrap, el.ic.checked);
         if (!el.ic.checked) { el.icFlavour.value = ''; el.icSauce.value = ''; }
@@ -163,10 +168,14 @@
             return '';
         }
         if (!checked('meal_type')) return 'Please choose 2 Course or 3 Course.';
-        if (!el.starter.value) return 'Please choose a starter.';
-        if (!el.main.value) return 'Please choose a main.';
+        if (checked('meal_type') === '3course') {
+            if (!el.starter.value) return 'Please choose a starter.';
+            if (!el.main.value) return 'Please choose a main.';
+            if (!el.dessert.value) return 'Please choose a dessert.';
+        } else if ([el.starter, el.main, el.dessert].filter((s) => s.value).length !== 2) {
+            return 'For 2 Course, please choose any two of starter, main and dessert (or pick 3 Course for all three).';
+        }
         if (!el.riceWrap.classList.contains('d-none') && !el.rice.value) return 'Please choose rice or naan for your curry.';
-        if (checked('meal_type') === '3course' && !el.dessert.value) return 'Please choose a dessert.';
         return '';
     }
 
