@@ -2,7 +2,7 @@
 Christmas Lunch 2026 pre-order & payment tracker: data/xmas2026_preorders.xlsx
 
 Sits beside the unlisted Christmas Lunch RSVP (christmas_dinner_service.py), for
-the same private group of 9 families (29 people). Each person picks their meal
+the same private group of 9 families (30 people). Each person picks their meal
 from the restaurant's lunch menu (plus four momo starters agreed for our party);
 children can pick the kids menu instead. Families see their running total and
 tick "We have transferred the payment" once they've paid Deepesh.
@@ -47,7 +47,7 @@ EVENT = {
 LOCKED_MESSAGE = "Orders are closed — contact Deepesh for changes."
 
 TIP_PERCENT = 10  # added on top of each family's food & drinks total
-EXPECTED_HEADCOUNT = 29
+EXPECTED_HEADCOUNT = 30
 NOTES_MAX = 150
 
 # --------------------------------------------------------------------------
@@ -66,7 +66,7 @@ FAMILIES = [
     {"family": "Kalyan Bhandari", "members": [_m("Kalyan"), _m("Taptika"), _m("Aarabh"), _m("Nishad")]},
     {"family": "Keshav Bhattarai", "members": [_m("Krisha"), _m("Kundan"), _m("Prakriti"), _m("Keshav B")]},
     {"family": "Keshav Dahal", "members": [_m("Anjana")]},
-    {"family": "Pankaj Shah", "members": [_m("Pankaj")]},
+    {"family": "Pankaj Shah", "members": [_m("Pankaj"), _m("Pujan")]},
     {"family": "Ram Aryal", "members": [_m("Ram"), _m("Saroja"), _m("Shreya"), _m("Grishma"), _m("Aarambha")]},
 ]
 

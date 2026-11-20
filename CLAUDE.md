@@ -2065,8 +2065,10 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   `tests/test_xmas_pricing.py`). It lives in the existing unlisted
   `christmas_dinner_bp` (same noindex header); the only link to it is a
   "Pre-order your meal" button on the RSVP page.
-  - **Who:** 29 people in 9 families, seeded in the service (`FAMILIES`;
-    Hazel and Deelisha are children). A warning is logged if the seed isn't 29.
+  - **Who:** 30 people in 9 families, seeded in the service (`FAMILIES`;
+    Hazel and Deelisha are children). A warning is logged if the seed isn't 30
+    (`EXPECTED_HEADCOUNT`). **2026-11-20:** Pujan added to Pankaj Shah's family
+    (Pankaj is bringing him; RSVP now 30), as an adult.
   - **Menu and prices:** all in `MENU_XMAS2026` and `TIP_PERCENT` (10%, see below).
     The server always reprices with `price_order()` using `Decimal`. The
     browser's live price line is only a preview.
