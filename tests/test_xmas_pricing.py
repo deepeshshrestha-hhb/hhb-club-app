@@ -73,7 +73,7 @@ class PricingTests(unittest.TestCase):
 
 class SeedTests(unittest.TestCase):
     def test_headcount(self):
-        self.assertEqual(x.HEADCOUNT, 29)
+        self.assertEqual(x.HEADCOUNT, 30)
         self.assertEqual(len(x.FAMILIES), 9)
         children = sorted(m["name"] for f in x.FAMILIES for m in f["members"] if m["is_child"])
         self.assertEqual(children, ["Deelisha", "Hazel"])
