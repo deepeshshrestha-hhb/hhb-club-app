@@ -2104,6 +2104,11 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     (restaurant confirmed starter+main, main+dessert or starter+dessert).
     `clean_order()` requires exactly two for 2 Course and all three for 3
     Course; views, kitchen counts and export skip an unchosen course.
+  - **2026-11-22 — print fix.** Printing ran the Drinks list past the page
+    break and on top of "All orders" (Chrome can't split a flex `.row` across
+    pages). Print CSS now lays the kitchen lists out as full-width blocks with
+    items in 3 columns, starts All orders on a new page, and prints the table
+    totals once (`tfoot` as a row group, not repeated per page).
 
 - **2026-11-16 — League Final Standings now shows an NPD column** (before
   Win %). Ranking has always been Won -> NPD -> Win % (League Rule 9), but

@@ -79,7 +79,20 @@ footer { display: none; } /* club footer isn't relevant on this private page */
     #xpOrders .xp-fam-row td { background: #e6e6e6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     #xpOrders tr { break-inside: avoid; }
     .badge { border: 1px solid #000; color: #000 !important; background: none !important; }
-    #xpKitchen .row > div { break-inside: avoid; }
+    /* Kitchen summary: plain block flow, not the flex grid. Chrome can't split a
+       flex row across pages, so a long list (Drinks) spilled onto the next page
+       and printed on top of whatever followed. Each list now runs full width,
+       its items in 3 columns, and only short lists are kept in one piece. */
+    #xpKitchen .row { display: block; margin: 0; }
+    #xpKitchen .row > div { width: 100%; padding: 0; margin-bottom: 3mm; }
+    #xpKitchen .xp-card { height: auto !important; }
+    #xpKitchen h3 { break-after: avoid; }
+    #xpKitchen .xp-count-list { column-count: 3; column-gap: 8mm; }
+    #xpKitchen .xp-count-list li { break-inside: avoid; }
+    /* All orders starts on its own page, and the totals print once at the end
+       instead of repeating at the foot of every page. */
+    #xpAllOrders { break-before: page; }
+    #xpOrders tfoot { display: table-row-group; }
     a { color: #000 !important; text-decoration: none; }
 }
 
