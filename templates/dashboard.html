@@ -126,9 +126,11 @@
             <p class="text-muted mb-0">Great badminton, great people.</p>
         </div>
         <div class="d-flex gap-2">
+            {# Hidden while the League is off-season; restore when the next season starts.
             <a href="{{ url_for('weekly_scores.page') }}" class="btn btn-hhb-primary text-white">
                 Update League Scores
             </a>
+            #}
             <a href="{{ url_for('rules.club_rules') }}" class="btn btn-hhb-primary text-white hhb-rules-cta position-relative">
                 View Club Rules
                 <span class="badge rounded-pill bg-danger hhb-new-badge">New</span>
