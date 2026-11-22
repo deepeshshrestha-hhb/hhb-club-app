@@ -288,7 +288,12 @@
     async function refreshSummary() {
         try {
             const res = await fetch(C.urls.summary, { cache: 'no-store' });
-            if (res.ok) el.summary.innerHTML = await res.text();
+            if (res.ok) {
+                el.summary.innerHTML = await res.text();
+                // Keep the "Exclude prices" switch in step with the page after the swap.
+                const hide = document.getElementById('xpHidePrices');
+                if (hide) hide.checked = document.documentElement.classList.contains('xp-no-prices');
+            }
         } catch (e) { /* keep the last copy */ }
     }
 

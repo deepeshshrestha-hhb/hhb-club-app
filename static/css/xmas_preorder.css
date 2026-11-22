@@ -62,6 +62,9 @@ footer { display: none; } /* club footer isn't relevant on this private page */
 .xp-toast { z-index: 1090; }
 .xp-allergens { color: var(--xp-soft); font-size: .85rem; text-align: center; }
 .print-only { display: none; }
+/* "Exclude prices & paid status" switch: a restaurant copy with just the food. */
+.xp-no-prices .xp-price { display: none !important; }
+.xp-no-prices .xp-paid-status { visibility: hidden; }
 
 @page { size: A4 landscape; margin: 10mm; }
 @media print {
