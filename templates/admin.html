@@ -146,6 +146,27 @@
             </div>
         </div>
     </div>
+
+    <div class="col-md-6 mb-3">
+        <div class="card hhb-card h-100">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">Annual Dinner &amp; Gala 2026</h5>
+                <p class="card-text text-muted small">
+                    The <a href="{{ url_for('annual_dinner.page') }}">/annual-dinner</a> page always works by direct link.
+                    This switch controls the promo banner on the Dashboard (it also hides itself after 6 Dec 2026).
+                    Admins always see a preview of it.
+                </p>
+                <form action="{{ url_for('annual_dinner.admin_toggle_banner') }}" method="post" class="d-flex align-items-center gap-2 mt-auto">
+                    <input type="hidden" name="visible" value="{{ '0' if dinner_banner_visible else '1' }}">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" onchange="this.form.submit()"
+                               {{ 'checked' if dinner_banner_visible }} style="cursor:pointer;" aria-label="Show banner on Dashboard">
+                    </div>
+                    <span class="small text-muted">{{ 'Banner showing on Dashboard' if dinner_banner_visible else 'Banner hidden from members' }}</span>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}

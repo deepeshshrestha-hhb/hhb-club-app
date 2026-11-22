@@ -47,6 +47,14 @@ def _safe_next(target):
     return None
 
 
+def _dinner_banner_visible():
+    from services.annual_dinner_service import is_banner_visible
+    try:
+        return is_banner_visible()
+    except Exception:
+        return False
+
+
 def admin_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
@@ -81,6 +89,7 @@ def admin_page():
         "admin.html",
         committee_visible=committee_service.is_visible(),
         vote_state=vote_service.get_state(),
+        dinner_banner_visible=_dinner_banner_visible(),
         vote_voted=vote_voted,
         vote_total=vote_total,
     )

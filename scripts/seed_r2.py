@@ -11,6 +11,11 @@ r2_service.download_all cannot catch that; opening the workbook can.
 Run from the project root with the R2_* env vars set:
 
     python scripts/seed_r2.py
+
+To upload only specific files (safer: a full run also overwrites live data
+files such as RSVPs/feedback with whatever copy is on this PC), name them:
+
+    python scripts/seed_r2.py "tournaments/HHB Annual Players League - 2023.xlsm"
 """
 import os
 import sys
@@ -46,11 +51,17 @@ def main():
     client = r2_service.get_client()
     bucket = os.environ["R2_BUCKET"]
 
-    files = (
-        sorted(Path("data").glob("*.xlsx"))
-        + sorted(Path("data").glob("*.csv"))
-        + sorted(Path("tournaments").glob("*.xlsm"))
-    )
+    if len(sys.argv) > 1:
+        files = [Path(a) for a in sys.argv[1:]]
+        missing = [str(f) for f in files if not f.is_file()]
+        if missing:
+            sys.exit("Not found: " + ", ".join(missing))
+    else:
+        files = (
+            sorted(Path("data").glob("*.xlsx"))
+            + sorted(Path("data").glob("*.csv"))
+            + sorted(Path("tournaments").glob("*.xlsm"))
+        )
     if not files:
         sys.exit("No data/ or tournaments/ files found. Run from the project root.")
 

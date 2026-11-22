@@ -1,0 +1,109 @@
+/* Christmas Lunch 2026 pre-order - HHB blue/green with a light festive touch. */
+:root {
+    --xp-blue: #0066cc;
+    --xp-green: #00b386;
+    --xp-red: #c0392b;
+    --xp-ink: #1a1a1a;
+    --xp-soft: #6c757d;
+    --xp-line: #dfe5ec;
+}
+body.bg-light { background: #f3f7fb !important; }
+footer { display: none; } /* club footer isn't relevant on this private page */
+
+.xp-wrap { max-width: 1100px; margin: 0 auto; }
+.xp-narrow { max-width: 640px; margin-left: auto; margin-right: auto; }
+
+.xp-header { background: #fff; border-radius: .9rem; border-top: 5px solid var(--xp-blue);
+    box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 1.1rem 1.2rem; position: relative; overflow: hidden; }
+.xp-header::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px;
+    background: linear-gradient(90deg, var(--xp-blue), var(--xp-green)); }
+.xp-header h1 { color: var(--xp-red); font-weight: 700; font-size: clamp(1.4rem, 5.5vw, 2rem); margin: 0; }
+.xp-header .xp-sub { color: var(--xp-ink); font-weight: 600; margin: .25rem 0 0; }
+.xp-header .xp-venue { color: var(--xp-soft); font-size: .9rem; margin: 0; }
+
+.xp-card { background: #fff; border: 1px solid var(--xp-line); border-radius: .75rem; padding: 1.1rem; }
+.xp-card h2 { color: var(--xp-blue); font-size: 1.15rem; font-weight: 700; margin: 0 0 .8rem; }
+.xp-card h3 { color: var(--xp-green); font-size: 1rem; font-weight: 700; margin: 0 0 .5rem; }
+.xp-card .form-label { font-weight: 600; }
+.xp-step { display: inline-block; min-width: 1.6rem; height: 1.6rem; line-height: 1.6rem; text-align: center;
+    border-radius: 50%; background: var(--xp-blue); color: #fff; font-size: .8rem; margin-right: .35rem; }
+
+.xp-choice .btn { font-weight: 600; }
+.xp-choice .btn-check:checked + .btn { background: var(--xp-blue); border-color: var(--xp-blue); color: #fff; }
+
+.xp-price { background: #eef7f3; border: 1px solid #bfe6d6; border-radius: .5rem; padding: .6rem .8rem;
+    font-weight: 600; color: #0a6b4f; }
+.xp-price.xp-price-empty { background: #f6f7f9; border-color: var(--xp-line); color: var(--xp-soft); font-weight: 400; }
+
+.xp-save { background: var(--xp-green); border-color: var(--xp-green); color: #fff; font-weight: 700; }
+.xp-save:hover, .xp-save:focus { background: #009a73; border-color: #009a73; color: #fff; }
+.xp-save:disabled { background: var(--xp-green); border-color: var(--xp-green); opacity: .5; }
+
+.xp-total { font-size: 1.6rem; font-weight: 700; color: var(--xp-ink); }
+.xp-pay { background: #f0f6ff; border: 1px solid #c6dcf7; border-radius: .6rem; padding: .8rem .9rem; }
+.xp-pay .form-check-input { width: 1.3em; height: 1.3em; }
+.xp-pay .form-check-label { font-weight: 600; }
+
+.xp-stat { background: #fff; border: 1px solid var(--xp-line); border-radius: .5rem; padding: .45rem .75rem; }
+.xp-stat b { color: var(--xp-blue); font-size: 1.15rem; }
+.xp-count-list { list-style: none; padding: 0; margin: 0; }
+.xp-count-list li { display: flex; justify-content: space-between; gap: .75rem; padding: .3rem 0;
+    border-bottom: 1px dashed var(--xp-line); }
+.xp-count-list li:last-child { border-bottom: 0; }
+.xp-count-list .xp-n { font-weight: 700; color: var(--xp-blue); white-space: nowrap; }
+.xp-count-list .xp-detail { display: block; color: var(--xp-soft); font-size: .825rem; }
+
+#xpOrders { font-size: .9rem; }
+#xpOrders th { white-space: nowrap; }
+#xpOrders .xp-fam-row td { background: #eaf2fb; font-weight: 700; }
+#xpOrders .xp-pending td { color: var(--xp-soft); font-style: italic; }
+#xpOrders tfoot td { font-weight: 700; }
+
+.xp-toast { z-index: 1090; }
+.xp-allergens { color: var(--xp-soft); font-size: .85rem; text-align: center; }
+.print-only { display: none; }
+/* "Exclude prices & paid status" switch: a restaurant copy with just the food. */
+.xp-no-prices .xp-price { display: none !important; }
+.xp-no-prices .xp-paid-status { visibility: hidden; }
+
+@page { size: A4 landscape; margin: 10mm; }
+@media print {
+    .no-print, nav, .toast-container { display: none !important; }
+    .print-only { display: block; }
+    body, body.bg-light { background: #fff !important; color: #000 !important; }
+    .container, .container-fluid, main { max-width: none !important; padding: 0 !important; margin: 0 !important; }
+    .xp-wrap { max-width: none; }
+    .xp-card { border: 0; padding: 0; margin-bottom: 4mm !important; overflow: visible; box-shadow: none; }
+    .xp-card h2, .xp-card h3, .xp-stat b, .xp-count-list .xp-n { color: #000 !important; }
+    .xp-stat { border: 1px solid #999; }
+    .table-responsive { overflow: visible !important; }
+    #xpOrders { font-size: 8.5pt; color: #000; }
+    #xpOrders th, #xpOrders td { padding: 2px 4px !important; color: #000 !important; }
+    #xpOrders .xp-fam-row td { background: #e6e6e6 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    #xpOrders tr { break-inside: avoid; }
+    .badge { border: 1px solid #000; color: #000 !important; background: none !important; }
+    /* Kitchen summary: plain block flow, not the flex grid. Chrome can't split a
+       flex row across pages, so a long list (Drinks) spilled onto the next page
+       and printed on top of whatever followed. Each list now runs full width,
+       its items in 3 columns, and only short lists are kept in one piece. */
+    #xpKitchen .row { display: block; margin: 0; }
+    #xpKitchen .row > div { width: 100%; padding: 0; margin-bottom: 3mm; }
+    #xpKitchen .xp-card { height: auto !important; }
+    #xpKitchen h3 { break-after: avoid; }
+    /* Three items per line as inline boxes, not CSS columns: multi-column
+       layout split across a page break overlaps in some browsers (Safari). */
+    #xpKitchen .xp-count-list li { display: inline-flex; width: 31%; margin-right: 2%;
+        vertical-align: top; break-inside: avoid; border-bottom: 1px solid #ddd; }
+    /* All orders starts on its own page, and the totals print once at the end
+       instead of repeating at the foot of every page. */
+    #xpAllOrders { break-before: page; }
+    #xpOrders tfoot { display: table-row-group; }
+    a { color: #000 !important; text-decoration: none; }
+}
+
+.xp-tip-alert { background: #fff4d6; border: 2px solid #e8a317; border-radius: .75rem; padding: .75rem 1rem;
+    color: #5a3d00; font-size: 1.05rem; }
+.xp-steps { padding-left: 1.3rem; }
+.xp-steps li { margin-bottom: .25rem; }
+.xp-drinks-head { font-weight: 700; color: var(--xp-blue); border-top: 1px solid var(--xp-line); padding-top: .75rem; margin-bottom: .5rem; }
+.xp-paynote { background: #eaf3fc; border-left: 4px solid var(--xp-blue); border-radius: .4rem; padding: .6rem .8rem; }

@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}Christmas Lunch 2026 – Pre-order your meal{% endblock %}
+
+{% block head_extra %}
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Pre-order your Christmas Lunch on Saturday 12 December at City of Temple Kathmandu, Paisley.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Christmas Lunch 2026 – Pre-order your meal">
+<meta property="og:description" content="Pick your starter, main and dessert for Saturday 12 December at City of Temple Kathmandu, Paisley.">
+<meta property="og:url" content="{{ site_url ~ request.path }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/xmas_preorder.css') }}?v={{ asset_version('css/xmas_preorder.css') }}">
+{% endblock %}
+
+{% macro item_options(items) %}
+{% for i in items %}<option value="{{ i.name }}" data-supp="{{ i.supplement }}" data-short="{{ i.short or i.name }}">{{ i.label }}</option>{% endfor %}
+{% endmacro %}
+
+{% block content %}
+<div class="xp-wrap">
+    <div class="xp-header mb-3 no-print">
+        <h1>🎄 Christmas Lunch 2026</h1>
+        <p class="xp-sub">Pre-order your meal · {{ ev.date }}, {{ ev.time }}</p>
+        <p class="xp-venue">{{ ev.venue }}, {{ ev.address }}</p>
+        <a class="small" href="{{ url_for('christmas_dinner.page') }}">← Back to the RSVP page</a>
+    </div>
+
+    <div class="xp-tip-alert mb-3 no-print" role="note">
+        💷 <strong>A {{ menu.tip_percent }}% tip is added on top of your family's food &amp; drinks total.</strong>
+        The prices you see for each person don't include it. It's added once to your family total, e.g. £100 of food &amp; drinks = £10 tip, £110 to pay.
+    </div>
+
+    <div class="xp-card mb-3 no-print">
+        <h2>How to order</h2>
+        <ol class="xp-steps mb-3">
+            <li>Choose your <strong>family</strong>.</li>
+            <li>Choose the <strong>person</strong> you're ordering for.</li>
+            <li>Choose their courses: <strong>2 Course</strong> is any two of starter, main and dessert
+                (e.g. starter + main, main + dessert, or starter + dessert); <strong>3 Course</strong> is all three.</li>
+            <li>Optionally add a <strong>drink</strong> and/or a <strong>hot drink</strong>, then <strong>Save Order</strong>.
+                Repeat for each person.</li>
+        </ol>
+        <p class="mb-2">We're pre-ordering from the <strong>Lunch Menu</strong> and the <strong>Kids Menu</strong>:</p>
+        <ul class="mb-3">
+            {% for mt in menu.meal_types %}<li>Lunch Menu, {{ mt.label }}: <strong>{{ mt.price_label }}</strong></li>{% endfor %}
+            <li>Kids Menu meal: <strong>£{{ menu.kids_meal_price }}</strong>, plus Kid's Ice Cream <strong>£{{ menu.kids_icecream.price }}</strong> if wanted</li>
+            <li>Some dishes carry a supplement, shown next to them (e.g. +£2.00).</li>
+            <li>Drinks and hot drinks are optional, at menu prices, and are added to that person's total.</li>
+        </ul>
+        <div class="xp-paynote mb-2">
+            <strong>💳 How payment works:</strong> you order here, then pay your family total to {{ ev.organiser }}
+            around the <strong>1st week of December</strong> (no need to pay yet). On the day, {{ ev.organiser }} pays the
+            restaurant for all pre-orders, so there's nothing to pay at the table for these.
+        </div>
+        <p class="mb-2"><strong>On the day:</strong> you can order extras (food or drinks) or anything from the
+            À La Carte menu. We'll settle up for anything ordered on the day separately with {{ ev.organiser }}.</p>
+        <a class="btn btn-outline-primary btn-sm" href="https://www.cityoftemple.co.uk/menu.html" target="_blank" rel="noopener">View the City of Temple menus ↗</a>
+    </div>
+
+    <div class="alert alert-warning fw-semibold no-print {% if not state.locked %}d-none{% endif %}" id="xpLocked" role="status">
+        🔒 {{ state.locked_message }}{% if is_admin %} <span class="fw-normal">(You're logged in as admin, so you can still edit.)</span>{% endif %}
+    </div>
+
+    {% if is_admin %}
+    <div class="xp-card mb-3 no-print" id="admin">
+        <h2>Organiser</h2>
+        <form method="post" action="{{ url_for('christmas_dinner.preorder_lock') }}" class="form-check form-switch m-0">
+            <input class="form-check-input" type="checkbox" role="switch" id="lockSwitch" name="locked"
+                   {% if state.locked %}checked{% endif %} onchange="this.form.submit()">
+            <label class="form-check-label fw-semibold" for="lockSwitch">Lock orders</label>
+            <div class="small text-muted">When on, families can't change their orders. Payments can still be ticked.</div>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="row g-3 mb-4 no-print">
+        <div class="col-12 col-lg-7">
+            <div class="xp-card">
+                <h2>Your order</h2>
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-sm-6">
+                        <label for="familySelect" class="form-label">Family</label>
+                        <select id="familySelect" class="form-select">
+                            <option value="">Choose your family…</option>
+                            {% for f in families %}<option value="{{ f.family }}">{{ f.family }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="memberSelect" class="form-label">Who's ordering?</label>
+                        <select id="memberSelect" class="form-select" disabled>
+                            <option value="">Choose a name…</option>
+                        </select>
+                    </div>
+                </div>
+
+                <form id="orderForm" class="d-none" novalidate>
+                    <fieldset id="orderFields">
+                        <div class="mb-3 d-none" id="childMenuWrap">
+                            <div class="form-label">Menu</div>
+                            <div class="btn-group w-100 xp-choice" role="group" aria-label="Menu">
+                                <input type="radio" class="btn-check" name="menu" id="menuKids" value="kids">
+                                <label class="btn btn-outline-primary" for="menuKids">Kids Menu</label>
+                                <input type="radio" class="btn-check" name="menu" id="menuLunch" value="lunch">
+                                <label class="btn btn-outline-primary" for="menuLunch">Lunch Menu</label>
+                            </div>
+                        </div>
+
+                        <div id="lunchFields" class="d-none">
+                            <div class="mb-3">
+                                <div class="form-label">Meal</div>
+                                <div class="btn-group w-100 xp-choice" role="group" aria-label="Meal type">
+                                    {% for mt in menu.meal_types %}
+                                    <input type="radio" class="btn-check" name="meal_type" id="mt_{{ mt.key }}" value="{{ mt.key }}"
+                                           data-price="{{ mt.price }}" data-label="{{ mt.label }}">
+                                    <label class="btn btn-outline-primary" for="mt_{{ mt.key }}">{{ mt.label }} ({{ mt.price_label }})</label>
+                                    {% endfor %}
+                                </div>
+                                <div class="form-text d-none" id="courseHint">2 Course: pick any <strong>two</strong> of starter, main and dessert, and leave the third as "No …".</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="starterSelect" class="form-label"><span class="xp-step">1</span>Starter</label>
+                                <select id="starterSelect" class="form-select">
+                                    <option value="">Choose a starter…</option>
+                                    {% for g in menu.starters %}<optgroup label="{{ g.group }}">{{ item_options(g['items']) }}</optgroup>{% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="mainSelect" class="form-label"><span class="xp-step">2</span>Main</label>
+                                <select id="mainSelect" class="form-select">
+                                    <option value="">Choose a main…</option>
+                                    {% for g in menu.mains %}
+                                    <optgroup label="{{ g.group }}">
+                                        {% for i in g['items'] %}<option value="{{ i.name }}" data-supp="{{ i.supplement }}" data-short="{{ i.short or i.name }}"{% if g.curry %} data-curry="1"{% endif %}>{{ i.label }}</option>{% endfor %}
+                                    </optgroup>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3 d-none" id="riceWrap">
+                                <label for="riceSelect" class="form-label">Rice / Naan</label>
+                                <select id="riceSelect" class="form-select">
+                                    <option value="">Choose rice or naan…</option>
+                                    {% for r in menu.rice_naan %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3 d-none" id="dessertWrap">
+                                <label for="dessertSelect" class="form-label"><span class="xp-step">3</span>Dessert</label>
+                                <select id="dessertSelect" class="form-select">
+                                    <option value="">Choose a dessert…</option>
+                                    {{ item_options(menu.desserts) }}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="kidsFields" class="d-none">
+                            <div class="mb-3">
+                                <label for="kidsSelect" class="form-label">Kids meal ({{ '£%s' % menu.kids_meal_price }})</label>
+                                <select id="kidsSelect" class="form-select">
+                                    <option value="">Choose a kids meal…</option>
+                                    {% for i in menu.kids_meals %}<option value="{{ i.name }}">{{ i.label }}</option>{% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="icCheck">
+                                <label class="form-check-label fw-semibold" for="icCheck">Add Kid's Ice Cream (+£{{ menu.kids_icecream.price }})</label>
+                            </div>
+                            <div class="row g-2 mb-3 d-none" id="icWrap">
+                                <div class="col-6">
+                                    <label for="icFlavour" class="form-label">Flavour</label>
+                                    <select id="icFlavour" class="form-select">
+                                        <option value="">Choose…</option>
+                                        {% for v in menu.kids_icecream.flavours %}<option value="{{ v }}">{{ v }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label for="icSauce" class="form-label">Sauce</label>
+                                    <select id="icSauce" class="form-select">
+                                        <option value="">Choose…</option>
+                                        {% for v in menu.kids_icecream.sauces %}<option value="{{ v }}">{{ v }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-none" id="drinksWrap">
+                            <div class="xp-drinks-head">🥤 Drinks <span class="fw-normal text-muted">(optional, added to the price)</span></div>
+                            <div class="row g-2 mb-3">
+                                <div class="col-12 col-sm-6">
+                                    <label for="drinkSelect" class="form-label">Drink</label>
+                                    <select id="drinkSelect" class="form-select">
+                                        <option value="">No drink</option>
+                                        {% for g in menu.drinks %}
+                                        <optgroup label="{{ g.group }}"{% if g.alcohol %} data-alcohol="1"{% endif %}>
+                                            {% for i in g['items'] %}<option value="{{ i.name }}" data-price="{{ i.price }}">{{ i.label }}</option>{% endfor %}
+                                        </optgroup>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label for="hotSelect" class="form-label">Hot drink</label>
+                                    <select id="hotSelect" class="form-select">
+                                        <option value="">No hot drink</option>
+                                        {% for i in menu.hot_drinks %}<option value="{{ i.name }}" data-price="{{ i.price }}">{{ i.label }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 d-none" id="notesWrap">
+                            <label for="notesInput" class="form-label">Notes <span class="fw-normal text-muted">(optional)</span></label>
+                            <input type="text" id="notesInput" class="form-control" maxlength="{{ notes_max }}"
+                                   placeholder="Allergies, no chilli, etc.">
+                            <div class="small text-muted text-end"><span id="notesCount">0</span>/{{ notes_max }}</div>
+                        </div>
+                    </fieldset>
+
+                    <div class="xp-price xp-price-empty mb-3" id="priceLine" aria-live="polite"></div>
+                    <div class="alert alert-danger py-2 d-none" id="formError"></div>
+                    <button type="submit" class="btn xp-save w-100" id="saveBtn">Save Order</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-5">
+            <div class="xp-card d-none" id="familyCard" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <div id="summaryContainer">
+        {% include "_xmas_preorder_summary.html" %}
+    </div>
+
+    <p class="xp-allergens mt-4 mb-0">Some dishes may contain allergens. Desserts may contain traces of nuts.
+        Add any allergies in Notes.</p>
+    <p class="xp-allergens">(V) vegetarian · (GF) gluten free · 🌶 spicy</p>
+</div>
+
+<div class="toast-container position-fixed bottom-0 start-50 translate-middle-x p-3 xp-toast">
+    <div id="xpToast" class="toast align-items-center text-bg-success border-0" role="status" aria-live="polite">
+        <div class="d-flex">
+            <div class="toast-body" id="xpToastBody">Saved.</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.XMAS_PREORDER = {
+        urls: {
+            save: {{ url_for('christmas_dinner.preorder_save')|tojson }},
+            paid: {{ url_for('christmas_dinner.preorder_paid')|tojson }},
+            state: {{ url_for('christmas_dinner.preorder_state')|tojson }},
+            summary: {{ (url_for('christmas_dinner.preorder_summary') ~ '?partial=1')|tojson }}
+        },
+        families: {{ families|tojson }},
+        kidsPrice: {{ menu.kids_meal_price|tojson }},
+        icPrice: {{ menu.kids_icecream.price|tojson }},
+        tipPercent: {{ menu.tip_percent|tojson }},
+        organiser: {{ ev.organiser|tojson }},
+        isAdmin: {{ is_admin|tojson }},
+        state: {{ state|tojson }}
+    };
+</script>
+<script src="{{ url_for('static', filename='js/xmas_preorder.js') }}?v={{ asset_version('js/xmas_preorder.js') }}"></script>
+{% endblock %}

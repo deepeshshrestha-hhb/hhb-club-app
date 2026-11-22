@@ -76,3 +76,21 @@ Thumbs.db
 # November Group Holiday 2026 poll - family names/notes, created on first submit, stored in R2, not source-controlled
 data/holiday_nov2026.json
 data/holiday_nov2026.json.tmp
+
+# Tihar Party RSVP - family names, created on first submit, stored in R2, not source-controlled
+data/tihar_party.json
+data/tihar_party.json.tmp
+
+# Christmas Dinner 2026 RSVP - family names, created on first submit, stored in R2, not source-controlled
+data/christmas_dinner_2026.json
+data/christmas_dinner_2026.json.tmp
+data/christmas_dinner_2026_lunch.json
+data/christmas_dinner_2026_lunch.json.tmp
+
+# Annual Dinner & Gala 2026 RSVPs/roles/settings (member names + dietary notes; R2 is canonical)
+data/AnnualDinner2026.xlsx
+data/AnnualDinner2026.tmp.xlsx
+
+# Christmas Lunch 2026 pre-orders (names, notes, payments)
+data/xmas2026_preorders.xlsx
+data/xmas2026_preorders.tmp.xlsx

@@ -43,6 +43,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - **Photos** — club gallery (`/photos/gallery`), per-event photos linked from
     tournament pages, podium photos, and per-player profile photos
   - **Feedback** — site-wide modal (General + Feature Request); `/feedback`
+  - **Annual Dinner & Gala 2026** (`/annual-dinner`) — event page for Sat 5 Dec
+    2026: countdown, 2026 champions, volunteer roles, member RSVPs with guest
+    head count, admin tools; promoted by a Dashboard banner until 6 Dec
   - **Admin** (`/admin`) — Spond Refresh, Refresh Signup Analytics, Refresh Data
     from R2, and photo management (club + podium), behind a single-user login
 
@@ -61,7 +64,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Config:** copy `.env.example` → `.env` and fill in Spond creds (required for
   the live calendar/members), plus optional `R2_*` / `ADMIN_*` vars. `.env` is
   gitignored.
-- **Tests / lint:** there is **no** test suite or linter configured. For
+- **Tests / lint:** no linter and almost no tests. The one exception is
+  `python -m unittest tests.test_xmas_pricing` (Christmas Lunch pre-order
+  pricing). For
   data-format changes the real confirmation is the page rendering **on Render**
   (Linux), since some `.xlsm` quirks are hidden on Windows (see Known issues).
 - **Flask dev server caveat:** prefer `--no-reload` and track the PID — stale
@@ -95,8 +100,11 @@ routes/                 # Flask blueprints (thin; delegate to services)
   rules_routes.py        # /rules (Club Rules - rotation, sitting out, pool play sections)
   sunday_pools_routes.py # /sunday-pools + /sunday-pools/generate (admin) - Sunday Pool Play
   vote_routes.py         # /vote + /vote/results + /vote/admin/toggle-* (admin) - Top 20 Player Vote
-  holiday_routes.py      # /holiday/nov-2026-<slug> - UNLISTED private family-holiday poll (not a club
-                        #   feature; never link it anywhere - see Decisions Log 2026-10-12)
+  christmas_dinner_routes.py # /party/christmas-dinner-2026 - UNLISTED private Christmas Dinner RSVP
+                        #   (not a club feature; never link it anywhere - see Decisions Log 2026-11-09)
+                        #   + /preorder meal pre-order & payment tracker (see Decisions Log 2026-11-14)
+  annual_dinner_routes.py # /annual-dinner + api/ (state, rsvp, role claim) + admin/ (settings,
+                        #   roles, champions, rsvp delete, export.csv/.xlsx) - Annual Dinner & Gala 2026
 services/               # Business logic + data parsing (the heart of the app)
   spond_service.py      # Live Spond fetch: events (calendar) + members (CSV) + per-date confirmed
                         #   attendees (get_confirmed_attendees, for Weekly Score Upload, and
@@ -129,8 +137,13 @@ services/               # Business logic + data parsing (the heart of the app)
                         #   admin voting_open/results_published flags, compute_rankings()
                         #   (pure Borda-scoring function) - see Decisions Log for why JSON,
                         #   not the Excel workbook the original feature spec asked for
-  holiday_service.py    # November Group Holiday poll (data/holiday_nov2026.json): slug, weekends,
-                        #   families + MIN_PEOPLE config at the top; upsert per family + totals
+  christmas_dinner_service.py # Christmas Dinner 2026 RSVP (data/christmas_dinner_2026.json): headcount
+                        #   per family (0 = can't make it) + totals; VENUE + family list at the top
+  xmas2026_preorder_service.py # Christmas Lunch 2026 pre-orders (data/xmas2026_preorders.xlsx):
+                        #   families seed, MENU_XMAS2026, Decimal price_order(), kitchen summary, export
+  annual_dinner_service.py # Annual Dinner & Gala 2026 (data/AnnualDinner2026.xlsx: Settings, Roles,
+                        #   RSVPs, Champions sheets); champions auto-pulled from 2026 scoresheets;
+                        #   get_banner() feeds the Dashboard banner (None after 6 Dec 2026)
   photos_service.py     # Club + event photo CRUD (Photos.xlsx + static/images/photos/)
   podium_service.py     # Podium photos in static/images/podium/ (numbered _1, _2 …)
   feedback_service.py   # User feedback CRUD (Feedback.xlsx, General + Feature Request)
@@ -254,6 +267,12 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   part of this app) are untouched. Render support has not yet been contacted
   to ask whether they can offer a non-Cloudflare-fronted IP; if they do, the
   Worker could be removed and DNS-only records restored.
+- **No custom domains on the Render service.** The Worker fetches
+  `hhb-club.onrender.com` directly, so Render never sees `hhbclub.co.uk`.
+  A custom domain added there can't pass Render's certificate checks, so it
+  only sits in Certificate Error (both were removed 2026-11-13, see Decisions
+  Log). The domain lives only on the Worker (Workers & Pages → hhb-club-proxy →
+  Domains), and the Render address is in the Worker's code (`worker.js`).
 - **Day-to-day change → deploy workflow:** see
   [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (and the phone cheat-sheet
   `docs/dev-workflow.png`, rendered from `docs/dev-workflow.html` — edit the HTML
@@ -1889,10 +1908,245 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     login redirect wouldn't suit a `fetch()` call. The page has no navbar,
     so log in at `/admin/login?next=/holiday/nov-2026-5nupatxwf`.
 
+<<<<<<< HEAD
 - **2026-11-22 — Marked the 2026 Annual Players League as completed.** The
   season finished on 22-Nov (10 Sundays, 348 matches; Thomas champion).
   Added it to `COMPLETED_2026_EVENTS`, so the Calendar badge switches from
   "IN PROGRESS" to "COMPLETED » View Tournament".
+=======
+- **2026-11-01 — "Most Wins on a Single Sunday" now lists every tied day.**
+  It used to show a fixed top 3, breaking ties by player name, so Shiva's
+  8 wins on 01-Nov (and Rukhsar's/Sandip's earlier 8s) were hidden behind
+  Farooq's. It now shows every day at the top two win counts (9 and 8 today:
+  7 rows), most recent first within a count, with the date in brackets.
+
+- **2026-11-02 — Every Top-N list on All-Time League Analytics now keeps
+  exact ties at the cut-off.** Follow-up to the Most-Wins-on-a-Sunday fix:
+  an audit found Farooq & Purvaiz (18 played, 14 won - identical to Farooq &
+  Nawaz) hidden from both pairs Top 5s by name order, and three of four 21-4
+  wins hidden from Biggest Winning Margins by oldest-date-first. New
+  `_top_with_ties()` keeps anything tied with the last shown row on the
+  ranking numbers (name/date/insertion order never decides who's cut), and
+  `_with_ranks()` gives tied rows the same `#` (e.g. two pairs at 5). Applied
+  to the player and pair Top 5s, Biggest Winning Margins (now newest first
+  within a tie), Busiest Sunday (lists every tied date), Most Common
+  Scorelines, Biggest Rivalries and Most Different Partners. Section
+  headings now read "Top 5" from `TOP_N` rather than the list length.
+
+- **2026-11-06 — Retired the November Group Holiday poll; added an unlisted
+  Tihar Party RSVP** (`/party/tihar/hillfield-brae`, `tihar_party_service.py`,
+  `party_routes.py`, `templates/tihar_party.html`, `static/js/tihar_party.js`,
+  invitation at `static/img/party/tihar_invite.jpg`). It's for the same 9
+  families, for the party on Sat 7 Nov 2026. Each family enters a headcount
+  (0 = can't make it, editable by picking the family again); the page shows
+  the running total and a per-family table. There's no note field or admin
+  controls, since only the counts were wanted.
+  - **Holiday poll archive:** its code was deleted, so the old URL now 404s.
+    The code is in git history (last present in commit `16396ca`), and the
+    responses stay in R2 at `data/holiday_nov2026.json` (still gitignored).
+    The 2026-10-12 entry above describes that page as it was.
+  - **Hidden, but guessable:** noindex meta tag and header, not linked
+    anywhere, not in robots.txt. Unlike the holiday poll there's no random
+    slug (asked for a simple URL), and the invitation shows the home address.
+    Retire this page after the party.
+  - **Local testing:** local `.env` has production R2 creds, so testing this
+    on the normal dev server would write fake RSVPs to the live data. It was
+    tested on a separate instance with `R2_*` blanked and `DATA_PATH` pointed
+    at a scratch file.
+
+- **2026-11-08 — Retired the Tihar Party RSVP after the party.** Its route,
+  service, template, script and invitation image were deleted, so
+  `/party/tihar/hillfield-brae` now 404s. The code is in git history (last
+  present in commit `95e4f9e`), and the RSVPs stay in R2 at
+  `data/tihar_party.json` (still gitignored). The `hide_nav`/`hide_feedback`
+  flags in `base.html` are kept for any future one-off page.
+
+- **2026-11-09 — Added an unlisted Christmas Dinner 2026 RSVP**
+  (`/party/christmas-dinner-2026`, `christmas_dinner_service.py`,
+  `christmas_dinner_routes.py`, `templates/christmas_dinner.html`,
+  `static/js/christmas_dinner.js`). It's for the same 9 families as the Tihar
+  RSVP and works the same way: a headcount per family (0 = can't make it),
+  a running total and a replies table. The page adds a hero photo from the
+  2024 dinner at De' Buddha, Johnstone (`static/img/party/
+  christmas_2024_de_buddha.jpg`), the date (Fri 11 Dec 2026, 6:30 pm) and the
+  venue: City of Temple Kathmandu, First Floor, 8 Moss Street, Paisley PA1
+  1BL. It's run by De' Buddha's owners, and it's upstairs with no lift. A
+  Google Maps embed and link sit in `VENUE`.
+  - **Map embed:** use the `google.com/maps/embed?origin=mfe&pb=...` form.
+    The older `maps.google.com/maps?...&output=embed` URL redirects there via
+    a response carrying `X-Frame-Options: SAMEORIGIN`. The in-app preview
+    browser blocks all outside requests, so the map can only be checked on
+    the live site.
+    Query by the **street address only**: with "City of Temple Kathmandu" in
+    front, the embed centred on Gallowhill (wrong area, no pin).
+  - Same hiding and testing approach as the Tihar entry: noindex, not linked,
+    and tested on a separate R2-free instance. Retire it after the dinner.
+  - **2026-11-11 — moved to Sat 12 Dec, lunch from 12:30 pm** (same venue,
+    same URL). City of Temple had no Friday-evening availability for 24. A
+    notice at the top of the page explains the change. RSVPs were reset by
+    pointing `DATA_PATH` at a new `data/christmas_dinner_2026_lunch.json`, not
+    by editing live data: the live server only reads its own disk copy (see
+    the 2026-10-04 Hasan entry). The 24 Friday RSVPs stay in R2 under the old
+    file name.
+    The page title, link preview and banner now say **Christmas Lunch 2026**.
+    The URL, file names and the 2024 photo caption keep "dinner".
+
+- **2026-11-10 — Added the Annual Dinner & Gala 2026 page** (`/annual-dinner`,
+  `annual_dinner_service.py`, `annual_dinner_routes.py`,
+  `templates/annual_dinner.html`, `static/css/annual_dinner.css`,
+  `static/js/annual_dinner.js` + `annual_dinner_countdown.js`). It's the club's
+  first Annual Dinner & Gala (Sat 5 Dec 2026, 5-9 pm), and unlike the private
+  party pages above it's a real club page with the normal nav, linked from a
+  Dashboard banner.
+  - **Storage:** one workbook, `data/AnnualDinner2026.xlsx` (gitignored, R2 is
+    canonical), with four sheets: `Settings` (venue name/address/map link,
+    attendance target, default **35**), `Roles`, `RSVPs` (one row per member,
+    keyed by full name) and `Champions` (admin overrides only). Excel was
+    asked for, but the write path follows the JSON services' safety pattern: a
+    module lock around every read-modify-write, an atomic temp-file save, and
+    the R2 upload in a background thread.
+  - **Members:** dropdowns use `player_service.get_player_names()`
+    (`hhb_members.csv`, Spond-synced). The server rejects any name not on that
+    list, and guest counts must be whole numbers from 0 to 10 per band.
+  - **Head count:** members attending count as adults. Total = attending
+    members + adult/teen/child guests. The public page shows names only; the
+    guest breakdown per person is admin-only. Anyone picking a member's name can
+    load and change that member's RSVP (no PIN, as specced).
+  - **Roles:** six seeded roles (Rukhsar, Deepesh, Zaheer prefilled). The
+    public can claim an *open* role only; the server refuses a claim on a
+    filled one. Admin assigns/clears/renames/adds/removes.
+  - **Champions:** pulled live from the 2026 Doubles and Championships
+    scoresheets (cached on file mtimes); the League row shows "Season finishes
+    ..." until `get_league(2026)` is complete, then fills in. An admin row with
+    the same event name overrides it (blank winners hides it).
+  - **Chart:** a hand-drawn SVG doughnut, not Chart.js, so no extra CDN script.
+  - **Dashboard banner:** off by default. A switch on `/admin` ("Annual Dinner
+    & Gala 2026" card, `Settings.banner_visible`) turns it on, so the
+    committee could approve the page via its direct link before it was
+    promoted. Admins always see a preview with an "Admin preview" badge.
+    `get_banner()` also returns None after 6 Dec 2026. It's wrapped in
+    try/except so it can never break `/`.
+  - **Admin:** inline on the page (`session.is_admin`), plain form posts
+    behind `admin_required`. Log in at `/admin/login?next=/annual-dinner`.
+  - Previewed on a separate R2-free local instance before going live (local
+    `.env` points at production R2).
+  - **2026-11-12 — All RSVPs table made public.** `get_state()` now includes
+    `rsvps` (member, attending, per-band guest counts, notes), and
+    `annual_dinner.js` renders the table for everyone (live on submit + 30s
+    poll). Notes show as a 📝 icon that opens a popup ("None"/"n/a"/"-" count
+    as blank). The 🗑 delete button is drawn only for admins, and its route is
+    still `admin_required`. The admin section keeps only the Excel/CSV export.
+
+- **2026-11-13/14 — Morning "429 hibernate-rate-limited" outages: Render's
+  block lifts by itself around 8 am; accepted as is.**
+  - **Symptom (since 10 Nov):** after the service sleeps overnight (the
+    cron-job.org pinger only runs 7 am-11 pm, every 12 min), Render's edge
+    refuses to wake it: 429 with `x-render-routing: hibernate-rate-limited`.
+    Free hours were fine (165 of 750 used) and Render reported no outage.
+    On 10-12 Nov a manual redeploy (Deploy latest commit) brought it back
+    each time.
+  - **Not the custom domains.** On 13 Nov both Render custom domains were
+    deleted: they sat in Certificate Error because Render's certificate
+    checks go through the Worker and get the app's 404. The block still
+    happened on 14 Nov, so they weren't the cause. Removing them was
+    harmless (the Worker fetches `hhb-club.onrender.com` directly).
+  - **It clears on its own.** On 14 Nov, with no redeploy, the pinger got
+    503s at 7:00-7:48. The 8:00 ping started the service (gunicorn at 08:01;
+    that request timed out while the app booted) and 8:12 got 200. The
+    earlier mornings were redeployed before the block lifted, so this
+    wasn't seen then. The cause is on Render's side and unknown; nothing in
+    the app or its startup data changed around 9-10 Nov (startup still pulls
+    ~146 MB from R2, mostly photos).
+  - **Decision:** live with it, since Sunday sessions start at 9 am. Don't
+    redeploy for a morning outage before ~8:15. If it ever needs fixing:
+    run the pinger 24/7 (~720-744 of the 750 free hours a month), move to
+    the Starter plan (no sleep), or raise a Render support ticket quoting
+    the header.
+
+- **2026-11-14 — Added a Christmas Lunch 2026 meal pre-order & payment
+  tracker** (`/party/christmas-dinner-2026/preorder`,
+  `xmas2026_preorder_service.py`, `templates/xmas_preorder.html` +
+  `_xmas_preorder_summary.html` + `xmas_preorder_summary.html`,
+  `static/js/xmas_preorder.js`, `static/css/xmas_preorder.css`,
+  `tests/test_xmas_pricing.py`). It lives in the existing unlisted
+  `christmas_dinner_bp` (same noindex header); the only link to it is a
+  "Pre-order your meal" button on the RSVP page.
+  - **Who:** 30 people in 9 families, seeded in the service (`FAMILIES`;
+    Hazel and Deelisha are children). A warning is logged if the seed isn't 30
+    (`EXPECTED_HEADCOUNT`). **2026-11-20:** Pujan added to Pankaj Shah's family
+    (Pankaj is bringing him; RSVP now 30), as an adult.
+  - **Menu and prices:** all in `MENU_XMAS2026` and `TIP_PERCENT` (10%, see below).
+    The server always reprices with `price_order()` using `Decimal`. The
+    browser's live price line is only a preview.
+  - **Storage:** `data/xmas2026_preorders.xlsx` (gitignored) with `orders`,
+    `payments` and `settings` sheets. It uses the Annual Dinner save pattern:
+    a lock, an atomic save and a background R2 upload.
+  - **Payments:** families tick "We have transferred the payment", which
+    stores the family total at that moment. An amber alert shows if the total
+    changes later. No bank details are shown on the page. Anyone with the
+    link can edit any order or paid tick, by design.
+  - **Lock:** admin-only switch (existing `/admin/login`). When locked, the
+    server refuses non-admin saves. Admins can still edit, and paid ticks
+    still work.
+  - **Summary and export:** the kitchen summary and the all-orders table
+    are one Jinja partial. The page re-fetches it with `?partial=1` after
+    each save, so counts and table come from the same data. `/preorder/export`
+    downloads an .xlsx, and printing is set up for A4 landscape.
+  - **Testing:** tested on an R2-free local instance with `DATA_PATH` moved
+    to a scratch file, so no test orders reached production.
+  - **2026-11-15 — drinks added.** Each person can add one drink and one hot
+    drink, priced from City of Temple's Cocktail & Drink Menu 2026 and Hot
+    Beverages menu (`DRINKS_XMAS2026` / `HOT_DRINKS_XMAS2026`). These are
+    added to their total, with no tip on top. Alcohol groups (including 0%
+    beer/cider) are hidden from children and refused by the server. The page
+    asks families to transfer around the 1st week of December. Extras ordered
+    on the day are settled separately.
+  - **2026-11-17 — tip changed from £2 per person to 10% of each family's
+    food & drinks total** (`TIP_PERCENT`, `tip_for()`), rounded half-up to the
+    penny once per family. Per-person prices no longer include any tip. A
+    family that ticked "paid" before this sees the amber "total has changed"
+    alert for the difference.
+  - **2026-11-18 — 2 Course is now any two of starter, main and dessert**
+    (restaurant confirmed starter+main, main+dessert or starter+dessert).
+    `clean_order()` requires exactly two for 2 Course and all three for 3
+    Course; views, kitchen counts and export skip an unchosen course.
+  - **2026-11-22 — print fix.** Printing ran the Drinks list past the page
+    break and on top of "All orders" (Chrome can't split a flex `.row` across
+    pages). Print CSS now lays the kitchen lists out as full-width blocks with
+    items in 3 columns, starts All orders on a new page, and prints the table
+    totals once (`tfoot` as a row group, not repeated per page).
+    Follow-up the same day: the user still saw overlap with that CSS live, so
+    the 3-column lists now use inline boxes (31% wide) instead of CSS
+    multi-column, which some engines (Safari) mis-split across pages, and
+    `.xp-card` drops `overflow: hidden` in print. Only Chromium was testable
+    here.
+  - **2026-11-22 — "Exclude prices & paid status" switch** next to Print, for
+    the copy given to the restaurant. It sets `xp-no-prices` on `<html>`;
+    CSS then hides every `.xp-price` element (Price column, family totals,
+    totals footer) and blanks `.xp-paid-status`. Screen and print both follow
+    it. It's per-page-view only (not saved), and `xmas_preorder.js` re-syncs
+    the switch after each summary refresh.
+
+- **2026-11-16 — League Final Standings now shows an NPD column** (before
+  Win %). Ranking has always been Won -> NPD -> Win % (League Rule 9), but
+  NPD was computed (`point_diff` in `get_league()`) and never shown, so ties
+  on Won looked arbitrary. Template-only (`league_detail.html`): shown signed
+  (`+110`), sortable like Played/Won/Win %, and the footnote now states the
+  full tie-break order.
+
+- **2026-11-17 — Fixed 2023 League match 340 (Waqas on both teams).** The
+  sheet had "Tousif/Waqas bt Deepesh/Waqas 21-16", a typo in the sheet
+  itself. The admin's WhatsApp record shows Tousif/**Jalal** bt
+  Deepesh/Waqas, so D344 is now Jalal. Waqas 2023: 39 P / 18 W (16th, was
+  14th); Jalal +1 win. This was the only match in 2022-2026 with a player
+  twice. *How it was edited:* D344 and J344's cached Winner value were
+  patched directly in the sheet XML, and `fullCalcOnLoad` was set, rather
+  than saved via openpyxl, which would wipe every formula's cached value.
+  The sheet's own pair-key and stats columns stay stale until it's next
+  opened in Excel (the website doesn't read them). `seed_r2.py` now takes
+  optional file paths, so the live copy can be updated with just this file.
+  A full run would also overwrite live data files with local copies.
+>>>>>>> origin/master
 
 ---
 

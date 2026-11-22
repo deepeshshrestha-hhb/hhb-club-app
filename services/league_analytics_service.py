@@ -103,6 +103,24 @@ def _next_milestone(value, step):
     return (value // step + 1) * step
 
 
+def _top_with_ties(items, key, tie, n):
+    """Sort by `key` and keep the top `n`, plus anything after the cut-off
+    that ties with the n-th item on `tie` (the ranking numbers alone) - so
+    a name, date or insertion-order tie-break never hides an equal record."""
+    ranked = sorted(items, key=key)
+    if len(ranked) > n:
+        cut = tie(ranked[n - 1])
+        ranked = ranked[:n] + [x for x in ranked[n:] if tie(x) == cut]
+    return ranked
+
+
+def _with_ranks(rows, tie):
+    """Add a 1-based "rank" to each row; rows tied on `tie` share a rank."""
+    for i, r in enumerate(rows):
+        r["rank"] = rows[i - 1]["rank"] if i and tie(r) == tie(rows[i - 1]) else i + 1
+    return rows
+
+
 def get_all_time_analytics():
     years = sorted(list_league_years())
     key = _cache_key(years)
@@ -134,7 +152,7 @@ def _compute(years):
     seasons_by_player = defaultdict(set)
     opp_meetings = Counter()
     opp_wins = Counter()   # (winner_player, loser_player) -> wins
-    day_wins = Counter()   # (player, date) -> wins
+    day_wins = Counter()   # (player, date_raw, date) -> wins
     by_date = Counter()
     score_counter = Counter()
     points_scored = 0
@@ -164,7 +182,7 @@ def _compute(years):
                 current_sundays[p].add(m["date_raw"])
         for p in m["win"]:
             wins[p] += 1
-            day_wins[(p, m["date"])] += 1
+            day_wins[(p, m["date_raw"], m["date"])] += 1
             if m["year"] == current_year:
                 current_wins[p] += 1
         for w in m["win"]:
@@ -188,18 +206,27 @@ def _compute(years):
                 "win_pct": round(w / pl * 100) if pl else 0,
                 "active": all(p in current_played for p in pair)}
 
-    top_played = [player_row(p) for p in sorted(players, key=lambda p: (-played[p], -wins[p], p))[:TOP_N]]
-    top_wins = [player_row(p) for p in sorted(players, key=lambda p: (-wins[p], played[p], p))[:TOP_N]]
+    # Every Top-N list keeps exact ties at the cut-off (see _top_with_ties).
+    row_tie = lambda r: (r["played"], r["wins"])
+    top_played = _with_ranks([player_row(p) for p in _top_with_ties(
+        players, lambda p: (-played[p], -wins[p], p), lambda p: (played[p], wins[p]), TOP_N)], row_tie)
+    top_wins = _with_ranks([player_row(p) for p in _top_with_ties(
+        players, lambda p: (-wins[p], played[p], p), lambda p: (played[p], wins[p]), TOP_N)], row_tie)
     pct_pool = [p for p in players if played[p] >= MIN_PLAYER_MATCHES_FOR_PCT]
-    top_win_pct = [player_row(p) for p in sorted(
-        pct_pool, key=lambda p: (-wins[p] / played[p], -played[p], p))[:TOP_N]]
+    top_win_pct = _with_ranks([player_row(p) for p in _top_with_ties(
+        pct_pool, lambda p: (-wins[p] / played[p], -played[p], p),
+        lambda p: (played[p], wins[p]), TOP_N)], row_tie)
 
     pairs = list(pair_played)
-    top_pairs_played = [pair_row(x) for x in sorted(pairs, key=lambda x: (-pair_played[x], -pair_wins[x], x))[:TOP_N]]
-    top_pairs_wins = [pair_row(x) for x in sorted(pairs, key=lambda x: (-pair_wins[x], pair_played[x], x))[:TOP_N]]
+    pair_tie = lambda x: (pair_played[x], pair_wins[x])
+    top_pairs_played = _with_ranks([pair_row(x) for x in _top_with_ties(
+        pairs, lambda x: (-pair_played[x], -pair_wins[x], x), pair_tie, TOP_N)], row_tie)
+    top_pairs_wins = _with_ranks([pair_row(x) for x in _top_with_ties(
+        pairs, lambda x: (-pair_wins[x], pair_played[x], x), pair_tie, TOP_N)], row_tie)
     pair_pct_pool = [x for x in pairs if pair_played[x] >= MIN_PAIR_MATCHES_FOR_PCT]
-    top_pairs_pct = [pair_row(x) for x in sorted(
-        pair_pct_pool, key=lambda x: (-pair_wins[x] / pair_played[x], -pair_played[x], x))[:TOP_N]]
+    top_pairs_pct = _with_ranks([pair_row(x) for x in _top_with_ties(
+        pair_pct_pool, lambda x: (-pair_wins[x] / pair_played[x], -pair_played[x], x),
+        pair_tie, TOP_N)], row_tie)
 
     # Unbeaten: 5+ matches, or 3+ if both players are still active this
     # season (a live unbeaten run worth watching even while it's short).
@@ -219,27 +246,36 @@ def _compute(years):
     biggest_wins = [{
         "date": m["date"], "win": _pair_label(m["win"]), "lose": _pair_label(m["lose"]),
         "score": f"{m['win_score']}–{m['lose_score']}", "diff": m["diff"],
-    } for m in sorted(matches, key=lambda m: (-m["diff"], m["date_raw"]))[:3]]
+    } for m in _top_with_ties(matches, lambda m: (-m["diff"], -m["date_raw"].toordinal()),
+                              lambda m: m["diff"], 3)]
 
-    best_day = sorted(day_wins.items(), key=lambda kv: (-kv[1], kv[0][0]))[:3]
-    most_wins_one_sunday = [{"player": p, "date": d, "wins": w} for (p, d), w in best_day]
+    # Every day at the top two win counts (ties included), most recent
+    # first within a count - a fixed top 3 hid tied days arbitrarily.
+    top_counts = sorted(set(day_wins.values()), reverse=True)[:2]
+    best_day = sorted(((k, w) for k, w in day_wins.items() if w in top_counts),
+                      key=lambda kv: (-kv[1], -kv[0][1].toordinal(), kv[0][0]))
+    most_wins_one_sunday = [{"player": p, "date": d, "wins": w} for (p, _, d), w in best_day]
 
-    busiest = sorted(by_date.items(), key=lambda kv: (-kv[1], kv[0]))[:1]
-    busiest_sunday = {"date": _fmt_date(busiest[0][0]), "matches": busiest[0][1]} if busiest else None
+    busiest = _top_with_ties(by_date.items(), lambda kv: (-kv[1], -kv[0].toordinal()),
+                             lambda kv: kv[1], 1)
+    busiest_sunday = ({"date": ", ".join(_fmt_date(d) for d, _ in busiest), "matches": busiest[0][1]}
+                      if busiest else None)
 
 
     deuce = sum(c for (h, l), c in score_counter.items() if (h, l) == (21, 20))
     one_point = sum(1 for m in matches if m["diff"] == 1)
-    common_scores = [{"score": f"{h}–{l}", "count": c} for (h, l), c in score_counter.most_common(3)]
+    common_scores = [{"score": f"{h}–{l}", "count": c} for (h, l), c in _top_with_ties(
+        score_counter.items(), lambda kv: (-kv[1], kv[0]), lambda kv: kv[1], 3)]
     decided = [m["diff"] for m in matches if m["diff"] > 0]
     avg_margin = round(sum(decided) / len(decided), 1) if decided else 0
 
     rivalries = []
-    for (a, b), n in opp_meetings.most_common(TOP_N):
+    for (a, b), n in _top_with_ties(opp_meetings.items(), lambda kv: (-kv[1], kv[0]),
+                                    lambda kv: kv[1], TOP_N):
         rivalries.append({"a": a, "b": b, "meetings": n,
                           "a_wins": opp_wins[(a, b)], "b_wins": opp_wins[(b, a)]})
 
-    social = sorted(players, key=lambda p: (-len(partners[p]), p))[:TOP_N]
+    social = _top_with_ties(players, lambda p: (-len(partners[p]), p), lambda p: len(partners[p]), TOP_N)
     most_partners = [{"player": p, "partners": len(partners[p])} for p in social]
 
     ever_present = sorted(p for p in players if len(seasons_by_player[p]) == len(leagues))
@@ -346,6 +382,7 @@ def _compute(years):
         "club_milestone": club_milestone,
         "season_milestone": season_milestone,
         "constants": {
+            "top_n": TOP_N,
             "min_player_pct": MIN_PLAYER_MATCHES_FOR_PCT,
             "min_pair_pct": MIN_PAIR_MATCHES_FOR_PCT,
             "min_pair_lists": MIN_PAIR_MATCHES_FOR_STREAK_LISTS,
