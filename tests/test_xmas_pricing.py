@@ -164,6 +164,12 @@ class DrinkTests(unittest.TestCase):
         p = x.price_order({"menu_type": "kids", "kids_meal": "Fish Finger & Chips", "drink": "Apple Juice (half)"})
         self.assertEqual(p["total"], D("9.45"))  # 6.95 + 2.50, tip is on the family total
 
+    def test_butter_paneer_is_a_curry(self):
+        o, err = x.clean_order({"family": "Ram Aryal", "member": "Grishma", "meal_type": "2course",
+                                "starter": "Sha Phaley", "main": "Butter Paneer", "rice_naan": "Naan Bread"})
+        self.assertIsNone(err)
+        self.assertEqual((o["main"], o["rice_naan"]), ("Butter Paneer", "Naan Bread"))
+
     def test_drinks_are_optional(self):
         order, err = x.clean_order({"family": "Pankaj Shah", "member": "Pankaj", "meal_type": "2course",
                                     "starter": "Sha Phaley", "main": "Chicken Katsu"})

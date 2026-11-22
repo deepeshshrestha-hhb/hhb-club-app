@@ -2120,6 +2120,11 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     totals footer) and blanks `.xp-paid-status`. Screen and print both follow
     it. It's per-page-view only (not saved), and `xmas_preorder.js` re-syncs
     the switch after each summary refresh.
+  - **2026-11-22 — Butter Paneer added to the curries** (tagged V, with rice
+    or naan, no supplement). It's not on the restaurant's printed lunch menu;
+    the user agreed it with the restaurant for Grishma, who had ordered Butter
+    Chicken. Her order is changed by re-saving it on the live page (this
+    sandbox can't reach the live site).
 
 - **2026-11-16 — League Final Standings now shows an NPD column** (before
   Win %). Ranking has always been Won -> NPD -> Win % (League Rule 9), but
