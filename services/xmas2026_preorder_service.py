@@ -117,6 +117,8 @@ MENU_XMAS2026 = {
             {"name": "Chicken Korma", "tags": ["GF"]},
             {"name": "Chicken Chasni", "tags": ["GF"]},
             {"name": "Butter Chicken", "tags": ["GF"]},
+            # Not on the printed lunch menu: agreed with the restaurant on 2026-11-22.
+            {"name": "Butter Paneer", "tags": ["V"]},
             {"name": "Himalayan Lamb", "tags": ["chilli", "GF"], "supplement": "2.00", "short": "Lamb"},
             {"name": "Gurkha's Goat Meat Curry", "tags": ["chilli", "GF"], "supplement": "3.00", "short": "Goat"},
         ]},
