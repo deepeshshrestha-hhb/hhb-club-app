@@ -2144,6 +2144,13 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   season finished on 22-Nov (10 Sundays, 348 matches; Thomas champion).
   Added it to `COMPLETED_2026_EVENTS`, so the Calendar badge switches from
   "IN PROGRESS" to "COMPLETED » View Tournament".
+- **2026-11-22 — Off-season clean-up.** (1) Corrected the Calendar's
+  Championships note to 12 trophies: Winner, Runner Up and 3rd Place in each
+  pool. This is cell C4 in `data/HHBClubAnnualCalendar.xlsx`, pushed live with
+  `seed_r2.py <file>`. (2) Hid the Dashboard "Update League Scores" button and
+  the navbar "Submit Scores" link with Jinja comments. Uncomment both when the
+  next League season starts. `/weekly-scores` still works, and the Admin page
+  still links to it.
 
 ---
 
