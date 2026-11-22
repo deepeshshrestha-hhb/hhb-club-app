@@ -2114,6 +2114,12 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     multi-column, which some engines (Safari) mis-split across pages, and
     `.xp-card` drops `overflow: hidden` in print. Only Chromium was testable
     here.
+  - **2026-11-22 — "Exclude prices & paid status" switch** next to Print, for
+    the copy given to the restaurant. It sets `xp-no-prices` on `<html>`;
+    CSS then hides every `.xp-price` element (Price column, family totals,
+    totals footer) and blanks `.xp-paid-status`. Screen and print both follow
+    it. It's per-page-view only (not saved), and `xmas_preorder.js` re-syncs
+    the switch after each summary refresh.
 
 - **2026-11-16 — League Final Standings now shows an NPD column** (before
   Win %). Ranking has always been Won -> NPD -> Win % (League Rule 9), but
