@@ -2140,6 +2140,10 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   opened in Excel (the website doesn't read them). `seed_r2.py` now takes
   optional file paths, so the live copy can be updated with just this file.
   A full run would also overwrite live data files with local copies.
+- **2026-11-22 — Marked the 2026 Annual Players League as completed.** The
+  season finished on 22-Nov (10 Sundays, 348 matches; Thomas champion).
+  Added it to `COMPLETED_2026_EVENTS`, so the Calendar badge switches from
+  "IN PROGRESS" to "COMPLETED » View Tournament".
 
 ---
 
