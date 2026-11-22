@@ -2109,6 +2109,11 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     pages). Print CSS now lays the kitchen lists out as full-width blocks with
     items in 3 columns, starts All orders on a new page, and prints the table
     totals once (`tfoot` as a row group, not repeated per page).
+    Follow-up the same day: the user still saw overlap with that CSS live, so
+    the 3-column lists now use inline boxes (31% wide) instead of CSS
+    multi-column, which some engines (Safari) mis-split across pages, and
+    `.xp-card` drops `overflow: hidden` in print. Only Chromium was testable
+    here.
 
 - **2026-11-16 — League Final Standings now shows an NPD column** (before
   Win %). Ranking has always been Won -> NPD -> Win % (League Rule 9), but

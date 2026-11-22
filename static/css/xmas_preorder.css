@@ -70,7 +70,7 @@ footer { display: none; } /* club footer isn't relevant on this private page */
     body, body.bg-light { background: #fff !important; color: #000 !important; }
     .container, .container-fluid, main { max-width: none !important; padding: 0 !important; margin: 0 !important; }
     .xp-wrap { max-width: none; }
-    .xp-card { border: 0; padding: 0; margin-bottom: 4mm !important; }
+    .xp-card { border: 0; padding: 0; margin-bottom: 4mm !important; overflow: visible; box-shadow: none; }
     .xp-card h2, .xp-card h3, .xp-stat b, .xp-count-list .xp-n { color: #000 !important; }
     .xp-stat { border: 1px solid #999; }
     .table-responsive { overflow: visible !important; }
@@ -87,8 +87,10 @@ footer { display: none; } /* club footer isn't relevant on this private page */
     #xpKitchen .row > div { width: 100%; padding: 0; margin-bottom: 3mm; }
     #xpKitchen .xp-card { height: auto !important; }
     #xpKitchen h3 { break-after: avoid; }
-    #xpKitchen .xp-count-list { column-count: 3; column-gap: 8mm; }
-    #xpKitchen .xp-count-list li { break-inside: avoid; }
+    /* Three items per line as inline boxes, not CSS columns: multi-column
+       layout split across a page break overlaps in some browsers (Safari). */
+    #xpKitchen .xp-count-list li { display: inline-flex; width: 31%; margin-right: 2%;
+        vertical-align: top; break-inside: avoid; border-bottom: 1px solid #ddd; }
     /* All orders starts on its own page, and the totals print once at the end
        instead of repeating at the foot of every page. */
     #xpAllOrders { break-before: page; }
