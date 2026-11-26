@@ -260,22 +260,22 @@
                             {% endif %}
                         </td>
                         <td class="text-center">
-                            {% if p.dt_count %}<span class="badge bg-secondary">{{ p.dt_count }}</span>{% else %}<span class="text-muted">—</span>{% endif %}
+                            <span class="v-current">{% if p.dt_count_cur %}<span class="badge bg-secondary">{{ p.dt_count_cur }}</span>{% else %}<span class="text-muted">—</span>{% endif %}</span><span class="v-cumulative" style="display:none">{% if p.dt_count %}<span class="badge bg-secondary">{{ p.dt_count }}</span>{% else %}<span class="text-muted">—</span>{% endif %}</span>
                         </td>
                         <td class="text-center">
-                            {% if p.ch_count %}<span class="badge bg-secondary">{{ p.ch_count }}</span>{% else %}<span class="text-muted">—</span>{% endif %}
+                            <span class="v-current">{% if p.ch_count_cur %}<span class="badge bg-secondary">{{ p.ch_count_cur }}</span>{% else %}<span class="text-muted">—</span>{% endif %}</span><span class="v-cumulative" style="display:none">{% if p.ch_count %}<span class="badge bg-secondary">{{ p.ch_count }}</span>{% else %}<span class="text-muted">—</span>{% endif %}</span>
                         </td>
                         <td class="text-center">
-                            {% if p.lg_count %}<span class="badge bg-secondary">{{ p.lg_count }}</span>{% else %}<span class="text-muted">—</span>{% endif %}
+                            <span class="v-current">{% if p.lg_count_cur %}<span class="badge bg-secondary">{{ p.lg_count_cur }}</span>{% else %}<span class="text-muted">—</span>{% endif %}</span><span class="v-cumulative" style="display:none">{% if p.lg_count %}<span class="badge bg-secondary">{{ p.lg_count }}</span>{% else %}<span class="text-muted">—</span>{% endif %}</span>
                         </td>
                         <td class="text-center fw-bold" style="color:var(--hhb-accent)">
-                            {% if p.total_wins %}{{ p.total_wins }}{% else %}—{% endif %}
+                            <span class="v-current">{% if p.wins_cur %}{{ p.wins_cur }}{% else %}—{% endif %}</span><span class="v-cumulative" style="display:none">{% if p.total_wins %}{{ p.total_wins }}{% else %}—{% endif %}</span>
                         </td>
                         <td class="text-center">
-                            {% if p.total_runner_ups %}{{ p.total_runner_ups }}{% else %}—{% endif %}
+                            <span class="v-current">{% if p.runner_ups_cur %}{{ p.runner_ups_cur }}{% else %}—{% endif %}</span><span class="v-cumulative" style="display:none">{% if p.total_runner_ups %}{{ p.total_runner_ups }}{% else %}—{% endif %}</span>
                         </td>
                         <td class="text-center">
-                            {% if p.total_thirds %}{{ p.total_thirds }}{% else %}—{% endif %}
+                            <span class="v-current">{% if p.thirds_cur %}{{ p.thirds_cur }}{% else %}—{% endif %}</span><span class="v-cumulative" style="display:none">{% if p.total_thirds %}{{ p.total_thirds }}{% else %}—{% endif %}</span>
                         </td>
                         <!-- Current score cell -->
                         <td class="score-cell-current">
@@ -306,6 +306,7 @@
 </div>
 
 <p class="text-muted small mt-2">
+    Current shows the last 3 years (2024–2026); Cumulative shows all club history.<br>
     DC = Annual Doubles Classic seasons &nbsp;|&nbsp; Champ = Annual Championships &nbsp;|&nbsp; League = Annual Players League seasons.
     Tournament matching is by first name — players who used a different name in older scoresheets may show lower counts.
 </p>
@@ -530,6 +531,9 @@ function setRankMode(mode) {
     document.getElementById('th-cumulative').style.display  = mode === 'cumulative' ? '' : 'none';
     document.querySelectorAll('.score-cell-current').forEach(el    => el.style.display = mode === 'current'    ? '' : 'none');
     document.querySelectorAll('.score-cell-cumulative').forEach(el => el.style.display = mode === 'cumulative' ? '' : 'none');
+
+    document.querySelectorAll('.v-current').forEach(el    => el.style.display = mode === 'current'    ? '' : 'none');
+    document.querySelectorAll('.v-cumulative').forEach(el => el.style.display = mode === 'cumulative' ? '' : 'none');
 
     // Toggle button states
     document.getElementById('btn-current').className    = 'btn btn-' + (mode === 'current'    ? 'primary active' : 'outline-secondary');

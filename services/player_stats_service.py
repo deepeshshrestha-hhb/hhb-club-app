@@ -251,6 +251,20 @@ def get_all_player_stats():
             ),
         }
 
+        # Same counts restricted to the Current window (last 3 years)
+        dt_cur = {y: v for y, v in dt_ach.items() if y in CURRENT_YEARS}
+        ch_cur = {y: v for y, v in ch_ach.items() if y in CURRENT_YEARS}
+        lg_cur = {y: v for y, v in lg_ach.items() if y in CURRENT_YEARS}
+        cur_wins = (_count(dt_cur, "winner")
+                    + sum(1 for vl in ch_cur.values() for e in vl if e["level"] == "winner")
+                    + _count(lg_cur, "champion"))
+        cur_ru = (_count(dt_cur, "runner_up")
+                  + sum(1 for vl in ch_cur.values() for e in vl if e["level"] == "runner_up")
+                  + _count(lg_cur, "runner_up"))
+        cur_3rd = (_count(dt_cur, "third")
+                   + sum(1 for vl in ch_cur.values() for e in vl if e["level"] == "third")
+                   + _count(lg_cur, "third"))
+
         result[fn] = {
             "dt_count": len(dt_ach),
             "ch_count": len(ch_ach),
@@ -258,6 +272,12 @@ def get_all_player_stats():
             "total_wins": dt_wins + ch_wins + lg_wins,
             "total_runner_ups": dt_ru + ch_ru + lg_ru,
             "total_thirds": dt_3rd + ch_3rd + lg_3rd,
+            "dt_count_cur": len(dt_cur),
+            "ch_count_cur": len(ch_cur),
+            "lg_count_cur": len(lg_cur),
+            "wins_cur": cur_wins,
+            "runner_ups_cur": cur_ru,
+            "thirds_cur": cur_3rd,
             "hhb_score_cumulative": dt_pts + ch_pts + lg_pts,
             "hhb_score_current": dt_pts_cur + ch_pts_cur + lg_pts_cur,
             "breakdown": breakdown,

@@ -61,6 +61,8 @@ def get_all_players():
     empty_stats = {
         "dt_count": 0, "ch_count": 0, "lg_count": 0,
         "total_wins": 0, "total_runner_ups": 0, "total_thirds": 0,
+        "dt_count_cur": 0, "ch_count_cur": 0, "lg_count_cur": 0,
+        "wins_cur": 0, "runner_ups_cur": 0, "thirds_cur": 0,
         "hhb_score_cumulative": 0, "hhb_score_current": 0,
         "breakdown": {"doubles": [], "champ_a": [], "champ_b": [], "league": []},
     }
