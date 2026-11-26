@@ -56,6 +56,20 @@ DEFAULT_MEMBERS = [
         "desc": "Splitwise-meets-Spond wizardry to track who owes what — and the innovative name-and-shame lists to prove it.",
         "founder": False,
     },
+    {
+        "id": "7", "roster_no": "NO. 7", "name": "Altamash Pervez",
+        "linked_player": "Altamash Pervez", "badge": "Committee Member & Sit-Out Rota Manager",
+        "title_line": "The Rally Questioner",
+        "desc": "Asked the committee so many questions we let him join it. Now runs the Wednesday and Sunday sit-out rota, and still asks why.",
+        "founder": False,
+    },
+    {
+        "id": "8", "roster_no": "NO. 8", "name": "Shiva Koteeswaran",
+        "linked_player": "Shiva Koteeswaran", "badge": "Senior Committee Member",
+        "title_line": "The Steady Drive",
+        "desc": "Calm, friendly and quietly consistent. A practical head off court, and a player who shows up and delivers in every tournament.",
+        "founder": False,
+    },
 ]
 
 
@@ -72,7 +86,13 @@ def _load() -> dict:
     except (json.JSONDecodeError, OSError):
         return _defaults()
     data.setdefault("visible", True)
-    data.setdefault("members", DEFAULT_MEMBERS)
+    data.setdefault("members", json.loads(json.dumps(DEFAULT_MEMBERS)))
+    # A saved committee.json predates newly added default members: append any
+    # default whose id isn't stored yet so new members appear without a re-seed.
+    have = {m.get("id") for m in data["members"]}
+    for m in DEFAULT_MEMBERS:
+        if m["id"] not in have:
+            data["members"].append(json.loads(json.dumps(m)))
     return data
 
 
