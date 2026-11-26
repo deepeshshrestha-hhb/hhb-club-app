@@ -2030,6 +2030,16 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
     poll). Notes show as a 📝 icon that opens a popup ("None"/"n/a"/"-" count
     as blank). The 🗑 delete button is drawn only for admins, and its route is
     still `admin_required`. The admin section keeps only the Excel/CSV export.
+  - **2026-11-26 — Programme & Menu page** (`/annual-dinner/programme`,
+    `templates/annual_dinner_programme.html`). The running order and menu
+    live in one data file, `services/annual_dinner_programme.py` (`SCHEDULE`,
+    `MENU`); edit times, leads and dishes there. The venue comes from the
+    same `Settings` sheet as the RSVP page. Awards, Dinner and Surprise Game
+    get a gold accent; **keep "Surprise Game" exactly as written, with no
+    sub-line, icon or hint**. On 5 Dec, client-side JS marks the current slot
+    "Now". A `@media print` block in `annual_dinner.css` fits it on one A4
+    page (schedule left, menu right); this was checked by printing to PDF with
+    headless Edge. The RSVP hero has a "View Programme & Menu" button.
 
 - **2026-11-13/14 — Morning "429 hibernate-rate-limited" outages: Render's
   block lifts by itself around 8 am; accepted as is.**

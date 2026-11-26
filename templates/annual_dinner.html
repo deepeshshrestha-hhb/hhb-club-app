@@ -51,6 +51,7 @@
                 <a href="#rsvp" class="btn ad-btn-gold btn-lg px-4">RSVP now</a>
                 <a href="#roles" class="btn ad-btn-ghost btn-lg px-4">Volunteer</a>
             </div>
+            <a href="{{ url_for('annual_dinner.programme_page') }}" class="btn ad-btn-ghost w-100 mt-2 ad-prog-link">🗓️ View Programme &amp; Menu</a>
             <p class="ad-hero-count mt-3 mb-0"><strong id="heroCount">{{ state.summary.total }}</strong> <span id="heroCountLabel">{{ 'person' if state.summary.total == 1 else 'people' }}</span> coming so far</p>
         </div>
     </section>
