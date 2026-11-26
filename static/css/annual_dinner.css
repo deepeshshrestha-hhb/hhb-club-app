@@ -237,3 +237,76 @@
 .ad-rsvp-table th, .ad-rsvp-table td { padding: .35rem .2rem; }
 .ad-rsvp-table thead th { font-size: .75rem; white-space: nowrap; }
 .ad-rsvp-table td:first-child { word-break: break-word; }
+
+/* ---------- Programme & Menu (/annual-dinner/programme) ---------- */
+.ad-back { display: inline-block; margin-bottom: .75rem; font-weight: 600; text-decoration: none; }
+.ad-prog-hero .ad-hero-inner { padding: 1.6rem 1rem 1.2rem; }
+.ad-prog-hero .ad-title { font-size: clamp(1.8rem, 8vw, 2.6rem); margin: .6rem 0 .8rem; }
+.ad-prog-hero .ad-facts { margin-bottom: 0; }
+
+.ad-timeline { position: relative; }
+.ad-slot {
+    position: relative;
+    display: grid;
+    grid-template-columns: 4.6rem 1fr auto;
+    gap: .6rem;
+    align-items: start;
+    padding: .6rem .75rem;
+    background: #fff;
+    border: 1px solid rgba(11, 31, 58, .08);
+    border-left: 4px solid rgba(0, 102, 204, .35);
+    border-radius: .6rem;
+    margin-bottom: .45rem;
+}
+.ad-slot-time { font-weight: 800; color: var(--ad-blue); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ad-slot-title { font-weight: 700; color: var(--ad-navy); line-height: 1.25; }
+.ad-slot-sub { font-size: .8rem; color: #5b6b80; margin-top: .1rem; }
+.ad-slot-lead { font-size: .8rem; color: #5b6b80; margin-top: .15rem; }
+.ad-slot-lead::before { content: "👤 "; }
+.ad-slot-mins {
+    font-size: .72rem; font-weight: 600; white-space: nowrap;
+    padding: .15rem .45rem; border-radius: 999px;
+    background: rgba(0, 102, 204, .08); color: var(--ad-blue);
+}
+.ad-slot-key { border-left-color: var(--ad-gold-dark); background: #fffaf0; }
+.ad-slot-key .ad-slot-time { color: var(--ad-gold-dark); }
+.ad-slot-end { border-left-color: var(--ad-navy); background: #f4f6f9; }
+.ad-slot-now { border-left-color: var(--ad-green); box-shadow: 0 0 0 2px var(--ad-green); }
+.ad-now-badge { background: var(--ad-green); font-size: .7rem; vertical-align: middle; margin-left: .3rem; }
+
+.ad-menu-card { border-radius: .75rem; overflow: hidden; border-color: rgba(11, 31, 58, .1); }
+.ad-menu-card .card-header { font-weight: 800; color: #fff; background: linear-gradient(135deg, var(--ad-navy), #133a6b); }
+.ad-menu-card .list-group-item { padding: .5rem .9rem; }
+.ad-veg { color: var(--ad-green); font-weight: 700; font-size: .85em; }
+
+@media (max-width: 400px) {
+    .ad-slot { grid-template-columns: 4.1rem 1fr; }
+    .ad-slot-mins { display: none; }
+}
+
+/* One A4 sheet: schedule left, menu right, no site chrome. */
+@media print {
+    @page { size: A4 portrait; margin: 10mm; }
+    .hhb-navbar, footer, .feedback-fab, .ad-back, .d-print-none { display: none !important; }
+    body { background: #fff !important; }
+    body > .container-fluid { margin: 0 !important; padding: 0 !important; }
+    .ad-prog { max-width: none; font-size: 10.5pt; }
+    .ad-prog-hero { box-shadow: none; border-radius: .5rem; margin-bottom: 4mm !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .ad-prog-hero .ad-hero-inner { padding: 4mm 6mm; }
+    .ad-prog-hero .ad-title { font-size: 20pt; margin: 2mm 0; }
+    .ad-prog-hero .ad-title br { display: none; }
+    .ad-prog-hero .ad-facts { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 6mm; max-width: none; }
+    .ad-prog-grid { display: grid; grid-template-columns: 1.45fr 1fr; gap: 6mm; }
+    .ad-prog-grid section { margin-bottom: 0 !important; }
+    .ad-h2 { font-size: 13pt; margin-bottom: 2mm; }
+    .ad-slot { padding: 1.3mm 2.5mm; margin-bottom: 1.2mm; break-inside: avoid; gap: 2mm;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .ad-slot-sub, .ad-slot-lead { font-size: 8pt; }
+    .ad-slot-now { box-shadow: none; }
+    .ad-now-badge { display: none !important; }
+    .ad-menu-row > div { width: 100%; flex: 0 0 100%; max-width: 100%; }
+    .ad-menu-card { break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .ad-menu-card .list-group-item { padding: 1mm 3mm; }
+}
+.ad-prog-link { max-width: 420px; display: block; margin-left: auto; margin-right: auto; }

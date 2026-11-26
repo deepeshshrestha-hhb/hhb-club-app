@@ -12,6 +12,7 @@ from flask import (Blueprint, Response, flash, jsonify, redirect, render_templat
                    request, send_file, session, url_for)
 
 from routes.admin_routes import admin_required
+from services import annual_dinner_programme as programme
 from services import annual_dinner_service as ads
 from services.player_service import get_player_names
 
@@ -44,6 +45,22 @@ def page():
         champions=ads.get_champions(),
         admin=ads.get_admin_data() if is_admin else None,
         is_admin=is_admin,
+    )
+
+
+@annual_dinner_bp.route("/programme")
+def programme_page():
+    return render_template(
+        "annual_dinner_programme.html",
+        ev={
+            "title": ads.EVENT_TITLE,
+            "date": ads.EVENT_DATE_DISPLAY,
+            "time": ads.EVENT_TIME_DISPLAY,
+        },
+        site_url=ads.SITE_URL,
+        settings=ads.get_state()["settings"],  # venue comes from the same place as the RSVP page
+        schedule=programme.get_schedule(),
+        menu=programme.get_menu(),
     )
 
 

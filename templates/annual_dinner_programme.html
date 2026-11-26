@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Programme & Menu – Annual Dinner & Gala 2026 – HHB Club{% endblock %}
+
+{% block head_extra %}
+{% set og_desc = ev.date ~ ', ' ~ ev.time ~ '. Running order and menu for the HHB Annual Dinner & Gala 2026.' %}
+<meta name="description" content="{{ og_desc }}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Programme & Menu – {{ ev.title }}">
+<meta property="og:description" content="{{ og_desc }}">
+<meta property="og:url" content="{{ site_url ~ request.path }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/annual_dinner.css') }}?v={{ asset_version('css/annual_dinner.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="ad-wrap ad-prog">
+
+    <a href="{{ url_for('annual_dinner.page') }}" class="ad-back d-print-none">&laquo; Back to RSVP</a>
+
+    {# ------------------------------------------------------------ HEADER #}
+    <header class="ad-hero ad-prog-hero mb-4">
+        <div class="ad-confetti d-print-none" aria-hidden="true">
+            {% for i in range(12) %}<span></span>{% endfor %}
+        </div>
+        <div class="ad-hero-inner">
+            <span class="ad-pill">Programme &amp; Menu</span>
+            <h1 class="ad-title">Annual Dinner<br><span>&amp; Gala 2026</span></h1>
+            <ul class="ad-facts">
+                <li><span aria-hidden="true">📅</span> {{ ev.date }}</li>
+                <li><span aria-hidden="true">🕔</span> {{ ev.time }}</li>
+                <li><span aria-hidden="true">📍</span>
+                    {% if settings.venue_name %}
+                        <span><strong>{{ settings.venue_name }}</strong>{% if settings.venue_address %}<br><small>{{ settings.venue_address }}</small>{% endif %}
+                            {% if settings.venue_map_url %}<br><a class="ad-maplink d-print-none" href="{{ settings.venue_map_url }}" target="_blank" rel="noopener">Open map &raquo;</a>{% endif %}</span>
+                    {% else %}
+                        <span>Venue TBC</span>
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+    </header>
+
+    <div class="ad-prog-grid">
+        {# -------------------------------------------------------- SCHEDULE #}
+        <section class="mb-4" id="schedule">
+            <h2 class="ad-h2">🗓️ Schedule of the day</h2>
+            <ol class="ad-timeline list-unstyled mb-0">
+                {% for s in schedule %}
+                <li class="ad-slot{% if s.highlight %} ad-slot-key{% endif %}{% if s.end %} ad-slot-end{% endif %}"
+                    data-start="{{ s.start_iso }}">
+                    <div class="ad-slot-time">{{ s.display_time }}</div>
+                    <div class="ad-slot-body">
+                        <div class="ad-slot-title">
+                            {{ s.title }}
+                            <span class="badge ad-now-badge d-none">Now</span>
+                        </div>
+                        {% if s.sub %}<div class="ad-slot-sub">{{ s.sub }}</div>{% endif %}
+                        {% if s.lead %}<div class="ad-slot-lead">{{ s.lead }}</div>{% endif %}
+                    </div>
+                    {% if s.mins %}<span class="ad-slot-mins">{{ s.mins }} min</span>{% endif %}
+                </li>
+                {% endfor %}
+            </ol>
+        </section>
+
+        {# ------------------------------------------------------------ MENU #}
+        <section class="mb-4" id="menu">
+            <h2 class="ad-h2">🍽️ Menu</h2>
+            <div class="row g-2 g-md-3 ad-menu-row">
+                {% for c in menu %}
+                <div class="col-12 col-md-4">
+                    <div class="card ad-menu-card h-100">
+                        <div class="card-header"><span aria-hidden="true">{{ c.icon }}</span> {{ c.course }}</div>
+                        <ul class="list-group list-group-flush">
+                            {% for name, veg in c['items'] %}
+                            <li class="list-group-item">{{ name }}{% if veg %} <span class="ad-veg" title="Vegetarian">(V)</span>{% endif %}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <p class="small text-muted mt-2 mb-0"><span class="ad-veg">(V)</span> = Vegetarian</p>
+        </section>
+    </div>
+
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center mb-4 d-print-none">
+        <a href="{{ url_for('annual_dinner.page') }}" class="btn btn-outline-primary">&laquo; Back to RSVP</a>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()">🖨️ Print</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// On the day, mark the slot that's on right now. Times are UK (GMT in December).
+(function () {
+    var slots = Array.prototype.slice.call(document.querySelectorAll('.ad-slot'));
+    function mark() {
+        var now = Date.now(), current = null;
+        slots.forEach(function (li, i) {
+            var start = Date.parse(li.getAttribute('data-start'));
+            var next = slots[i + 1] ? Date.parse(slots[i + 1].getAttribute('data-start')) : null;
+            if (next !== null && now >= start && now < next) current = li;
+        });
+        slots.forEach(function (li) {
+            var on = li === current;
+            li.classList.toggle('ad-slot-now', on);
+            li.querySelector('.ad-now-badge').classList.toggle('d-none', !on);
+        });
+    }
+    mark();
+    setInterval(mark, 30000);
+})();
+</script>
+{% endblock %}
