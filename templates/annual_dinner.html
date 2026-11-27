@@ -31,7 +31,7 @@
                     {% if state.settings.venue_name %}
                         <span>
                             <strong>{{ state.settings.venue_name }}</strong>{% if state.settings.venue_address %}<br><small>{{ state.settings.venue_address }}</small>{% endif %}
-                            {% if state.settings.venue_map_url %}<br><a class="ad-maplink" href="{{ state.settings.venue_map_url }}" target="_blank" rel="noopener">Open map &raquo;</a>{% endif %}
+                            <br>{% if state.settings.venue_map_url %}<a class="ad-maplink" href="{{ state.settings.venue_map_url }}" target="_blank" rel="noopener">Open map &raquo;</a><span class="ad-maplink-sep">·</span>{% endif %}<a class="ad-maplink" href="{{ url_for('static', filename='video/annual_dinner/crookfur_house_route.mp4') }}" target="_blank" rel="noopener">▶ Route video</a>
                         </span>
                     {% else %}
                         <span>Venue TBC</span>
