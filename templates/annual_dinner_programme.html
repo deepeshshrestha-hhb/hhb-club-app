@@ -31,7 +31,7 @@
                 <li><span aria-hidden="true">📍</span>
                     {% if settings.venue_name %}
                         <span><strong>{{ settings.venue_name }}</strong>{% if settings.venue_address %}<br><small>{{ settings.venue_address }}</small>{% endif %}
-                            {% if settings.venue_map_url %}<br><a class="ad-maplink d-print-none" href="{{ settings.venue_map_url }}" target="_blank" rel="noopener">Open map &raquo;</a>{% endif %}</span>
+                            <span class="d-print-none"><br>{% if settings.venue_map_url %}<a class="ad-maplink" href="{{ settings.venue_map_url }}" target="_blank" rel="noopener">Open map &raquo;</a><span class="ad-maplink-sep">·</span>{% endif %}<a class="ad-maplink" href="{{ url_for('static', filename='video/annual_dinner/crookfur_house_route.mp4') }}" target="_blank" rel="noopener">▶ Route video</a></span></span>
                     {% else %}
                         <span>Venue TBC</span>
                     {% endif %}
