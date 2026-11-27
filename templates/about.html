@@ -256,7 +256,9 @@
                         <div class="card-body d-flex flex-column align-items-center pt-4">
                             <div class="committee-photo-frame mb-3">
                                 {% if m.photo_filename %}
-                                <img src="{{ url_for('players.player_photo', filename=m.photo_filename) }}" alt="{{ m.name }}">
+                                <img src="{{ url_for('players.player_photo', filename=m.photo_filename) }}" alt="{{ m.name }}"
+                                     style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#committeePhotoModal{{ m.id }}"
+                                     title="Click to view full photo">
                                 {% else %}
                                 <span class="committee-initials">{{ m.name[0] | upper }}</span>
                                 {% endif %}
@@ -268,6 +270,23 @@
                         </div>
                     </div>
                 </div>
+
+                {% if m.photo_filename %}
+                <div class="modal fade" id="committeePhotoModal{{ m.id }}" tabindex="-1" aria-label="Full photo" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" style="max-width:min(90vw,700px)">
+                        <div class="modal-content bg-dark border-0">
+                            <div class="modal-header border-0 pb-0">
+                                <span class="text-white fw-semibold">{{ m.name }}</span>
+                                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-2 text-center">
+                                <img src="{{ url_for('players.player_photo', filename=m.photo_filename) }}" alt="{{ m.name }}"
+                                     style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:.5rem;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
 
                 {% if session.get('is_admin') %}
                 <div class="modal fade" id="editCommitteeModal{{ m.id }}" tabindex="-1" aria-hidden="true">
