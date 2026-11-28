@@ -2180,6 +2180,14 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   recorded. Rukhsar 820->995, Jalal 431->606, Shoaib 180->355, etc.; Mohan
   scores 75 but isn't a current member, so he's not on the Players page.
 
+- **2026-11-28 — "Through the Years" slideshow video on the Photo Gallery.**
+  A 2:44 slideshow of all 41 gallery photos, with captions and an original
+  synthesised instrumental, is hosted on YouTube as unlisted (`EEpTZNB8ngc`).
+  It's embedded at the top of `/photos/gallery` (`#video` anchor), using
+  `youtube-nocookie`. Video isn't stored in the repo or R2: Render's free tier
+  isn't suited to streaming an ~89 MB file. The local copy is in `slideshow/`
+  (excluded via `.git/info/exclude`).
+
 ---
 
 ## Next Steps / TODO
