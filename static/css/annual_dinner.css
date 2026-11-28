@@ -291,7 +291,7 @@
     .hhb-navbar, footer, .feedback-fab, .ad-back, .d-print-none { display: none !important; }
     body { background: #fff !important; }
     body > .container-fluid { margin: 0 !important; padding: 0 !important; }
-    .ad-prog { max-width: none; font-size: 10.5pt; }
+    .ad-prog { max-width: none; font-size: 10pt; }
     .ad-prog-hero { box-shadow: none; border-radius: .5rem; margin-bottom: 4mm !important;
         -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .ad-prog-hero .ad-hero-inner { padding: 4mm 6mm; }
@@ -301,9 +301,9 @@
     .ad-prog-grid { display: grid; grid-template-columns: 1.45fr 1fr; gap: 6mm; }
     .ad-prog-grid section { margin-bottom: 0 !important; }
     .ad-h2 { font-size: 13pt; margin-bottom: 2mm; }
-    .ad-slot { padding: 1.3mm 2.5mm; margin-bottom: 1.2mm; break-inside: avoid; gap: 2mm;
+    .ad-slot { padding: .8mm 2.5mm; margin-bottom: .9mm; break-inside: avoid; gap: 2mm; line-height: 1.25;
         -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .ad-slot-sub, .ad-slot-lead { font-size: 8pt; }
+    .ad-slot-sub, .ad-slot-lead { font-size: 7.5pt; }
     .ad-slot-now { box-shadow: none; }
     .ad-now-badge { display: none !important; }
     .ad-menu-row > div { width: 100%; flex: 0 0 100%; max-width: 100%; }
