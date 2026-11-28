@@ -2167,6 +2167,14 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   next League season starts. `/weekly-scores` still works, and the Admin page
   still links to it.
 
+- **2026-11-28 — Doubles archive is now a table; 2015-2017 added.** The
+  `/tournaments/doubles` cards became one table (Year, Winner, Runner-Up,
+  View Tournament); the podium photo view/edit popups still sit on the
+  Winner/Runner-Up names. 2015-2017 have no scoresheet, so their results
+  live in `tournament_service.HISTORIC_DOUBLES_RESULTS` and show without a
+  button. They don't count towards HHB Score, which is parsed from the
+  scoresheets. Names use the scoresheet spelling ("Rukhsar", not "Ruksar").
+
 ---
 
 ## Next Steps / TODO

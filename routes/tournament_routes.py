@@ -5,6 +5,7 @@ from services.tournament_service import (
     create_tournament,
     list_doubles_tournament_years,
     get_doubles_tournament,
+    HISTORIC_DOUBLES_RESULTS,
 )
 from services.championship_service import list_championship_years, get_championship
 from services.league_service import list_league_years, get_league, get_overall_stats, get_weekly_stats
@@ -59,7 +60,12 @@ def doubles_index():
             "ready": ready,
             "winner": data["knockouts"]["winner"] if (data and data["knockouts"]) else "",
             "runner_up": data["knockouts"]["runner_up"] if (data and data["knockouts"]) else "",
+            "historic": False,
         })
+    for year, result in HISTORIC_DOUBLES_RESULTS.items():
+        if year not in years:
+            tournaments.append({"year": year, "ready": False, "historic": True, **result})
+    tournaments.sort(key=lambda t: t["year"], reverse=True)
     return render_template(
         "tournament_doubles_index.html",
         tournaments=tournaments,
