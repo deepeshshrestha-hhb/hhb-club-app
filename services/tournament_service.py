@@ -73,6 +73,16 @@ def _doubles_filename(year):
     return f"HHB Annual Doubles Classic - {year}.xlsm"
 
 
+# Early editions with no surviving scoresheet: only the final result is known,
+# so these show on the archive page without a "View Tournament" link.
+# Names use the same spelling as the scoresheets (e.g. "Rukhsar").
+HISTORIC_DOUBLES_RESULTS = {
+    2017: {"winner": "Prasanna/Nawaz", "runner_up": "Purvaiz/Jalal"},
+    2016: {"winner": "Rukhsar/Deepak", "runner_up": "Shoaib/Purvaiz"},
+    2015: {"winner": "Shoaib/Jalal", "runner_up": "Rukhsar/Mohan"},
+}
+
+
 def list_doubles_tournament_years():
     """Years we have a scoresheet for, regardless of whether the parser supports them yet."""
     years = []
