@@ -6,7 +6,9 @@ Name matching strategy: tournament data uses first names only (or pair format
 "Name1 / Name2"). We normalise these to lowercase and apply ALIASES to map
 known nickname/spelling variations back to the Spond firstName.
 """
-from services.tournament_service import list_doubles_tournament_years, get_doubles_tournament
+from services.tournament_service import (
+    list_doubles_tournament_years, get_doubles_tournament, HISTORIC_DOUBLES_RESULTS,
+)
 from services.championship_service import list_championship_years, get_championship
 from services.league_service import list_league_years, get_league
 
@@ -120,6 +122,18 @@ def get_all_player_stats():
         if k:
             for fn in participants:
                 raw[fn]["dt"][year] = _best_knockout_level(fn, k)
+
+    # Early Doubles editions with no scoresheet (2015-2017): only the winners
+    # and runners-up are known, so only they are credited. Nobody gets a
+    # group-stage credit for these years, since the field isn't recorded.
+    sheet_years = set(list_doubles_tournament_years())
+    for year, result in HISTORIC_DOUBLES_RESULTS.items():
+        if year in sheet_years:
+            continue
+        for key in ("runner_up", "winner"):
+            for fn in _fns(result.get(key, "")):
+                _ensure(fn)
+                raw[fn]["dt"][year] = key
 
     # ── Annual Championships ─────────────────────────────────────────────────
     for year in list_championship_years():
