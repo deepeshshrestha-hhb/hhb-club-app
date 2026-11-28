@@ -13,6 +13,9 @@
 {% endblock %}
 
 {% block content %}
+{# Faded club photo behind the page. A real <img>, not a CSS background, so it
+   prints even when the browser's "Background graphics" option is off. #}
+<img class="ad-prog-bg" src="{{ url_for('static', filename='images/annual_dinner_programme_bg.jpg') }}" alt="" aria-hidden="true">
 <div class="ad-wrap ad-prog">
 
     <a href="{{ url_for('annual_dinner.page') }}" class="ad-back d-print-none">&laquo; Back to RSVP</a>
