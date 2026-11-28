@@ -23,7 +23,7 @@ SCHEDULE = [
     {"time": "18:35", "title": "Awards ceremony", "sub": "Special Awards 1",
      "lead": "Deepesh", "mins": 5, "highlight": True},
     {"time": "18:40", "title": "Teens game", "lead": "Deepesh", "mins": 15},
-    {"time": "18:55", "title": "Song Performance 3", "lead": "Zaheer", "mins": 5},
+    {"time": "18:55", "title": "Song Performance 2", "lead": "Zaheer", "mins": 5},
     {"time": "19:00", "title": "Awards ceremony", "sub": "Special Awards 2",
      "lead": "Deepesh", "mins": 5, "highlight": True},
     {"time": "19:05", "title": "Family Fortunes (Top 10)", "lead": "Deepesh", "mins": 20},
