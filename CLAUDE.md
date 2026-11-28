@@ -2172,8 +2172,13 @@ also reachable at `hhb-club.onrender.com`. Hosted on **Render free tier**
   View Tournament); the podium photo view/edit popups still sit on the
   Winner/Runner-Up names. 2015-2017 have no scoresheet, so their results
   live in `tournament_service.HISTORIC_DOUBLES_RESULTS` and show without a
-  button. They don't count towards HHB Score, which is parsed from the
-  scoresheets. Names use the scoresheet spelling ("Rukhsar", not "Ruksar").
+  button. Names use the scoresheet spelling ("Rukhsar", not "Ruksar").
+  *Same day:* these results now count towards HHB Score (Cumulative only,
+  since 2015-17 is outside the Current window): `player_stats_service`
+  credits the winners 100 and runners-up 75 from `HISTORIC_DOUBLES_RESULTS`,
+  and gives no group-stage credit to anyone else, since the field isn't
+  recorded. Rukhsar 820->995, Jalal 431->606, Shoaib 180->355, etc.; Mohan
+  scores 75 but isn't a current member, so he's not on the Players page.
 
 ---
 
